@@ -15,7 +15,7 @@ readme = "README.md"
 license = {text = "MIT"}
 
 [project.scripts]
-gdtk = "gdtk.__main__:main"
+gdtk = "gdtk.__main__:app"
 
 [build-system]
 requires = ["pdm-pep517>=1.0"]
