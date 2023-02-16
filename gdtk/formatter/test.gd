@@ -1,1 +1,1 @@
-@onready("hi", ") @onready(", "heeee", ", ", "yyyy")
+@onready("hi") @onready("heeee", "yyyy") var test
