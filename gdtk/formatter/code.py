@@ -2,4 +2,8 @@ from typing import List
 
 
 def format_code(line: str) -> List[str]:
-    return [line]
+    return [line.strip()]
+
+KEYWORD_TOKENS = {
+    
+}

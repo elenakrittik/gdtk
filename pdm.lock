@@ -22,6 +22,12 @@ version = "0.9.1"
 summary = "Python parser for the CommonMark Markdown spec"
 
 [[package]]
+name = "platformdirs"
+version = "3.1.1"
+requires_python = ">=3.7"
+summary = "A small Python package for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
+
+[[package]]
 name = "pygments"
 version = "2.14.0"
 requires_python = ">=3.6"
@@ -67,7 +73,7 @@ dependencies = [
 
 [metadata]
 lock_version = "4.1"
-content_hash = "sha256:a9c16ee7c209a77c24b9169c428dd4fc2983628ebf2ca11c6ec5679b54f9ee85"
+content_hash = "sha256:c063f688c25f7c03555cc58f1ba0ec58794a50d90cb6f1673467d46ff8aef3cc"
 
 [metadata.files]
 "click 8.1.3" = [
@@ -81,6 +87,10 @@ content_hash = "sha256:a9c16ee7c209a77c24b9169c428dd4fc2983628ebf2ca11c6ec5679b5
 "commonmark 0.9.1" = [
     {url = "https://files.pythonhosted.org/packages/60/48/a60f593447e8f0894ebb7f6e6c1f25dafc5e89c5879fdc9360ae93ff83f0/commonmark-0.9.1.tar.gz", hash = "sha256:452f9dc859be7f06631ddcb328b6919c67984aca654e5fefb3914d54691aed60"},
     {url = "https://files.pythonhosted.org/packages/b1/92/dfd892312d822f36c55366118b95d914e5f16de11044a27cf10a7d71bbbf/commonmark-0.9.1-py2.py3-none-any.whl", hash = "sha256:da2f38c92590f83de410ba1a3cbceafbc74fee9def35f9251ba9a971d6d66fd9"},
+]
+"platformdirs 3.1.1" = [
+    {url = "https://files.pythonhosted.org/packages/79/c4/f98a05535344f79699bbd494e56ac9efc986b7a253fe9f4dba7414a7f505/platformdirs-3.1.1.tar.gz", hash = "sha256:024996549ee88ec1a9aa99ff7f8fc819bb59e2c3477b410d90a16d32d6e707aa"},
+    {url = "https://files.pythonhosted.org/packages/7b/e1/593f693096c50411a2bf9571f66bc3be9d0f79a4a50e95aab581458b0e3c/platformdirs-3.1.1-py3-none-any.whl", hash = "sha256:e5986afb596e4bb5bde29a79ac9061aa955b94fca2399b7aaac4090860920dd8"},
 ]
 "pygments 2.14.0" = [
     {url = "https://files.pythonhosted.org/packages/0b/42/d9d95cc461f098f204cd20c85642ae40fbff81f74c300341b8d0e0df14e0/Pygments-2.14.0-py3-none-any.whl", hash = "sha256:fa7bd7bd2771287c0de303af8bfdfc731f51bd2c6a47ab69d117138893b82717"},

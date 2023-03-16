@@ -1,16 +1,21 @@
 [project]
 name = "gdtk"
-version = "0.1.0"
 description = ""
 authors = [
     { name = "ItsAleph", email = "igorekkrupskij@gmail.com" },
 ]
 dependencies = [
     "typer[all]>=0.7.0",
+    "platformdirs>=3.1.1",
 ]
 requires-python = ">=3.10"
 readme = "README.md"
 license = { text = "MIT" }
+dynamic = ["version"]
+
+[tool.pdm.version]
+source = "file"
+path = "gdtk/__init__.py"
 
 [project.scripts]
 gdtk = "gdtk.__main__:app"
@@ -18,3 +23,5 @@ gdtk = "gdtk.__main__:app"
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
+
+[tool.pdm]

@@ -13,7 +13,7 @@ class AnnotationParseMode(Enum):
     unknown = 4
 
 def format_comment(line: str) -> List[str]:
-    return []
+    return ["# " + line.removeprefix("#").strip()]
 
 def format_annotation(line: str) -> List[str]:
     out: List[str] = []
@@ -28,7 +28,6 @@ def format_annotation(line: str) -> List[str]:
     stop: bool = False
 
     for char_idx, char in enumerate(line):
-        print(char)
         if mode == AnnotationParseMode.annotation_value:
             if char == '"':
                 annotations[current_annotation_idx]["values"].append(line[annotation_value_start + 1:char_idx]) # type: ignore
@@ -62,7 +61,14 @@ def format_annotation(line: str) -> List[str]:
             case _:
                 if mode == AnnotationParseMode.unknown:
                     mode = AnnotationParseMode.annotation_code
-                    code_lines = format_code(line[char_idx:])
+                    to_format = line[char_idx:].strip()
+
+                    if not to_format.is_empty():
+                        if to_format[0] == "#":
+                            code_lines = format_comment(to_format)
+                        else:
+                            code_lines = format_code(to_format)
+
                     stop = True
         
         if stop:
@@ -81,8 +87,4 @@ def format_annotation(line: str) -> List[str]:
 SPECIAL_TOKENS: Dict[str, Callable[[str], List[str]]] = {
     "@": format_annotation,
     "#": format_comment,
-}
-
-KEYWORD_TOKENS = {
-
 }
