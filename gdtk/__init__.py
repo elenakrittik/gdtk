@@ -1,5 +1,0 @@
-__title__ = "gdtk"
-__author__ = "ItsAleph"
-__license__ = "MIT"
-__copyright__ = "Copyright 2023-present ItsAleph"
-__version__ = "0.1.0a"
