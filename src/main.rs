@@ -1,5 +1,5 @@
-use colored::Colorize;
 use clap::{Parser, Subcommand};
+use colored::Colorize;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -29,13 +29,16 @@ fn main() {
     match &cli.command {
         Some(Commands::Format { files }) => {
             if !files.is_empty() {
-                println!("Formatting {} files!", files.len().to_string().green());
+                println!(
+                    "{} {} {}",
+                    "Formatting".blue(),
+                    files.len().to_string().green(),
+                    "files!".blue(),
+                );
             } else {
-                println!("Not printing testing lists...");
+                println!("{}", "No files found".red(),);
             }
         }
         None => {}
     }
-
-    // Continued program logic goes here...
 }
