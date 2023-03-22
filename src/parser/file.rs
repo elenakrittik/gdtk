@@ -23,6 +23,27 @@ pub fn parse_file(path: String) -> Result<String, io::Error> {
 }
 
 fn parse_line(content: &mut String, line: &String) {
-    content.push_str(line);
+    let mut result = String::new();
+
+    let mut chars = line.trim().chars();
+    let first_char = match chars.next() {
+        Some(chr) => chr,
+        None => {
+            content.push('\n');
+            return;
+        }
+    };
+
+    match first_char {
+        '#' => {
+            let stripped = line.trim().strip_prefix("#").unwrap().trim();
+            let mut il = String::from("# ");
+            il.push_str(stripped);
+            result.push_str(&il);
+        }
+        _ => {}
+    }
+
+    content.push_str(&result);
     content.push('\n');
 }
