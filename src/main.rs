@@ -20,7 +20,7 @@ enum Commands {
     },
     Parse {
         #[arg(short, long)]
-        file: Option<String>,
+        file: String,
     },
 }
 
@@ -41,15 +41,25 @@ fn main() {
             }
         }
         Some(Commands::Parse { file }) => {
-            let fs = file.as_ref().unwrap();
+            let fs = file;
             if !fs.is_empty() {
                 println!("{} {}{}", "Parsing".green(), fs.blue(), ".".green(),);
+                match parse_file(fs.to_string()) {
+                    Ok(content) => println!("{}", content),
+                    Err(_) => println!("{}", "error: unable to read file contents".red()),
+                };
             } else {
-                println!("{}", "No file specified.".red());
+                println!("{} {}", "error:".red(), "no file specified.");
             }
         }
         None => {
-            println!("{}", "No command bruh".red());
+            println!(
+                "{} {} {} {}",
+                "error:".red(),
+                "no command specified. Run",
+                "`gdtk help`".green(),
+                "to view help message.",
+            );
         }
     }
 }
