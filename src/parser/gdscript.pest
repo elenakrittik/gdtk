@@ -1,0 +1,16 @@
+comment = {
+	"#"
+	~ ANY*
+}
+
+statement = {
+	comment
+}
+
+file = _{
+	SOI
+	~ "\n"*
+	~ (statement* ~ "\n"+)*
+	~ statement?
+	~ EOI
+}

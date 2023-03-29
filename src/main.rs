@@ -3,6 +3,11 @@ mod parser;
 use crate::parser::parse_file;
 use clap::{Parser, Subcommand};
 use colored::Colorize;
+use pest::Parser as PestParser;
+
+extern crate pest;
+#[macro_use]
+extern crate pest_derive;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
