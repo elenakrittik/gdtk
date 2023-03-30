@@ -1,9 +1,10 @@
 mod parser;
 
-use crate::parser::parse_file;
+use crate::parser::{GDScriptParser, Rule};
 use clap::{Parser, Subcommand};
 use colored::Colorize;
 use pest::Parser as PestParser;
+use std::fs;
 
 extern crate pest;
 #[macro_use]
@@ -49,7 +50,22 @@ fn main() {
             let fs = file;
             if !fs.is_empty() {
                 println!("{} {}{}", "Parsing".green(), fs.blue(), ".".green(),);
-                match parse_file(fs.to_string()) {
+
+                let src = match fs::read_to_string(fs) {
+                    Ok(data) => data,
+                    Err(e) => {
+                        return println!(
+                            "{} {} {}{} {}",
+                            "error:".red(),
+                            "unable to read file",
+                            fs.green(),
+                            ":",
+                            e.to_string()
+                        )
+                    }
+                };
+
+                match GDScriptParser::parse(Rule::file, &src) {
                     Ok(content) => println!("{}", content),
                     Err(_) => println!("{}", "error: unable to read file contents".red()),
                 };
