@@ -1,0 +1,27 @@
+on:
+  push:
+    branches:
+      - master
+
+name: Build Artifact
+
+jobs:
+  release:
+    name: Build Artifact
+    env:
+      PROJECT_NAME_UNDERSCORE: gdtk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Release Build
+        run: cargo build --release
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v2
+        with:
+          name: ${{ env.PROJECT_NAME_UNDERSCORE }}
+          path: target/release/${{ env.PROJECT_NAME_UNDERSCORE }}
