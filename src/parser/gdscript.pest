@@ -1,10 +1,23 @@
+identifier = {
+	ALPHABETIC+
+	~ ASCII_ALPHANUMERIC*
+}
+
 comment = {
-	"#"
-	~ ANY*
+    "#"
+	~ (!"\n" ~ ANY)*
+}
+
+annotation = {
+	"@"
+	~ identifier
+	~ ( !("\n" | " ") ~ "()"* )
+	~ ( !("\n" | " ") ~ ANY)*
 }
 
 statement = _{
 	comment
+	| annotation
 }
 
 file = _{

@@ -65,10 +65,18 @@ fn main() {
                     }
                 };
 
-                match GDScriptParser::parse(Rule::file, &src) {
-                    Ok(content) => println!("{}", content),
-                    Err(_) => println!("{}", "error: unable to read file contents".red()),
+                let content = match GDScriptParser::parse(Rule::file, &src) {
+                    Ok(val) => val,
+                    Err(e) => {
+                        println!("{}", e.to_string());
+                        println!("{:?}", e);
+                        return;
+                    }
                 };
+
+                for pair in content {
+                    println!("{}: {:?}", "Next pair".blue(), pair);
+                }
             } else {
                 println!("{} {}", "error:".red(), "no file specified.");
             }
