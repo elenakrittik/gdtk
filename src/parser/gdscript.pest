@@ -1,7 +1,7 @@
 //! GDScript Parsing Expression Grammar
 
 //! Always document every single line you write,
-//! **verboseness** is intentional.
+//! **verboseness is intentional**.
 //! Formatting is appreciated, but optional.
 
 // WHITESPACE defines rule used for determining whether
@@ -47,15 +47,15 @@ char = {       // rule defined as
 // identifier defines a valid name for function,
 // variable, etc.
 identifier = {
-	('a'..'z')
-	~ ('a'..'z' | '0'..'9')*
+	ASCII_ALPHA
+	~ ASCII_ALPHANUMERIC*
 }
 
-remainder_of_line = {
+remainder_of_line = _{
 	(!"\n" ~ ANY)+
 }
 
-comment = {
+comment = _{
     "#"
 	~ " "*
 	~ remainder_of_line?
@@ -68,7 +68,7 @@ annotation_base = _{
 
 basic_annotation = {
 	annotation_base
-	~ (typed_var | var)?
+	~ (" " ~ var)?
 }
 
 annotation = {
@@ -76,7 +76,7 @@ annotation = {
 	~ "("
 	~ (string ~ ","?)*
 	~ ")"
-	~ (typed_var | var)?
+	~ (" " ~ var)?
 }
 
 number = {
@@ -86,23 +86,17 @@ number = {
 value = _{
 	string
 	| number
+	| identifier
 }
 
 typehint = {
 	(":" ~ identifier)
 }
 
-typed_var = {
-	"var"
-	~ identifier
-	~ typehint
-	~ "="
-	~ value
-}
-
 var = {
 	"var"
 	~ identifier
+	~ typehint?
 	~ "="
 	~ value
 }
@@ -112,7 +106,6 @@ statement = _{
 	| annotation
 	| basic_annotation
 	| var
-	| typed_var
 	| value
 }
 

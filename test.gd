@@ -25,5 +25,11 @@ var num: int = 12
 # Test minimal annotation with text after it
 @onready var number = 1
 
-# Test parentised annotation with text after it
+# Test parenthesed annotation with text after it
 @onready() var number = 1
+
+indentifier
+
+"string"
+
+1234567890

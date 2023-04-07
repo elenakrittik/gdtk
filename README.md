@@ -6,9 +6,13 @@ Planned features:
 - [ ] Project and dependecy manager (multiple commands) (TBD)
 - - [ ] Might also include support for GPM.
 
-~~Parser and other low-level stuff will be written in V to be more faster,
-while Python will be used to provide beatiful command-line interface.~~
-EVERYTHING WILL BE WRITTEN IN RUST
+## Known issues
+
+Inline basic annotated code is not supported.
+If possible, add empty parentheses to your annotation
+or place code on the next line after the annotation.
+
+## Credits
 
 Greatly inspired by these projects:
 - Pawel Lampe's [godot-gdscript-toolkit](https;//github.com/Scony/godot-gdscriot-toolkit)
