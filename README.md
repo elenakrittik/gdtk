@@ -8,9 +8,7 @@ Planned features:
 
 ## Known issues
 
-Inline basic annotated code is not supported.
-If possible, add empty parentheses to your annotation
-or place code on the next line after the annotation.
+None for now :P
 
 ## Credits
 

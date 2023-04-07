@@ -46,7 +46,7 @@ char = {       // rule defined as
 
 // identifier defines a valid name for function,
 // variable, etc.
-identifier = {
+identifier = @{
 	ASCII_ALPHA
 	~ ASCII_ALPHANUMERIC*
 }
@@ -61,9 +61,13 @@ comment = _{
 	~ remainder_of_line?
 }
 
-annotation_base = _{
+annotation_base_core = @{
 	"@"
 	~ identifier
+}
+
+annotation_base = _{
+	annotation_base_core
 }
 
 basic_annotation = {
