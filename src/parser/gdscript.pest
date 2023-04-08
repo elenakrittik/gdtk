@@ -11,7 +11,7 @@ WHITESPACE = _{ // silent rule defined as
 	" "         //  space character ( )
 }
 
-COMMENT = {
+COMMENT = _{
 	comment
 }
 
@@ -87,10 +87,42 @@ number = {
 	ASCII_DIGIT+
 }
 
+array = {
+	"["
+	~ (value ~ ","?)*
+	~ "]"
+}
+
+key_value = _{
+	value
+	~ ":"
+	~ value
+}
+
+dict = {
+	"{"
+	~ (key_value ~ ","?)*
+	~ "}"
+}
+
+lua_key_value = _{
+	identifier
+	~ "="
+	~ value
+}
+
+lua_dict = {
+	"{"
+	~ (lua_key_value ~ ","?)*
+	~ "}"
+}
+
 value = _{
 	string
 	| number
-	| identifier
+	| array
+	| dict
+	| lua_dict
 }
 
 typehint = {
@@ -104,11 +136,40 @@ var = {
 	~ ("=" ~ value)?
 }
 
+inferred_var = {
+	"var"
+	~ identifier
+	~ ":="
+	~ value
+}
+
+const = {
+	"const"
+	~ identifier
+	~ "="
+	~ value
+}
+
+class_name = {
+	"class_name"
+	~ identifier
+}
+
+extends = {
+	"extends"
+	~ identifier
+}
+
 statement = _{
 	annotation
 	| basic_annotation
+	| inferred_var
 	| var
+	| class_name
+	| extends
+	| const
 	| value
+	| identifier
 }
 
 file = _{           // silent rule defined as
