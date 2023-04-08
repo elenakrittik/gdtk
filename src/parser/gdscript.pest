@@ -11,6 +11,10 @@ WHITESPACE = _{ // silent rule defined as
 	" "         //  space character ( )
 }
 
+COMMENT = {
+	comment
+}
+
 // string defines a simple string rule
 // matches: "Hello!"
 // matches "Backslash: \\"
@@ -47,8 +51,8 @@ char = {       // rule defined as
 // identifier defines a valid name for function,
 // variable, etc.
 identifier = @{
-	ASCII_ALPHA
-	~ ASCII_ALPHANUMERIC*
+	(ASCII_ALPHA | "_")
+	~ (ASCII_ALPHANUMERIC | "_")*
 }
 
 remainder_of_line = _{
@@ -61,13 +65,9 @@ comment = _{
 	~ remainder_of_line?
 }
 
-annotation_base_core = @{
+annotation_base = ${
 	"@"
 	~ identifier
-}
-
-annotation_base = _{
-	annotation_base_core
 }
 
 basic_annotation = {
@@ -101,13 +101,11 @@ var = {
 	"var"
 	~ identifier
 	~ typehint?
-	~ "="
-	~ value
+	~ ("=" ~ value)?
 }
 
 statement = _{
-	comment
-	| annotation
+	annotation
 	| basic_annotation
 	| var
 	| value
