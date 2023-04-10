@@ -25,16 +25,16 @@ const ANSWER = 42
 const THE_NAME = "Charly"
 
 # Enums.
-# enum {UNIT_NEUTRAL, UNIT_ENEMY, UNIT_ALLY}
-# enum Named {THING_1, THING_2, ANOTHER_THING = -1}
+enum {UNIT_NEUTRAL, UNIT_ENEMY, UNIT_ALLY}
+enum Named {THING_1, THING_2, ANOTHER_THING = -1}
 
 # Built-in vector types.
-# var v2 = Vector2(1, 2)
-# var v3 = Vector3(1, 2, 3)
+var v2 = Vector2(1, 2)
+var v3 = Vector3(1, 2, 3)
 
 
 # Functions.
-# func some_function(param1, param2, param3):
+func some_function(param1, param2: int, param3):
 #     const local_const = 5
 # 
 #     if param1 < local_const:

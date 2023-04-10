@@ -84,7 +84,8 @@ annotation = {
 }
 
 number = {
-	ASCII_DIGIT+
+	"-"?
+	~ ASCII_DIGIT+
 }
 
 array = {
@@ -93,7 +94,7 @@ array = {
 	~ "]"
 }
 
-key_value = _{
+key_value = {
 	value
 	~ ":"
 	~ value
@@ -105,7 +106,7 @@ dict = {
 	~ "}"
 }
 
-lua_key_value = _{
+lua_key_value = {
 	identifier
 	~ "="
 	~ value
@@ -123,6 +124,7 @@ value = _{
 	| array
 	| dict
 	| lua_dict
+	| call
 }
 
 typehint = {
@@ -143,6 +145,19 @@ inferred_var = {
 	~ value
 }
 
+param = {
+	identifier
+	~ typehint?
+}
+
+func = {
+	"func"
+	~ identifier
+	~ "("
+	~ (param ~ ","?)*
+	~ "):"
+}
+
 const = {
 	"const"
 	~ identifier
@@ -160,6 +175,26 @@ extends = {
 	~ identifier
 }
 
+enum_key_value = {
+	identifier
+	~ ("=" ~ number)?
+}
+
+enum = {
+	"enum"
+	~ identifier?
+	~ "{"
+	~ (enum_key_value ~ ","?)*
+	~ "}"
+}
+
+call = {
+	identifier
+	~ "("
+	~ (value ~ ","?)*
+	~ ")"
+}
+
 statement = _{
 	annotation
 	| basic_annotation
@@ -168,17 +203,24 @@ statement = _{
 	| class_name
 	| extends
 	| const
+	| enum
+	| call
+	| func
 	| value
 	| identifier
 }
 
-file = _{           // silent rule defined as
-	SOI             //  start-of-input
-	~ "\n"*         //  followed by zero or more newlines
-	~ (             //  followed by a group defined as
-		statement*  //   zero or more statements
-		~ "\n"+     //   followed by one or more newlines
-	)*              //  repeated zero or more times
-	~ statement?    //  followed by an optional statement
-	~ EOI           //  followed by end-of-input
+code = _{
+	"\n"*
+     ~ (
+         statement*
+         ~ "\n"+
+	)*
+     ~ statement?
+}
+
+file = _{
+	SOI
+	~ code
+	~ EOI
 }
