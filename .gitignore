@@ -5,7 +5,4 @@
 
 .pdb
 
-.vscode
-
-# Mo idea how but still
-**/__pycache__/
+.git

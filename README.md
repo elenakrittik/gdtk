@@ -8,10 +8,12 @@ Planned features:
 
 ## Known issues
 
+<sup>this is essentially a public todo-list, don't mind me</sup>
+
 None for now :P
 
 ## Credits
 
 Greatly inspired by these projects:
-- Pawel Lampe's [godot-gdscript-toolkit](https;//github.com/Scony/godot-gdscriot-toolkit)
+- Pawel Lampe's [godot-gdscript-toolkit](https;//github.com/Scony/godot-gdscript-toolkit)
 - Paul Hocker's [gs-project-manager](https://gitlab.com/godot-stuff/gs-project-manager/)
