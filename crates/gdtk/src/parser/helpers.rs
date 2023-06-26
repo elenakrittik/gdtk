@@ -1,10 +1,15 @@
+use std::io::Read;
+
 use combine::{
     attempt, choice, eof, many,
     parser::char::{newline, spaces, string},
     Parser, Stream,
 };
+use sparsec::Sparsec;
 
 use crate::parser::meta::identifier;
+
+pub fn newline_<R: Read>(parser: Sparsec<R>) -> () {}
 
 pub fn newlines<Input>() -> impl Parser<Input>
 where
