@@ -1,0 +1,14 @@
+{
+	"Define combinator": {
+		"prefix": "combo",
+		"description": "Create a custom combinator",
+		"body": [
+			"pub fn ${1:name}<Input>() -> impl combine::Parser<Input, Output = ${2:()}>",
+			"where",
+			"    Input: combine::Stream<Token = char>",
+			"{",
+			"    $0",
+			"}"
+		]
+	}
+}
