@@ -16,4 +16,6 @@ pub enum ASTStatement {
 #[derive(Debug, PartialEq)]
 pub enum ASTValue {
     Int(i64),
+    Float(f64),
+    String(String),
 }

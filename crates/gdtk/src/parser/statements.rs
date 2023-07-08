@@ -1,57 +1,62 @@
-use combine::parser::char::spaces;
-use combine::{choice, many, optional, Parser, Stream};
+use std::io::Cursor;
+
+use sparsec::Sparsec;
+
+use crate::ast::ASTStatement;
 
 use super::values::value;
-use crate::ast::ASTStatement;
-use crate::parser::{
-    helpers::{newlines, simple_statement},
-    meta::comment,
-};
 
-pub fn statements<Input>() -> impl Parser<Input, Output = Vec<ASTStatement>>
-where
-    Input: Stream<Token = char>,
-{
-    many(
-        (statement(), optional(comment()), newlines().silent()).map(|(stmt, comm, _)| {
-            if let Some(cmt) = comm {
-                ASTStatement::Commented(Box::new(stmt), Box::new(cmt))
-            } else {
-                stmt
-            }
-        }),
-    )
+pub fn statement(line: String) -> anyhow::Result<ASTStatement> {
+    let binding = line.as_bytes();
+    let mut parser = Sparsec::new(Cursor::new(binding));
+
+    Ok(ASTStatement::Value(value(&mut parser)?))
 }
 
-pub fn statement<Input>() -> impl Parser<Input, Output = ASTStatement>
-where
-    Input: Stream<Token = char>,
-{
-    choice((
-        classname_statement(),
-        extends_statement(),
-        comment(),
-        value_statement(),
-    ))
-}
+// pub fn statements<Input>() -> impl Parser<Input, Output = Vec<ASTStatement>>
+// where
+//     Input: Stream<Token = char>,
+// {
+//     many(
+//         (statement(), optional(comment()), newlines().silent()).map(|(stmt, comm, _)| {
+//             if let Some(cmt) = comm {
+//                 ASTStatement::Commented(Box::new(stmt), Box::new(cmt))
+//             } else {
+//                 stmt
+//             }
+//         }),
+//     )
+// }
 
-pub fn classname_statement<Input>() -> impl Parser<Input, Output = ASTStatement>
-where
-    Input: Stream<Token = char>,
-{
-    simple_statement("class_name ").map(|(_, _, ident, _)| ASTStatement::ClassName(ident))
-}
+// pub fn statement<Input>() -> impl Parser<Input, Output = ASTStatement>
+// where
+//     Input: Stream<Token = char>,
+// {
+//     choice((
+//         classname_statement(),
+//         extends_statement(),
+//         comment(),
+//         value_statement(),
+//     ))
+// }
 
-pub fn extends_statement<Input>() -> impl Parser<Input, Output = ASTStatement>
-where
-    Input: Stream<Token = char>,
-{
-    simple_statement("extends ").map(|(_, _, ident, _)| ASTStatement::Extends(ident))
-}
+// pub fn classname_statement<Input>() -> impl Parser<Input, Output = ASTStatement>
+// where
+//     Input: Stream<Token = char>,
+// {
+//     simple_statement("class_name ").map(|(_, _, ident, _)| ASTStatement::ClassName(ident))
+// }
 
-pub fn value_statement<Input>() -> impl combine::Parser<Input, Output = ASTStatement>
-where
-    Input: combine::Stream<Token = char>,
-{
-    (value(), spaces()).map(|(val, _)| ASTStatement::Value(val))
-}
+// pub fn extends_statement<Input>() -> impl Parser<Input, Output = ASTStatement>
+// where
+//     Input: Stream<Token = char>,
+// {
+//     simple_statement("extends ").map(|(_, _, ident, _)| ASTStatement::Extends(ident))
+// }
+
+// pub fn value_statement<Input>() -> impl combine::Parser<Input, Output = ASTStatement>
+// where
+//     Input: combine::Stream<Token = char>,
+// {
+//     (value(), spaces()).map(|(val, _)| ASTStatement::Value(val))
+// }

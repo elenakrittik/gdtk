@@ -3,11 +3,21 @@ pub mod meta;
 pub mod statements;
 pub mod values;
 
+use self::statements::statement;
 use crate::ast::ASTModule;
-use crate::parser::{helpers::newlines, statements::statements};
 
 pub fn parse(s: &mut String) -> anyhow::Result<ASTModule> {
-    
+    sparsec::from_string!(parser, s);
 
-    Ok(ASTModule { statements: vec![] })
+    let mut stmts = vec![];
+
+    while let Ok(line) = parser.read_until("\n") {
+        if line.is_empty() {
+            continue;
+        };
+
+        stmts.push(statement(line)?);
+    }
+
+    Ok(ASTModule { statements: stmts })
 }

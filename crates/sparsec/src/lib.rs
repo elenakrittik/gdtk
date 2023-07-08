@@ -1,3 +1,8 @@
+#![feature(decl_macro)]
+#![feature(trait_alias)]
+
+pub mod charstream;
+
 use std::io::Read;
 
 use thiserror::Error;
@@ -12,30 +17,71 @@ pub enum SparsecError {
 
     #[error("Internal parser error. It's not your fault, please report this at https://github.com/elenakrittik/gdtk/issues/")]
     InternalParserError { details: String },
+
+    #[error("All choice subparsers failed.")]
+    ChoiceFailed,
+
+    #[error("Unexpected character encountered.")]
+    UnexpectedCharacter {
+        expected: char,
+        encountered: char,
+    },
 }
 
-pub struct Sparsec<'a, R: Read> {
-    pub stream: &'a mut R,
+pub type Stream = crate::charstream::CharStream;
+
+#[derive(Debug, Clone)]
+pub struct Sparsec {
+    pub stream: Stream,
 }
 
-impl<'a, R: Read> Sparsec<'a, R> {
+type ChoiceFnType<T, E> = fn(&mut Sparsec) -> Result<T, E>;
+
+impl Sparsec {
     /// Returns
-    pub fn new(stream: &'a mut R) -> Self {
-        Self { stream }
+    pub fn new(stream: Stream) -> Self {
+        Self {
+            stream,
+        }
     }
 
-    pub fn read(&mut self, count: usize) -> Result<String, SparsecError> {
-        let mut d = vec![0_u8];
+    /// Read `count` characters and concatenate into a [String].
+    pub fn read_string(&mut self, count: usize) -> Result<String, SparsecError> {
+        Ok(self.read(count)?.iter().collect())
+    }
+
+    pub fn read(&mut self, count: usize) -> Result<Vec<char>, SparsecError> {
+        let mut d: Vec<u8> = Vec::new();
         d.resize(count, 0);
         let buf = d.as_mut_slice();
-
         self.stream
             .read_exact(buf)
             .map_err(|e| SparsecError::InternalParserError {
                 details: e.to_string(),
             })?;
+        Ok(buf.iter_mut().map(|v| *v as char).collect())
+    }
 
-        utf8_string(buf)
+    /// Optimized version of [Sparsec::read] for reading a single character.
+    pub fn read_one(&mut self) -> Result<char, SparsecError> {
+        let mut buf = [0_u8];
+        self.stream
+            .read_exact(&mut buf)
+            .map_err(|e| SparsecError::InternalParserError {
+                details: e.to_string(),
+            })?;
+        char::from_u32(*buf.first().unwrap() as u32)
+            .ok_or(SparsecError::InternalParserError { details: "".into() })
+    }
+
+    pub fn read_one_exact(&mut self, expected: &char) -> Result<char, SparsecError> {
+        let chr = self.read_one()?;
+
+        if chr != *expected {
+            return Err(SparsecError::UnexpectedCharacter { expected: *expected, encountered: chr });
+        }
+
+        Ok(chr)
     }
 
     pub fn read_until(&mut self, until: &str) -> Result<String, SparsecError> {
@@ -43,26 +89,46 @@ impl<'a, R: Read> Sparsec<'a, R> {
             return Ok("".to_string());
         }
 
-        let mut buf = [0_u8];
-        let mut utf8: Vec<u8> = Vec::new();
-        let hint = until.chars().last().unwrap() as u8;
+        let mut chars: Vec<char> = Vec::new();
+        let hint = until.chars().last().unwrap(); // TODO: proper error msg
 
-        while self.stream.read_exact(&mut buf).is_ok() {
-            let byte = *buf.first().unwrap();
-            utf8.push(byte);
+        while let Ok(chr) = self.read_one() {
+            chars.push(chr);
 
-            if byte == hint {
-                let s = utf8_string(&utf8)?;
+            if chr == hint {
+                let s = (&chars).iter().collect::<String>();
                 let split = s.split(until).collect::<Vec<&str>>();
 
                 if split.len() >= 2 {
-                    utf8 = utf8[..utf8.len() - 1].to_vec();
+                    chars = chars[..chars.len() - 1].to_vec();
                     break;
                 }
             }
         }
 
-        utf8_string(&utf8)
+        Ok(chars.iter().collect())
+    }
+
+    /// Consume input as long as `pred(character)` returns `true`.
+    /// 
+    /// Clone count: 1
+    pub fn read_while(&mut self, pred: fn(&char) -> bool) -> Result<String, SparsecError> {
+        let mut result = String::new();
+        let mut safe = self.clone();
+        let mut num_read = 0;
+
+        while let Ok(v) = safe.read_one() {
+            if pred(&v) {
+                result.push(v);
+                num_read += 1;
+            } else {
+                break;
+            }
+        }
+
+        self.read(num_read)?;
+
+        Ok(result)
     }
 
     /// Read all of the remaining stream data.
@@ -70,13 +136,10 @@ impl<'a, R: Read> Sparsec<'a, R> {
     /// # Examples
     ///
     /// ```
-    /// use fractparse::Sparsec;
+    /// sparsec::from_string!(parser, "AliceWoodhood");
     ///
-    /// let mut stream = "AliceWoodhood".as_bytes();
-    /// let mut sparsec = Sparsec::new(&mut stream);
-    ///
-    /// sparsec.read(5).unwrap();
-    /// assert_eq!("Woodhood", sparsec.read_remaining().unwrap());
+    /// parser.read(5).unwrap();
+    /// assert_eq!("Woodhood", parser.read_remaining().unwrap());
     /// ```
     pub fn read_remaining(&mut self) -> Result<String, SparsecError> {
         let mut s = String::new();
@@ -87,6 +150,16 @@ impl<'a, R: Read> Sparsec<'a, R> {
             })?;
         Ok(s)
     }
+
+    pub fn choice<T, E>(&mut self, fns: Vec<ChoiceFnType<T, E>>) -> Result<T, SparsecError> {
+        for func in fns {
+            if let Ok(val) = func(&mut self.clone()) {
+                return Ok(val);
+            }
+        }
+
+        Err(SparsecError::ChoiceFailed)
+    }
 }
 
 pub fn utf8_string(utf8: &[u8]) -> Result<String, SparsecError> {
@@ -95,23 +168,103 @@ pub fn utf8_string(utf8: &[u8]) -> Result<String, SparsecError> {
     })
 }
 
+/// Helper macro for creating a [Sparsec] instance from a [String].
+///
+/// # Examples
+///
+/// ```
+/// sparsec::from_string!(parser, "10");
+///
+/// assert_eq!("10", parser.read_string(2).unwrap())
+/// ```
+pub macro from_string($var: ident, $s: expr) {
+    let mut $var = $crate::Sparsec::new($crate::charstream::CharStream::new(&$s.to_string()));
+}
+
+/// Helper macro for use in tests.
+/// 
+/// ```
+/// fn int(parser: &mut sparsec::Sparsec) -> Result<i64, ()> {
+///     let raw = parser.read_while(|c| c.is_ascii_digit()).map_err(|_| ())?;
+///     let num = raw.parse().map_err(|_| ())?;
+///     Ok(num)
+/// }
+/// 
+/// sparsec::test_eq!(int, "10", 10);
+/// ```
+pub macro test_eq($func: ident, $input: expr, $value: expr) {
+    {
+        $crate::from_string!(parser, $input);
+        assert_eq!($func(&mut parser).unwrap(), $value);
+    }
+}
+
+/// Helper macro for use in tests.
+/// 
+/// ```
+/// fn int(parser: &mut sparsec::Sparsec) -> Result<i64, ()> {
+///     let raw = parser.read_while(|c| c.is_ascii_digit()).map_err(|_| ())?;
+///     let num = raw.parse().map_err(|_| ())?;
+///     Ok(num)
+/// }
+/// 
+/// sparsec::test_fails!(int, "not an integer");
+/// ```
+pub macro test_fails($func: ident, $input: expr) {
+    {
+        $crate::from_string!(parser, $input);
+        assert!($func(&mut parser).is_err());
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::Sparsec;
 
     #[test]
-    fn test_read_one() {
-        let mut stream = "10".as_bytes();
-        let mut parser = Sparsec::new(&mut stream);
+    fn test_choice_double() {
+        crate::from_string!(parser, "kate");
 
-        assert_eq!("1", parser.read(1).unwrap());
+        fn lena(parser: &mut Sparsec) -> Result<String, ()> {
+            let s = parser.read_string(4).map_err(|e| println!("{:?}", e))?;
+            if s == "lena" {
+                Ok(s)
+            } else {
+                Err(())
+            }
+        }
+
+        fn kate(parser: &mut Sparsec) -> Result<String, ()> {
+            let s = parser.read_string(4).map_err(|e| println!("{:?}", e))?;
+            if s == "kate" {
+                Ok(s)
+            } else {
+                Err(())
+            }
+        }
+
+        assert_eq!("kate", parser.choice(vec![lena, kate]).unwrap());
+    }
+
+    #[test]
+    fn test_read_while() {
+        crate::from_string!(parser, "1000abc");
+
+        assert_eq!("1000", parser.read_while(|c| char::is_ascii_digit(c)).unwrap());
+        assert_eq!("abc", parser.read_remaining().unwrap());
+    }
+
+    #[test]
+    fn test_read_one() {
+        crate::from_string!(parser, "10");
+
+        assert_eq!('1', parser.read_one().unwrap());
         assert_eq!("0", parser.read_remaining().unwrap());
     }
 
     #[test]
     fn test_read_until_sep_present() {
-        let mut stream = "100.02".as_bytes();
-        let mut parser = Sparsec::new(&mut stream);
+        crate::from_string!(parser, "100.02");
 
         assert_eq!("100", parser.read_until(".").unwrap());
         assert_eq!("02", parser.read_remaining().unwrap());
@@ -119,8 +272,7 @@ mod tests {
 
     #[test]
     fn test_read_until_sep_not_present() {
-        let mut stream = "100".as_bytes();
-        let mut parser = Sparsec::new(&mut stream);
+        crate::from_string!(parser, "100");
 
         assert_eq!("100", parser.read_until(".").unwrap());
         assert_eq!("", parser.read_remaining().unwrap());
@@ -128,8 +280,7 @@ mod tests {
 
     #[test]
     fn test_read_until_sep_trailing() {
-        let mut stream = "100.".as_bytes();
-        let mut parser = Sparsec::new(&mut stream);
+        crate::from_string!(parser, "100.");
 
         assert_eq!("100", parser.read_until(".").unwrap());
         assert_eq!("", parser.read_remaining().unwrap());
@@ -137,8 +288,7 @@ mod tests {
 
     #[test]
     fn test_read_until_sep_preceding() {
-        let mut stream = ".02".as_bytes();
-        let mut parser = Sparsec::new(&mut stream);
+        crate::from_string!(parser, ".02");
 
         assert_eq!("", parser.read_until(".").unwrap());
         assert_eq!("02", parser.read_remaining().unwrap());

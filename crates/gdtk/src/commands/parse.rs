@@ -14,9 +14,9 @@ pub fn run(file: &String) -> anyhow::Result<()> {
         Err(e) => {
             return {
                 // crate::display::display_ariadne_traceback(file, &content, e);
-                eprintln!("{:?}", e);
+                eprintln!("{:#?}", e);
                 Ok(())
-            }
+            };
         }
     };
 
