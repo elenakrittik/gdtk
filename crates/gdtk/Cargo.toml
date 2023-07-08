@@ -12,4 +12,4 @@ combine = "4.6.6"
 human-panic = "1.1.5"
 sparsec = { version = "0.1.0", path = "../sparsec" }
 sprout = "1.0.0"
-thiserror = "1.0.40"
+thiserror = "1.0.43"
