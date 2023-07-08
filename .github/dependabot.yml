@@ -1,0 +1,11 @@
+version: 2
+updates:
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      time: "03:00"
+    reviewers:
+      - "elenakrittik"
+    commit-message:
+      prefix: "deps"
