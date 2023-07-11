@@ -1,14 +1,9 @@
-use std::io::Cursor;
-
-use sparsec::Sparsec;
-
 use crate::ast::ASTStatement;
 
 use super::values::value;
 
 pub fn statement(line: String) -> anyhow::Result<ASTStatement> {
-    let binding = line.as_bytes();
-    let mut parser = Sparsec::new(Cursor::new(binding));
+    sparsec::from_string!(parser, line);
 
     Ok(ASTStatement::Value(value(&mut parser)?))
 }

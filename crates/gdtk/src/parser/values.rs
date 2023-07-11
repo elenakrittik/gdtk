@@ -30,13 +30,13 @@ fn integer(parser: &mut Sparsec, allow_minus: bool) -> Result<i64, anyhow::Error
     if allow_minus {
         let minuses = parser.read_while(|c| *c == '-')?;
         let neg = minuses.len() % 2 == 1;
-        let mut val: i64 = parser.read_while(|c| c.is_ascii_digit())?.parse()?;
+        let mut val: i64 = parser.read_while(|c| c.is_ascii_digit())?.iter().collect::<String>().parse()?;
 
         if neg { val = -val };
 
         Ok(val)
     } else {
-        Ok(parser.read_while(|c| c.is_ascii_digit())?.parse()?)
+        Ok(parser.read_while(|c| c.is_ascii_digit())?.iter().collect::<String>().parse()?)
     }
 }
 
@@ -45,7 +45,7 @@ pub fn string(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
     let content = parser.read_until("\"")?;
     parser.read_one_exact(&'"')?;
 
-    Ok(ASTValue::String(content))
+    Ok(ASTValue::String(content.iter().collect()))
 }
 
 #[cfg(test)]

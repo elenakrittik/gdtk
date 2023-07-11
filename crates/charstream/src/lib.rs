@@ -10,6 +10,7 @@ pub enum CharStreamError {
     OutOfBoundsAccess,
 }
 
+#[derive(Debug, Clone)]
 pub struct CharStream {
     inner: Vec<char>,
     pos: usize,
@@ -22,8 +23,22 @@ impl CharStream {
         CharStream { pos: 0, len: chrs.len(), inner: chrs }
     }
 
-    pub fn get(&self) -> Result<&char, CharStreamError> {
-        self.inner.get(self.pos).ok_or(CharStreamError::OutOfBoundsAccess)
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn remaining<'a>(&mut self) -> Result<Vec<char>, CharStreamError> {
+        let mut chars = Vec::new();
+
+        while let Ok(c) = self.next() {
+            chars.push(c)
+        }
+
+        Ok(chars)
+    }
+
+    pub fn get(&self) -> Result<char, CharStreamError> {
+        self.inner.get(self.pos).ok_or(CharStreamError::OutOfBoundsAccess).map(|v| *v)
     }
 
     fn safe_inc(&mut self, count: usize) -> Result<(), CharStreamError> {
@@ -46,12 +61,12 @@ impl CharStream {
         Ok(())
     }
 
-    pub fn next(&mut self) -> Result<&char, CharStreamError> {
+    pub fn next(&mut self) -> Result<char, CharStreamError> {
         self.safe_inc(1)?;
         self.get()
     }
 
-    pub fn prev(&mut self) -> Result<&char, CharStreamError> {
+    pub fn prev(&mut self) -> Result<char, CharStreamError> {
         self.safe_dec(1)?;
         self.get()
     }

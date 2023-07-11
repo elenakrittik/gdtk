@@ -16,7 +16,7 @@ pub fn parse(s: &mut String) -> anyhow::Result<ASTModule> {
             continue;
         };
 
-        stmts.push(statement(line)?);
+        stmts.push(statement(line.iter().collect())?);
     }
 
     Ok(ASTModule { statements: stmts })
