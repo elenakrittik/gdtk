@@ -248,9 +248,9 @@ dependencies = [
  "anyhow",
  "ariadne",
  "clap",
- "colored",
  "combine",
  "human-panic",
+ "owo-colors",
  "sparsec",
  "sprout",
  "thiserror",
@@ -413,6 +413,12 @@ dependencies = [
  "serde",
  "winapi",
 ]
+
+[[package]]
+name = "owo-colors"
+version = "2.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a61765925aec40abdb23812a3a1a01fafc6ffb9da22768b2ce665a9e84e527c"
 
 [[package]]
 name = "petgraph"

@@ -1,7 +1,7 @@
 //! Utility functions for consistent output displaying.
 
 use ariadne::{ColorGenerator, Source};
-use colored::Colorize;
+// use owo_colors::OwoColorize; // TODO
 use combine::{easy::Errors, stream::PointerOffset};
 
 /// Prints an error using format_error and eprintln
@@ -18,14 +18,14 @@ pub fn format_error(text: String) -> String {
 
 /// Colorize text with error color.
 #[inline]
-pub fn error(text: &str) -> colored::ColoredString {
-    text.red().bold()
+pub fn error(text: &str) -> &str {
+    text // TODO
 }
 
 /// Colorize text with action (e.g., a command or a "Formatting" status message) color.
 #[inline]
-pub fn action(text: &str) -> colored::ColoredString {
-    text.green().bold()
+pub fn action(text: &str) -> &str {
+    text // TODO
 }
 
 /// Colorize text with thing (e.g., a path or any other "value") color.

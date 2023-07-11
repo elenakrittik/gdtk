@@ -7,7 +7,7 @@ edition = "2021"
 anyhow = "1.0.71"
 ariadne = "0.3.0"
 clap = { version = "4.1.11", features = ["derive"] }
-colored = "2.0.0"
+owo-colors = "2.0.0"
 combine = "4.6.6"
 human-panic = "1.1.5"
 sparsec = { version = "0.1.0", path = "../sparsec" }
