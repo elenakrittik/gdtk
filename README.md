@@ -1,4 +1,4 @@
-# gdtk
+# Godot ToolKit
 
 `gdtk` aims to be *the*<sup>tm</sup> ultimate<sup>tm</sup>, all-in-one<sup>tm</sup> toolkit<sup>tm</sup> for Godot developers. No matter what you're trying to build,
 `gdtk` is here to help. It can\* manage your dependencies (both addons and native extensions like godot-rust), auto-format your GDScript
@@ -15,7 +15,7 @@ this is essentially a public todo-list
 - [ ] Parser
 - [ ] Formatter
 - [ ] Linter
-- [ ] Project and dependecy manager
+- [ ] Project and dependency manager
 - - [ ] Might also include support for GPM.
 - [ ] Interpreter (with REPL)
 - [ ] Testing framework
