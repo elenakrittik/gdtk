@@ -18,16 +18,17 @@ pub struct CharStream {
 }
 
 impl CharStream {
-    pub fn new(content: &String) -> CharStream {
+    pub fn new(content: &str) -> CharStream {
         let chrs: Vec<char> = content.chars().collect();
         CharStream { pos: 0, len: chrs.len(), inner: chrs }
     }
 
+    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.len
     }
 
-    pub fn remaining<'a>(&mut self) -> Result<Vec<char>, CharStreamError> {
+    pub fn remaining(&mut self) -> Result<Vec<char>, CharStreamError> {
         let mut chars = Vec::new();
 
         while let Ok(c) = self.next() {
@@ -61,6 +62,7 @@ impl CharStream {
         Ok(())
     }
 
+    #[allow(clippy::should_implement_trait)]
     pub fn next(&mut self) -> Result<char, CharStreamError> {
         self.safe_inc(1)?;
         self.get()
@@ -74,10 +76,11 @@ impl CharStream {
     pub fn goto(&mut self, pos: usize) -> Result<(), CharStreamError> {
         let diff = pos as i64 - self.pos as i64;
 
+        #[allow(clippy::comparison_chain)]
         if diff > 0 {
             self.safe_inc(diff as usize)
         } else if diff < 0 {
-            self.safe_dec(diff.abs() as usize)
+            self.safe_dec(diff.unsigned_abs() as usize)
         } else {
             Ok(())
         }

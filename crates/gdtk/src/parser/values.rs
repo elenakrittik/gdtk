@@ -10,8 +10,8 @@ pub fn int(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
     Ok(ASTValue::Int(integer(parser, true)?))
 }
 
-pub fn float(mut parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
-    let integer_ = integer(&mut parser, true)?;
+pub fn float(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
+    let integer_ = integer(parser, true)?;
     
     let dot = parser.read_one()?;
     
@@ -19,14 +19,14 @@ pub fn float(mut parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
         anyhow::bail!("Expected '.', found");
     }
 
-    let fraction = integer(&mut parser, false)?;
+    let fraction = integer(parser, false)?;
 
     let f = format!("{}.{}", integer_, fraction).parse()?;
 
     Ok(ASTValue::Float(f))
 }
 
-fn integer(parser: &mut Sparsec, allow_minus: bool) -> Result<i64, anyhow::Error> {
+fn integer(parser: &mut Sparsec, allow_minus: bool) -> anyhow::Result<i64, anyhow::Error> {
     if allow_minus {
         let minuses = parser.read_while(|c| *c == '-')?;
         let neg = minuses.len() % 2 == 1;
