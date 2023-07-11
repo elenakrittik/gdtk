@@ -12,9 +12,9 @@ pub fn int(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
 
 pub fn float(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
     let integer_ = integer(parser, true)?;
-    
+
     let dot = parser.read_one()?;
-    
+
     if dot != '.' {
         anyhow::bail!("Expected '.', found");
     }
@@ -30,13 +30,23 @@ fn integer(parser: &mut Sparsec, allow_minus: bool) -> anyhow::Result<i64, anyho
     if allow_minus {
         let minuses = parser.read_while(|c| *c == '-')?;
         let neg = minuses.len() % 2 == 1;
-        let mut val: i64 = parser.read_while(|c| c.is_ascii_digit())?.iter().collect::<String>().parse()?;
+        let mut val: i64 = parser
+            .read_while(|c| c.is_ascii_digit())?
+            .iter()
+            .collect::<String>()
+            .parse()?;
 
-        if neg { val = -val };
+        if neg {
+            val = -val
+        };
 
         Ok(val)
     } else {
-        Ok(parser.read_while(|c| c.is_ascii_digit())?.iter().collect::<String>().parse()?)
+        Ok(parser
+            .read_while(|c| c.is_ascii_digit())?
+            .iter()
+            .collect::<String>()
+            .parse()?)
     }
 }
 

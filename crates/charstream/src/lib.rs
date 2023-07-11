@@ -20,7 +20,11 @@ pub struct CharStream {
 impl CharStream {
     pub fn new(content: &str) -> CharStream {
         let chrs: Vec<char> = content.chars().collect();
-        CharStream { pos: 0, len: chrs.len(), inner: chrs }
+        CharStream {
+            pos: 0,
+            len: chrs.len(),
+            inner: chrs,
+        }
     }
 
     #[allow(clippy::len_without_is_empty)]
@@ -39,11 +43,17 @@ impl CharStream {
     }
 
     pub fn get(&self) -> Result<char, CharStreamError> {
-        self.inner.get(self.pos).ok_or(CharStreamError::OutOfBoundsAccess).map(|v| *v)
+        self.inner
+            .get(self.pos)
+            .ok_or(CharStreamError::OutOfBoundsAccess)
+            .map(|v| *v)
     }
 
     fn safe_inc(&mut self, count: usize) -> Result<(), CharStreamError> {
-        self.pos = self.pos.checked_add(count).ok_or(CharStreamError::EndOfInput)?;
+        self.pos = self
+            .pos
+            .checked_add(count)
+            .ok_or(CharStreamError::EndOfInput)?;
 
         if self.pos >= self.len {
             self.pos = self.len - 1; // reset back to the end
@@ -54,11 +64,14 @@ impl CharStream {
     }
 
     fn safe_dec(&mut self, count: usize) -> Result<(), CharStreamError> {
-        self.pos = self.pos.checked_sub(count).ok_or(CharStreamError::StartOfInput)?;
+        self.pos = self
+            .pos
+            .checked_sub(count)
+            .ok_or(CharStreamError::StartOfInput)?;
 
         // usize is always positive so no need to check against pos < len here
         // (because len >= 0)
-    
+
         Ok(())
     }
 

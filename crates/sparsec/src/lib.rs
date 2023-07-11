@@ -1,13 +1,13 @@
 #![feature(decl_macro)]
 #![feature(trait_alias)]
 
-mod utils;
 mod macros;
+mod utils;
 
 pub use charstream;
-pub use crate::macros::*;
-
 use thiserror::Error;
+
+pub use crate::macros::*;
 
 #[derive(Debug, Error)]
 pub enum SparsecError {
@@ -30,10 +30,7 @@ pub enum SparsecError {
     ChoiceFailed,
 
     #[error("Unexpected character encountered.")]
-    UnexpectedCharacter {
-        expected: char,
-        encountered: char,
-    },
+    UnexpectedCharacter { expected: char, encountered: char },
 }
 
 pub type Stream = charstream::CharStream;
@@ -48,9 +45,7 @@ type ChoiceFnType<T, E> = fn(&mut Sparsec) -> Result<T, E>;
 impl Sparsec {
     /// Returns
     pub fn new(stream: Stream) -> Self {
-        Self {
-            stream,
-        }
+        Self { stream }
     }
 
     /// Read `count` characters and concatenate into a [String].
@@ -78,7 +73,10 @@ impl Sparsec {
         let chr = self.read_one()?;
 
         if chr != *expected {
-            return Err(SparsecError::UnexpectedCharacter { expected: *expected, encountered: chr });
+            return Err(SparsecError::UnexpectedCharacter {
+                expected: *expected,
+                encountered: chr,
+            });
         }
 
         Ok(chr)
@@ -110,7 +108,7 @@ impl Sparsec {
     }
 
     /// Consume input as long as `pred(character)` returns `true`.
-    /// 
+    ///
     /// Clone count: 1
     pub fn read_while(&mut self, pred: fn(&char) -> bool) -> Result<Vec<char>, SparsecError> {
         let mut result = Vec::new();
@@ -173,7 +171,9 @@ fn map_charstream_error(e: charstream::CharStreamError) -> SparsecError {
     match e {
         charstream::CharStreamError::EndOfInput => SparsecError::EndOfInput,
         charstream::CharStreamError::StartOfInput => SparsecError::StartOfInput,
-        _ => SparsecError::InternalParserError { details: e.to_string() },
+        _ => SparsecError::InternalParserError {
+            details: e.to_string(),
+        },
     }
 }
 
