@@ -8,8 +8,5 @@ anyhow = "1.0.71"
 ariadne = "0.3.0"
 clap = { version = "4.3.11", features = ["derive"] }
 owo-colors = "2.0.0"
-combine = "4.6.6"
-human-panic = "1.1.5"
 sparsec = { version = "0.1.0", path = "../sparsec" }
-sprout = "1.0.0"
 thiserror = "1.0.40"
