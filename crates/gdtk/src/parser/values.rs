@@ -2,7 +2,7 @@ use sparsec::Sparsec;
 
 use crate::ast::ASTValue;
 
-pub fn value(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
+pub fn value(_parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
     // Ok(parser.choice(vec![float, int, string])?)
     Ok(ASTValue::Float(15.01))
 }

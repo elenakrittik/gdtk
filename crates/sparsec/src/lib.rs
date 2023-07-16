@@ -15,7 +15,7 @@ pub struct Sparsec<'a> {
     pub stream: CharStream<'a>,
 }
 
-type ChoiceFn<T> = fn(&Sparsec) -> Result<T, error::SparsecError>;
+// type ChoiceFn<T> = fn(&Sparsec) -> Result<T, error::SparsecError>;
 type MutChoiceFn<T> = fn(&mut Sparsec) -> Result<T, error::SparsecError>;
 
 impl<'a> Sparsec<'a> {
@@ -42,7 +42,7 @@ impl<'a> Sparsec<'a> {
 
     /// Optimized version of [read](crate::Sparsec::read) for reading a single character.
     pub fn read_one(&mut self) -> Result<char, error::SparsecError> {
-        self.stream.next().map_err(map_charstream_error)
+        self.stream.nextr().map_err(map_charstream_error)
     }
 
     /// Like [read_one](crate::Sparsec::read_one), but additionally ensures that the received character is the

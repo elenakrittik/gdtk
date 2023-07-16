@@ -40,44 +40,44 @@ pub fn path(text: &String) -> &String {
 // ) {
 //     let err = e.map_position(|p| p.translate_position(input));
 
-   // let mut unexpected = String::new();
-   // let mut expected = String::new();
+// let mut unexpected = String::new();
+// let mut expected = String::new();
 
- //   let mut colors = ColorGenerator::new();
+//   let mut colors = ColorGenerator::new();
 //    let expected_color = colors.next();
-    //let unexpected_color = colors.next();
+//let unexpected_color = colors.next();
 
-  //  for error in &err.errors {
+//  for error in &err.errors {
 //        match error {
-            //combine::easy::Error::Unexpected(info) => {
-          //      unexpected = format!(
-        //            "{}, {}",
-      //              unexpected,
-    //                unexpected_color.paint(info.to_string())
-  //              )
+//combine::easy::Error::Unexpected(info) => {
+//      unexpected = format!(
+//            "{}, {}",
+//              unexpected,
+//                unexpected_color.paint(info.to_string())
+//              )
 //            }
-           // combine::easy::Error::Expected(info) => {
-              //  expected = format!("{}, {}", expected, expected_color.paint(info.to_string()))
-         //   }
-       //     _ => (),
-     //   }
-   // }
+// combine::easy::Error::Expected(info) => {
+//  expected = format!("{}, {}", expected, expected_color.paint(info.to_string()))
+//   }
+//     _ => (),
+//   }
+// }
 
- //   expected = "Expected ".to_owned() + &expected;
-    //unexpected = "Unexpected ".to_owned() + &unexpected;
+//   expected = "Expected ".to_owned() + &expected;
+//unexpected = "Unexpected ".to_owned() + &unexpected;
 
-  //  ariadne::Report::build(ariadne::ReportKind::Error, input_name, err.position)
+//  ariadne::Report::build(ariadne::ReportKind::Error, input_name, err.position)
 //        .with_code("E0001")
-        //.with_message("Invalid syntax")
-      //  .with_label(
-    //        ariadne::Label::new((input_name, err.position..(err.position + 1)))
-  //              .with_message(unexpected)
+//.with_message("Invalid syntax")
+//  .with_label(
+//        ariadne::Label::new((input_name, err.position..(err.position + 1)))
+//              .with_message(unexpected)
 //                .with_color(unexpected_color),
-    //  )
-    //    .with_note(expected)
-  //      .finish()
+//  )
+//    .with_note(expected)
+//      .finish()
 //        .eprint((input_name, Source:://from(input)))
-  //      .expect("something");
+//      .expect("something");
 //
-  //  println!("{:?}", &err);
+//  println!("{:?}", &err);
 //}
