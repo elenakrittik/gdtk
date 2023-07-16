@@ -1,60 +1,36 @@
 #![feature(decl_macro)]
-#![feature(trait_alias)]
 
 mod macros;
 mod utils;
 
 pub use charstream;
-use thiserror::Error;
+use charstream::CharStream;
 
 pub use crate::macros::*;
 
-#[derive(Debug, Error)]
-pub enum SparsecError {
-    #[error("EOF reached while trying to read.")]
-    EndOfFile,
-
-    #[error("End-of-input reached while trying to read.")]
-    EndOfInput,
-
-    #[error("Start-of-input reached while trying to read.")]
-    StartOfInput,
-
-    #[error("Invalid argument(s) provided.")]
-    BadArguments { reason: &'static str },
-
-    #[error("Internal parser error. It's not your fault, please report this at https://github.com/elenakrittik/gdtk/issues/")]
-    InternalParserError { details: String },
-
-    #[error("All choice subparsers failed.")]
-    ChoiceFailed,
-
-    #[error("Unexpected character encountered.")]
-    UnexpectedCharacter { expected: char, encountered: char },
-}
-
-pub type Stream = charstream::CharStream;
+pub mod modname;
 
 #[derive(Debug, Clone)]
 pub struct Sparsec {
-    pub stream: Stream,
+    pub stream: CharStream,
 }
 
-type ChoiceFnType<T, E> = fn(&mut Sparsec) -> Result<T, E>;
+type ChoiceFn<T> = fn(&Sparsec) -> Result<T, modname::SparsecError>;
+type MutChoiceFn<T> = fn(&mut Sparsec) -> Result<T, modname::SparsecError>;
 
 impl Sparsec {
-    /// Returns
-    pub fn new(stream: Stream) -> Self {
+    /// Returns a new [Sparsec] instance.
+    pub fn new(stream: CharStream) -> Self {
         Self { stream }
     }
 
     /// Read `count` characters and concatenate into a [String].
-    pub fn read_string(&mut self, count: usize) -> Result<String, SparsecError> {
+    pub fn read_string(&mut self, count: usize) -> Result<String, modname::SparsecError> {
         Ok(self.read(count)?.iter().collect())
     }
 
     /// Read `count` characters.
-    pub fn read(&mut self, count: usize) -> Result<Vec<char>, SparsecError> {
+    pub fn read(&mut self, count: usize) -> Result<Vec<char>, modname::SparsecError> {
         let mut s = Vec::new();
 
         for _ in 0..count {
@@ -65,15 +41,17 @@ impl Sparsec {
     }
 
     /// Optimized version of [read] for reading a single character.
-    pub fn read_one(&mut self) -> Result<char, SparsecError> {
+    pub fn read_one(&mut self) -> Result<char, modname::SparsecError> {
         self.stream.next().map_err(map_charstream_error)
     }
 
-    pub fn read_one_exact(&mut self, expected: &char) -> Result<char, SparsecError> {
+    /// Like [read_one], but additionally ensures that the received character is the
+    /// same as the expected one. If not, raises [SparsecError::UnexpectedCharacter].
+    pub fn read_one_exact(&mut self, expected: &char) -> Result<char, modname::SparsecError> {
         let chr = self.read_one()?;
 
         if chr != *expected {
-            return Err(SparsecError::UnexpectedCharacter {
+            return Err(modname::SparsecError::UnexpectedCharacter {
                 expected: *expected,
                 encountered: chr,
             });
@@ -82,7 +60,7 @@ impl Sparsec {
         Ok(chr)
     }
 
-    pub fn read_until(&mut self, until: &str) -> Result<Vec<char>, SparsecError> {
+    pub fn read_until(&mut self, until: &str) -> Result<Vec<char>, modname::SparsecError> {
         if until.chars().count() < 1 {
             return Ok(vec![]);
         }
@@ -110,7 +88,10 @@ impl Sparsec {
     /// Consume input as long as `pred(character)` returns `true`.
     ///
     /// Clone count: 1
-    pub fn read_while(&mut self, pred: fn(&char) -> bool) -> Result<Vec<char>, SparsecError> {
+    pub fn read_while(
+        &mut self,
+        pred: fn(&char) -> bool,
+    ) -> Result<Vec<char>, modname::SparsecError> {
         let mut result = Vec::new();
         let mut safe = self.clone();
         let mut num_read = 0;
@@ -139,18 +120,21 @@ impl Sparsec {
     /// parser.read(5).unwrap();
     /// assert_eq!("Woodhood", parser.read_remaining().unwrap());
     /// ```
-    pub fn read_remaining(&mut self) -> Result<Vec<char>, SparsecError> {
+    pub fn read_remaining(&mut self) -> Result<Vec<char>, modname::SparsecError> {
         self.stream.remaining().map_err(map_charstream_error)
     }
 
-    pub fn choice<T, E>(&mut self, fns: Vec<ChoiceFnType<T, E>>) -> Result<T, SparsecError> {
+    pub fn mut_choice<T, E>(
+        &mut self,
+        fns: Vec<MutChoiceFn<T>>,
+    ) -> Result<T, modname::SparsecError> {
         for func in fns {
             if let Ok(val) = func(&mut self.clone()) {
                 return Ok(val);
             }
         }
 
-        Err(SparsecError::ChoiceFailed)
+        Err(modname::SparsecError::ChoiceFailed)
     }
 }
 
@@ -167,11 +151,11 @@ pub macro from_string($var: ident, $s: expr) {
     let mut $var = $crate::Sparsec::new($crate::charstream::CharStream::new(&$s.to_string()));
 }
 
-fn map_charstream_error(e: charstream::CharStreamError) -> SparsecError {
+fn map_charstream_error(e: charstream::modname::CharStreamError) -> modname::SparsecError {
     match e {
-        charstream::CharStreamError::EndOfInput => SparsecError::EndOfInput,
-        charstream::CharStreamError::StartOfInput => SparsecError::StartOfInput,
-        _ => SparsecError::InternalParserError {
+        charstream::modname::CharStreamError::EndOfInput => modname::SparsecError::EndOfInput,
+        charstream::modname::CharStreamError::StartOfInput => modname::SparsecError::StartOfInput,
+        _ => modname::SparsecError::InternalParserError {
             details: e.to_string(),
         },
     }
