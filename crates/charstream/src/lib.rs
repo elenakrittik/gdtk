@@ -1,18 +1,24 @@
 //! `charstream` - a convenient wrapper around `std`'s `String` that provides
-//! a two-way stream-like APIs. Perfect for parser libraries.
+//! a two-way stream-like APIs. Perfect for implementing your own lexer or parser library.
 
+/// Error type used throughout the crate.
 #[derive(thiserror::Error, Debug)]
 pub enum CharStreamError {
+    /// EOI (End-Of-Input) reached when trying to advance forward.
     #[error("End-Of-Input reached.")]
     EndOfInput,
 
-    #[error("Cursor position was out of stream's bounds. Please report this at https://github.com/elenakrittik/gdtk/issues")]
+    /// Cursor position appeared to be out of stream's bounds. This is a bug, please report.
+    #[error("Cursor position was out of stream's bounds. This is a bug, please report.")]
     OutOfBoundsAccess,
 
+    /// SOI (Start-Of-Input) reached when trying to advance backward.
     #[error("Start-Of-Input reached.")]
     StartOfInput,
 }
 
+/// A convenient wrapper around [String](std::string::String) that provides a two-way
+/// stream-like APIs.
 #[derive(Debug, Clone)]
 pub struct CharStream<'a> {
     original: &'a String,
@@ -22,7 +28,7 @@ pub struct CharStream<'a> {
 }
 
 impl<'a> CharStream<'a> {
-    /// Create a new [CharStream].
+    /// Create a new [CharStream](crate::CharStream).
     pub fn new(content: &String) -> CharStream {
         let chrs: Vec<char> = content.chars().collect();
         CharStream {
@@ -34,9 +40,13 @@ impl<'a> CharStream<'a> {
     }
 
     /// Returns the total length of the stream.
-    #[allow(clippy::len_without_is_empty)]
     pub fn len(&self) -> usize {
         self.len
+    }
+
+    /// Returns whether the total length of the stream is 0.
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
     }
 
     /// Reads the stream until the end and returns all characters read.
@@ -75,25 +85,24 @@ impl<'a> CharStream<'a> {
             .ok_or(CharStreamError::StartOfInput)?;
 
         // usize is always positive so no need to check against pos < len here
-        // (because len >= 0)
+        // (because len >= 0 and so is pos)
 
         Ok(())
     }
 
-    /// Moves cursor one time forward and returns the result of [CharStream::get].
-    #[allow(clippy::should_implement_trait)]
+    /// Moves cursor one time forward and returns the result of [get](CharStream::get).
     pub fn next(&mut self) -> Result<char, CharStreamError> {
         self.safe_inc(1)?;
         self.get()
     }
 
-    /// Moves cursor one time backward and returns the result of [CharStream::get].
+    /// Moves cursor one time backward and returns the result of [crate::CharStream::get].
     pub fn prev(&mut self) -> Result<char, CharStreamError> {
         self.safe_dec(1)?;
         self.get()
     }
 
-    /// Same as [CharStream::goto], but also returns slice implied by the transition.
+    /// Same as [goto](crate::CharStream::goto), but also returns slice implied by the transition.
     pub fn travel(&mut self, pos: usize) -> Result<&str, CharStreamError> {
         let origin = self.pos.clone();
         self.goto(pos)?;
