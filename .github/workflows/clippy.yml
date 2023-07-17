@@ -15,6 +15,7 @@ jobs:
           profile: minimal
           toolchain: nightly
           components: clippy
+          override: true
 
       - uses: actions-rs/cargo@v1
         with:
