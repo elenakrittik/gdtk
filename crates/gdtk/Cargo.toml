@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.71"
 ariadne = "0.3.0"
-clap = { version = "4.3.11", features = ["derive"] }
+clap = { version = "4.3.12", features = ["derive"] }
 owo-colors = "2.0.0"
 sparsec = { version = "0.1.0", path = "../sparsec" }
 thiserror = "1.0.40"
