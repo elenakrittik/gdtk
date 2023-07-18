@@ -6,17 +6,11 @@ pub mod values;
 use self::statements::statement;
 use crate::ast::ASTModule;
 
-pub fn parse(s: &mut String) -> anyhow::Result<ASTModule> {
-    sparsec::from_string!(parser, s);
-
+pub fn parse(input: &String) -> anyhow::Result<ASTModule> {
     let mut stmts = vec![];
 
-    while let Ok(line) = parser.read_until("\n") {
-        if line.is_empty() {
-            continue;
-        };
-
-        stmts.push(statement(line.iter().collect())?);
+    for line in input.split('\n') {
+        stmts.push(statement(line)?);
     }
 
     Ok(ASTModule { statements: stmts })

@@ -1,10 +1,10 @@
 use super::values::value;
 use crate::ast::ASTStatement;
 
-pub fn statement(line: String) -> anyhow::Result<ASTStatement> {
-    sparsec::from_string!(parser, line);
+pub fn statement(line: &str) -> anyhow::Result<ASTStatement> {
+    let parser = sparsec::Sparsec::new(line);
 
-    Ok(ASTStatement::Value(value(&mut parser)?))
+    Ok(ASTStatement::Value(value(&parser)?))
 }
 
 // pub fn statements<Input>() -> impl Parser<Input, Output = Vec<ASTStatement>>

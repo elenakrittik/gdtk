@@ -2,38 +2,42 @@ use sparsec::Sparsec;
 
 use crate::ast::ASTValue;
 
-pub fn value(_parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
-    // Ok(parser.choice(vec![float, int, string])?)
-    Ok(ASTValue::Float(15.01))
+pub fn value(parser: &Sparsec) -> anyhow::Result<ASTValue> {
+    Ok(int(parser)?)
+    // Ok(ASTValue::Float(15.01))
 }
 
-pub fn int(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
-    Ok(ASTValue::Int(integer(parser, true)?))
+pub fn int(parser: &Sparsec) -> anyhow::Result<ASTValue> {
+    Ok(ASTValue::Int(integer(parser)?))
 }
 
-pub fn float(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
-    let integer_ = integer(parser, true)?;
+// pub fn float(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
+//     let integer_ = integer(parser, true)?;
 
-    let dot = parser.read_one()?;
+//     parser.read_one_exact('.')?;
 
-    if dot != '.' {
-        anyhow::bail!("Expected '.', found");
-    }
+//     let fraction = integer(parser, false)?;
 
-    let fraction = integer(parser, false)?;
+//     let f = format!("{}.{}", integer_, fraction).parse()?;
 
-    let f = format!("{}.{}", integer_, fraction).parse()?;
+//     Ok(ASTValue::Float(f))
+// }
 
-    Ok(ASTValue::Float(f))
-}
+fn integer(parser: &mut Sparsec, /*, allow_minus: bool */) -> anyhow::Result<i64, anyhow::Error> {
+    if true
+    /* allow_minus */
+    {
+        let neg = parser
+            .by_ref()
+            .take_while(|c| *c == '-')
+            .collect::<Vec<char>>()
+            .len()
+            % 2
+            == 1;
 
-fn integer(parser: &mut Sparsec, allow_minus: bool) -> anyhow::Result<i64, anyhow::Error> {
-    if allow_minus {
-        let minuses = parser.read_while(|c| *c == '-')?;
-        let neg = minuses.len() % 2 == 1;
         let mut val: i64 = parser
-            .read_while(|c| c.is_ascii_digit())?
-            .iter()
+            .by_ref()
+            .take_while(|c| c.is_ascii_digit())
             .collect::<String>()
             .parse()?;
 
@@ -44,20 +48,19 @@ fn integer(parser: &mut Sparsec, allow_minus: bool) -> anyhow::Result<i64, anyho
         Ok(val)
     } else {
         Ok(parser
-            .read_while(|c| c.is_ascii_digit())?
-            .iter()
+            .take_while(|c| c.is_ascii_digit())
             .collect::<String>()
             .parse()?)
     }
 }
 
-pub fn string(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
-    parser.read_one_exact(&'"')?;
-    let content = parser.read_until("\"")?;
-    parser.read_one_exact(&'"')?;
+// pub fn string(parser: &mut Sparsec) -> anyhow::Result<ASTValue> {
+//     parser.read_one_exact('"')?;
+//     let content = parser.read_until('\"')?;
+//     parser.read_one_exact('"')?;
 
-    Ok(ASTValue::String(content.iter().collect()))
-}
+//     Ok(ASTValue::String(content.iter().collect()))
+// }
 
 #[cfg(test)]
 mod test {

@@ -80,13 +80,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "50d30906286121d95be3d479533b458f87493b30a4b5f79a607db8f5d11aa91f"
 
 [[package]]
-name = "charstream"
-version = "0.1.0"
-dependencies = [
- "thiserror",
-]
-
-[[package]]
 name = "clap"
 version = "4.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -248,7 +241,6 @@ dependencies = [
 name = "sparsec"
 version = "0.1.0"
 dependencies = [
- "charstream",
  "thiserror",
 ]
 

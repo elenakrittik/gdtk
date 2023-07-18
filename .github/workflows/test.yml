@@ -19,4 +19,5 @@ jobs:
 
       - uses: actions-rs/cargo@v1
         with:
-          command: miri test
+          command: miri
+          args: test
