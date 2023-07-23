@@ -9,7 +9,7 @@ ariadne = "0.3.0"
 clap = { version = "4.3.11", features = ["derive"] }
 gdtk-lexer = { version = "0.1.0", path = "../gdtk-lexer" }
 lazy_static = "1.4.0"
-owo-colors = "2.0.0"
+owo-colors = "3.5.0"
 thiserror = "1.0.40"
 
 [lib]
