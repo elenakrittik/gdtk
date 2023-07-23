@@ -7,4 +7,4 @@
 
 .git
 
-Cargo.lock
+**/Cargo.lock

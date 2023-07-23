@@ -1,26 +1,23 @@
-use crate::display::{action, path};
+use owo_colors::OwoColorize;
+
+use crate::display::{print_error, ACTION, THING};
 
 pub fn run(file: &String) -> anyhow::Result<()> {
-    println!("{} {}", action("Parsing"), path(file));
+    println!("{} {}", "Parsing".style(*ACTION), file.style(*THING));
 
-    let mut content = std::fs::read_to_string(file)?;
-
-    println!("File contents: \n{}", content);
-
-    let result = crate::parser::parse(&mut content);
-
-    let ast = match result {
-        Ok(val) => val,
+    let content = std::fs::read_to_string(file)?;
+    let lexed = match gdtk_lexer::lex(&content) {
+        Ok(v) => v,
         Err(e) => {
-            return {
-                // crate::display::display_ariadne_traceback(file, &content, e);
-                eprintln!("{:#?}", e);
-                Ok(())
-            };
+            print_error(e.to_string());
+            println!("{} {}:{:?}", "-->".cyan(), file, e.1);
+            return Ok(());
         }
     };
 
-    println!("{:?}", ast);
+    for lexeme in lexed {
+        println!("{:?}", lexeme);
+    }
 
     Ok(())
 }

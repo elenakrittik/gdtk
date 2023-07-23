@@ -1,14 +1,1 @@
-1
-12
-0
--0
--1
--111
-1.0
--0.0
--1.0
-0.0
-0.1
-
--0.1
-"hello"
+# Everything after "#" is a comment.

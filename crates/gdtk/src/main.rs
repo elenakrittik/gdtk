@@ -1,15 +1,19 @@
 use gdtk::commands::parse::run as parse;
-use gdtk::display::{action, print_error};
+use gdtk::display::{print_error, ACTION};
+use owo_colors::OwoColorize;
 
 fn main() -> anyhow::Result<()> {
     let cli = gdtk::cli::parse();
 
     match &cli.command {
-        Some(gdtk::cli::Commands::Parse { file }) => parse(file)?,
+        Some(gdtk::cli::Commands::Parse { file }) => match parse(file) {
+            Ok(_) => (),
+            Err(e) => print_error(e.to_string()),
+        },
         None => {
             print_error(format!(
                 "no command specified. Run {} to view help message.",
-                action("`gdtk help`")
+                "`gdtk help`".style(*ACTION)
             ));
         }
     }

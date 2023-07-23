@@ -1,8 +1,0 @@
-[package]
-name = "sparsec"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-# charstream = { version = "0.1.0", path = "../charstream" }
-thiserror = "1.0.40"
