@@ -7,7 +7,7 @@ an interactive REPL to quickly test your thoughts, a robust testing framework wi
 an advanced LSP implementation to access all of `gdtk`'s goodies right from your IDE, and a powerful preprocessor
 to <!-- embrace, --> extend <!-- and extinguish --> GDScript syntax for additional features like macros, typed
 dictionaries and more with your own modifiers. And all of this speedy awesomeness is backed by a super friendly,
-extendable CLI.
+extensible CLI.
 
 ## Planned features*
 
