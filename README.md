@@ -1,25 +1,31 @@
 # Godot ToolKit
 
-`gdtk` aims to be *the*<sup>tm</sup> ultimate<sup>tm</sup>, all-in-one<sup>tm</sup> toolkit<sup>tm</sup> for Godot developers. No matter what you're trying to build,
-`gdtk` is here to help. It can\* manage your dependencies (both addons and native extensions like godot-rust), auto-format your GDScript
-according to the official style guide and C# using CSharpier, do semantic anylysis to type-check and lint your code.
-It also provides an interactive REPL to quickly test your thoughts, a robust testing framework with first-class integration with Godot's UI,
-an advanced LSP implementation to use all `gdtk`'s goodies right from your IDE, and a preprocessor to <!-- embrace, --> extend <!-- and extinguish -->
-GDScript's syntax for additional features like macros, typed dictionaries and more with your own modifiers. And all of this awesomeness is backed
-by a super friendly CLI written in Rust.
+`gdtk` is a versatile toolkit for Godot developers. No matter what you're trying to build, it's here to help.
+It can\* manage your dependencies (both addons and native extensions like godot-rust), format your GDScript
+according to the official style guide, and do semantic anylysis to type-check and lint your code. It also provides
+an interactive REPL to quickly test your thoughts, a robust testing framework with first-class Godot integration,
+an advanced LSP implementation to access all of `gdtk`'s goodies right from your IDE, and a powerful preprocessor
+to <!-- embrace, --> extend <!-- and extinguish --> GDScript syntax for additional features like macros, typed
+dictionaries and more with your own modifiers. And all of this speedy awesomeness is backed by a super friendly,
+extendable CLI.
 
 ## Planned features*
 
 this is essentially a public todo-list
 
 - [ ] Parser
+- - [ ] Lexer
+- - [ ] Actual parser
 - [ ] Formatter
 - [ ] Linter
 - [ ] Project and dependency manager
-- - [ ] Might also include support for GPM.
-- [ ] Interpreter (with REPL)
+- - [ ] Addon dependencies
+- - [ ] Native dependencies
+- - [ ] GPM dependencies
+- [ ] Interpreter
+- - [ ] REPL
 - [ ] Testing framework
-- - [ ] + godot addon
+- - [ ] Godot integration
 - [ ] Preprocessor
 - [ ] LSP implementation
 
