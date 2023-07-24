@@ -1,22 +1,23 @@
 on:
   push:
-    branches:
-      - master
 
 name: Build Artifact
 
 jobs:
   release:
-    name: Build Artifact
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: nightly
+
       - run: cargo build --release
+
       - uses: actions/upload-artifact@v3
         with:
           name: gdtk
           path: target/release/gdtk
+        if: ${{ github.ref }} == "refs/heads/master"

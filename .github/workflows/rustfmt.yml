@@ -1,11 +1,10 @@
 on:
   push:
-  pull_request:
 
 name: Rustfmt
 
 jobs:
-  clippy:
+  rustfmt:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
