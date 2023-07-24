@@ -2,7 +2,7 @@ use std::{fmt::Debug, ops::Neg, str::FromStr};
 
 use crate::token::Token;
 
-pub fn trim_comment<'a>(lex: &mut logos::Lexer<'a, Token<'a>>) -> &'a str {
+pub fn trim_comment<'a>(lex: &logos::Lexer<'a, Token<'a>>) -> &'a str {
     let mut slc = &lex.slice()[1..];
 
     if let Some(s) = slc.strip_suffix('\r') {
@@ -13,11 +13,11 @@ pub fn trim_comment<'a>(lex: &mut logos::Lexer<'a, Token<'a>>) -> &'a str {
     slc
 }
 
-pub fn parse_integer<'a>(lex: &mut logos::Lexer<'a, Token<'a>>) -> i64 {
+pub fn parse_integer<'a>(lex: &logos::Lexer<'a, Token<'a>>) -> i64 {
     parse_number(lex.slice())
 }
 
-pub fn parse_float<'a>(lex: &mut logos::Lexer<'a, Token<'a>>) -> f64 {
+pub fn parse_float<'a>(lex: &logos::Lexer<'a, Token<'a>>) -> f64 {
     parse_number(lex.slice())
 }
 
@@ -40,7 +40,7 @@ where
     int
 }
 
-pub fn trim_string<'a>(lex: &mut logos::Lexer<'a, Token<'a>>) -> &'a str {
+pub fn trim_string<'a>(lex: &logos::Lexer<'a, Token<'a>>) -> &'a str {
     lex.slice()
         .strip_prefix('\"')
         .unwrap()
