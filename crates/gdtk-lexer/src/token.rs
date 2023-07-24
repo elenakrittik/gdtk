@@ -294,6 +294,7 @@ pub enum Token<'a> {
     Dedent,
     Spaces,
 
+    #[regex("([ ]|[\t])+")]
     Blank(&'a str), // handled by gdtk-indent
 
     /* Specials */

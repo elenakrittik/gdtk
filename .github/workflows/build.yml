@@ -7,7 +7,6 @@ name: Build Artifact
 
 jobs:
   release:
-    name: Build Artifact
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
