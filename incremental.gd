@@ -1,4 +1,2 @@
-"hello'
-'hello"
-"hello
-'hello
+fn:
+    id

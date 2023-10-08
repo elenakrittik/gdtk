@@ -8,5 +8,5 @@ edition = "2021"
 [dependencies]
 gdtk-lexer = { version = "0.1.0", path = "../gdtk-lexer" }
 gdtk-ast = { version = "0.1.0", path = "../gdtk-ast" }
-error-stack = "0.3.1"
+gdtk-diag = { version = "0.1.0", path = "../gdtk-diag" }
 thiserror = "1.0.43"

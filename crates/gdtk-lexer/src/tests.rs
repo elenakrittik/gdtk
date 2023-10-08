@@ -6,10 +6,8 @@ macro_rules! test_eq {
             let lexed = $crate::lex($input);
             let mut lexemes = vec![];
             
-            for result in lexed {
-                if let Ok((token, _)) = result {
-                    lexemes.push(token);
-                }
+            for (token, _) in lexed.0 {
+                lexemes.push(token);
             }
 
             assert_eq!(lexemes, vec![$($expected),*]);
@@ -21,7 +19,7 @@ macro_rules! test_all_fails {
     ($input: expr) => {
         {
             let lexed = $crate::lex($input);
-            assert!(lexed.iter().all(|r| r.is_err()));
+            assert!(lexed.0.len() == 0 && lexed.1.len() > 0);
         }
     };
 }
