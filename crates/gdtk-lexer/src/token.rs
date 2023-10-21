@@ -1,7 +1,10 @@
 use logos::Logos;
 
 use crate::{
-    callbacks::{parse_float, parse_integer, trim_comment, strip_quotes, parse_e_notation, parse_binary, parse_hex, strip_prefix_and_quotes, parse_bool},
+    callbacks::{
+        parse_binary, parse_bool, parse_e_notation, parse_float, parse_hex, parse_integer,
+        strip_prefix_and_quotes, strip_quotes, trim_comment, check_indent_style,
+    },
     error::Error,
 };
 
@@ -17,7 +20,7 @@ use crate::{
 #[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
 #[logos(subpattern float = r"(?&int)\.(?&int)")]
 #[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
-#[logos(subpattern invalid_string = "(\"[^\'\r\n]*\'?)|('[^\"\r\n]*\"?)")] // TODO: more handles for "valid invalid" syntax
+#[logos(subpattern invalid_string = "(\"[^\'\r\n)]*\'?)|('[^\"\r\n)]*\"?)")] // TODO: more handles for "valid invalid" syntax
 pub enum Token<'a> {
     /* Essentials */
     
@@ -318,7 +321,7 @@ pub enum Token<'a> {
     Dedent,
     Spaces,
 
-    #[regex("([ ]|[\t])+")]
+    #[regex("([ ]|[\t])+", |lex| { unsafe { check_indent_style(lex) } })]
     Blank(&'a str),
 
     /* Specials */

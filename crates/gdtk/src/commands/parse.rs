@@ -1,12 +1,15 @@
-use gdtk_parser::stage_0;
-use owo_colors::OwoColorize;
+use gdtk_parser::parse_file;
+// use owo_colors::OwoColorize;
 
-use crate::display::print_error;
+// use crate::display::print_error;
 
 pub fn run(file: &String) -> anyhow::Result<()> {
     let content = std::fs::read_to_string(file)?;
-    let mut lexed = gdtk_lexer::lex(&content);
-    stage_0::run(lexed.0, &mut lexed.1);
+    let lexed = gdtk_lexer::lex(&content);
+    dbg!(parse_file(lexed));
+
+    // dbg!(&lexed.0);
+    // dbg!(&lexed.1);
 
     // for lexeme in lexed {
     //     print_diag(file, &lexeme);

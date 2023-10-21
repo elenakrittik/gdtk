@@ -1,2 +1,1 @@
-fn:
-    id
+class_name Player
