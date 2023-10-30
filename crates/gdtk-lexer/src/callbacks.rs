@@ -29,12 +29,6 @@ fn get_style(blank: &str) -> Result<IndentStyle, Error> {
     }
 }
 
-unsafe fn footgun<'a, T>(reference: &'a T) -> &'a mut T {
-    let const_ptr = reference as *const T;
-    let mut_ptr = const_ptr as *mut T;
-    &mut *mut_ptr
-}
-
 // quick & dirty, exactly what i need.
 pub unsafe fn check_indent_style<'a>(
     lex: &mut logos::Lexer<'a, Token<'a>>,

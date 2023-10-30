@@ -4,9 +4,9 @@
 pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
 
 pub struct ASTClass<'a> {
-    pub class_name: &'a str,
-    pub extends: &'a str,
-    pub icon_path: &'a str,
+    pub class_name: Option<&'a str>,
+    pub extends: Option<&'a str>,
+    pub icon_path: Option<&'a str>,
     pub variables: Vec<ASTVariable<'a>>,
     pub enums: Vec<ASTEnum<'a>>,
     pub functions: Vec<ASTFunction<'a>>,
