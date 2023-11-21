@@ -3,6 +3,7 @@
 
 pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
 
+#[derive(Debug)]
 pub struct ASTClass<'a> {
     pub class_name: Option<&'a str>,
     pub extends: Option<&'a str>,
@@ -12,6 +13,7 @@ pub struct ASTClass<'a> {
     pub functions: Vec<ASTFunction<'a>>,
 }
 
+#[derive(Debug)]
 pub struct ASTVariable<'a> {
     pub identifier: &'a str,
     pub typehint: Option<&'a str>,
@@ -19,6 +21,7 @@ pub struct ASTVariable<'a> {
     pub kind: ASTVariableKind,
 }
 
+#[derive(Debug)]
 pub enum ASTVariableKind {
     /// Regular (`var`) variable.
     Regular,
@@ -30,16 +33,19 @@ pub enum ASTVariableKind {
     Static,
 }
 
+#[derive(Debug)]
 pub struct ASTEnum<'a> {
     pub identifier: Option<&'a str>,
     pub variants: Vec<ASTEnumVariant<'a>>,
 }
 
+#[derive(Debug)]
 pub struct ASTEnumVariant<'a> {
     pub identifier: &'a str,
     pub value: Option<i64>,
 }
 
+#[derive(Debug)]
 pub struct ASTFunction<'a> {
     pub identifier: Option<&'a str>,
     pub parameters: Vec<ASTFunctionParameter<'a>>,
@@ -47,12 +53,14 @@ pub struct ASTFunction<'a> {
     pub body: CodeBlock<'a>,
 }
 
+#[derive(Debug)]
 pub struct ASTFunctionParameter<'a> {
     pub identifier: &'a str,
     pub typehint: Option<&'a str>,
     pub default: Option<ASTValue<'a>>,
 }
 
+#[derive(Debug)]
 pub enum ASTValue<'a> {
     Identifier(&'a str),
     Number(i64),
@@ -70,12 +78,14 @@ pub enum ASTValue<'a> {
     Expression(ASTExpression<'a>),
 }
 
+#[derive(Debug)]
 pub struct ASTExpression<'a> {
     pub left: Box<ASTValue<'a>>,
     pub right: Box<ASTValue<'a>>,
     pub op: ASTOperation,
 }
 
+#[derive(Debug)]
 pub enum ASTOperation {
     Less,
     LessEqual,
@@ -106,6 +116,7 @@ pub enum ASTOperation {
     Range,
 }
 
+#[derive(Debug)]
 pub enum ASTStatement<'a> {
     Assert(ASTValue<'a>),
     /// (identifier, kind, value)
@@ -126,6 +137,7 @@ pub enum ASTStatement<'a> {
     Value(ASTValue<'a>),
 }
 
+#[derive(Debug)]
 pub enum ASTAssignmentKind {
     Regular,
     Plus,
@@ -142,10 +154,12 @@ pub enum ASTAssignmentKind {
     BitwiseShiftRight,
 }
 
+#[derive(Debug)]
 pub struct ASTMatchPattern<'a> {
     pub kind: ASTMatchPatternKind<'a>,
 }
 
+#[derive(Debug)]
 pub enum ASTMatchPatternKind<'a> {
     Expression(ASTValue<'a>),
     Binding(ASTVariable<'a>),

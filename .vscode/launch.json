@@ -1,215 +1,33 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
     "configurations": [
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in library 'gdtk'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib",
-                    "--package=gdtk"
-                ],
-                "filter": {
-                    "name": "gdtk",
-                    "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'gdtk'",
+            "name": "Run gdtk",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=gdtk",
-                    "--package=gdtk"
                 ],
                 "filter": {
                     "name": "gdtk",
-                    "kind": "bin"
+                    "kind": "bin",
                 }
             },
-            "args": ["parse", "--file", ".\\incremental.gd"],
-            "cwd": "${workspaceFolder}"
+            "args": ["${input:subcommand}", "${input:subsubcommand}"]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "subcommand",
+            "description": "Enter gdtk CLI args",
+            "default": "",
+            "type": "promptString"
         },
         {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'gdtk'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=gdtk",
-                    "--package=gdtk"
-                ],
-                "filter": {
-                    "name": "gdtk",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in library 'gdtk-lexer'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib",
-                    "--package=gdtk-lexer"
-                ],
-                "filter": {
-                    "name": "gdtk-lexer",
-                    "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in library 'gdtk-diag'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib",
-                    "--package=gdtk-diag"
-                ],
-                "filter": {
-                    "name": "gdtk-diag",
-                    "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in library 'gdtk-parser'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib",
-                    "--package=gdtk-parser"
-                ],
-                "filter": {
-                    "name": "gdtk-parser",
-                    "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in library 'gdtk-ast'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib",
-                    "--package=gdtk-ast"
-                ],
-                "filter": {
-                    "name": "gdtk-ast",
-                    "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in library 'gdtk-lint'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib",
-                    "--package=gdtk-lint"
-                ],
-                "filter": {
-                    "name": "gdtk-lint",
-                    "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in library 'gdtk-lsp'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--lib",
-                    "--package=gdtk-lsp"
-                ],
-                "filter": {
-                    "name": "gdtk-lsp",
-                    "kind": "lib"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug executable 'gdtk-lsp'",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--bin=gdtk-lsp",
-                    "--package=gdtk-lsp"
-                ],
-                "filter": {
-                    "name": "gdtk-lsp",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Debug unit tests in executable 'gdtk-lsp'",
-            "cargo": {
-                "args": [
-                    "test",
-                    "--no-run",
-                    "--bin=gdtk-lsp",
-                    "--package=gdtk-lsp"
-                ],
-                "filter": {
-                    "name": "gdtk-lsp",
-                    "kind": "bin"
-                }
-            },
-            "args": [],
-            "cwd": "${workspaceFolder}"
+            "id": "subsubcommand",
+            "description": "Enter gdtk CLI args",
+            "default": "",
+            "type": "promptString"
         }
     ]
 }

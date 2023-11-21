@@ -6,7 +6,7 @@ use gdtk_parser::parse_file;
 pub fn run(file: &String) -> anyhow::Result<()> {
     let content = std::fs::read_to_string(file)?;
     let lexed = gdtk_lexer::lex(&content);
-    dbg!(parse_file(lexed));
+    dbg!(parse_file(lexed)?);
 
     // dbg!(&lexed.0);
     // dbg!(&lexed.1);
