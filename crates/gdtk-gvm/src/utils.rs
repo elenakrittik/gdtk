@@ -1,5 +1,5 @@
 use rayon::prelude::*;
-use versions::Versioning;
+use versions::{Versioning, Version};
 
 pub fn sort_versions(vers: Vec<String>) -> Vec<String> {
     let mut itermediate = vers
@@ -16,7 +16,7 @@ pub fn format_version(ver: String) -> String {
     let ver = Versioning::new(ver.as_str()).unwrap();
 
     #[inline]
-    fn num(version: &versions::Version, idx: usize) -> u32 {
+    fn num(version: &Version, idx: usize) -> u32 {
         version.chunks.0[idx].single_digit().unwrap()
     }
 
@@ -46,23 +46,29 @@ fn platform() -> String {
     format!("{} on {}", std::env::consts::ARCH, std::env::consts::OS)
 }
 
-pub fn get_version_archive_name(version: String) -> Result<String, crate::Error> {
+pub fn get_version_archive_name(version: String, release: Option<String>) -> Result<String, crate::Error> {
     // versions are of form "Godot_v{version}-{release}_{platform}.zip"
     // {release} is "stable" if the version is not unstable
 
-    // i didn't investigate < 4.0 naming semantics yet
-    if version.starts_with('4') {
-        let platform = match std::env::consts::OS {
-            "windows" => match std::env::consts::ARCH {
-                "x86" => Ok("win32"),
-                "x86_64" => Ok("win64"),
-                _ => Err(crate::Error::GodotUnsupportedPlatform(platform())),
-            },
-            _ => Err(crate::Error::GDTKUnsupportedPlatform(platform())),
-        }?;
+    let release = release.unwrap_or("stable".to_string());
+    let platform = match &version.chars().nth(0) {
+        Some(major) => match major {
+            '4' => get_godot4_platform(),
+            _ => Err(crate::Error::GDTKUnsupportedVersionForInstall(version.clone())),
+        },
+        None => unreachable!(),
+    }?;
 
-        return Ok(format!("Godot_v{version}_{platform}.zip"));
-    }
+    Ok(format!("Godot_v{version}-{release}_{platform}.zip"))
+}
 
-    Err(crate::Error::GDTKUnsupportedVersionForInstall(version))
+fn get_godot4_platform() -> Result<String, crate::Error> {
+    match std::env::consts::OS {
+        "windows" => match std::env::consts::ARCH {
+            "x86" => Ok("win32.exe"),
+            "x86_64" => Ok("win64.exe"),
+            _ => Err(crate::Error::GodotUnsupportedPlatform(platform())),
+        },
+        _ => Err(crate::Error::GDTKUnsupportedPlatform(platform())),
+    }.map(|v| v.into())
 }

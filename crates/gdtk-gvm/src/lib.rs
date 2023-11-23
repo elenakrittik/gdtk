@@ -65,8 +65,7 @@ pub fn ensure_versions() -> Result<(), IOError> {
     Ok(())
 }
 
-/// Returns versions.toml content as a hash map of project path to Godot
-/// version string.
+/// Returns versions.toml content as a hash map of version string to relative path.
 pub fn get_local_versions() -> Result<AHashMap<String, String>, Error> {
     let versions_toml = versions_toml_path()?;
 
@@ -87,6 +86,21 @@ pub fn versions_toml_path() -> Result<PathBuf, IOError> {
     conf_dir.push("versions.toml");
 
     Ok(conf_dir)
+}
+
+pub fn godots_path() -> Result<PathBuf, IOError> {
+    let mut data_dir = gdtk_utils::base_data_dir()?;
+
+    data_dir.push("godots");
+
+    Ok(data_dir)
+}
+
+pub fn ensure_godots() -> Result<(), IOError> {
+    gdtk_utils::ensure_path(gdtk_utils::base_data_dir()?, true)?;
+    gdtk_utils::ensure_path(godots_path()?, true)?;
+
+    Ok(())
 }
 
 pub mod online;

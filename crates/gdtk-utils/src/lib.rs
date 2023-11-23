@@ -22,3 +22,11 @@ pub fn base_conf_dir() -> Result<std::path::PathBuf, Error> {
 
     Ok(conf_dir)
 }
+
+pub fn base_data_dir() -> Result<std::path::PathBuf, Error> {
+    let mut data_dir = dirs::data_local_dir().ok_or(Error::new(ErrorKind::NotFound, "Data dirrectory not gound"))?;
+
+    data_dir.push("gdtk");
+
+    Ok(data_dir)
+}

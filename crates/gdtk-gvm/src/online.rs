@@ -3,6 +3,7 @@ use futures::future::join_all;
 use scraper::Html;
 use scraper::Selector;
 use serde::Deserialize;
+use versions::Version;
 use versions::Versioning;
 
 use crate::Error;
@@ -66,7 +67,7 @@ pub async fn fetch_versions(opt: FetchVersionsOptions) -> Result<Vec<String>, Er
         .map(|v| v.version.as_str())
         .collect::<Vec<_>>();
 
-    let unstables: Vec<&str> = godots
+    let mut unstables: Vec<&str> = godots
         .iter()
         .filter(|v| v.status == 0)
         .map(|v| v.version.as_str())
@@ -122,7 +123,7 @@ pub async fn fetch_versions(opt: FetchVersionsOptions) -> Result<Vec<String>, Er
 
     if opt.dev {
         if opt.unsupported_dev {
-            unstables.extend(versions);
+            unstables.extend(versions.iter().map(|v| v.as_str()));
         }
 
         let unstables = join_all(
@@ -160,8 +161,13 @@ pub async fn fetch_unstable_versions(ver: &str) -> Result<Vec<String>, Error> {
 }
 
 pub fn get_version_download_url(version: String) -> Result<String, Error> {
-    let url = GODOT_DOWNLOADS_ROOT.to_string() + version.as_str();
-    let url = url + "/" + crate::utils::get_version_archive_name(version)?.as_str();
+    let url = GODOT_DOWNLOADS_ROOT.to_string();
+    let url = url + &version.replace('-', "/");
+
+    let majorminor_ver = version.chars().take(3).collect();
+    let release = Version::new(&version).unwrap().release.map(|v| v.to_string());
+
+    let url = url + "/" + crate::utils::get_version_archive_name(majorminor_ver, release)?.as_str();
 
     Ok(url)
 }
@@ -170,10 +176,7 @@ pub async fn check_version_exists(version: String) -> Result<bool, Error> {
     let url = get_version_download_url(version)?;
     let client = reqwest::Client::new();
 
-    let status = client.head(url).send().await?.status;
-
-    println!("{:?}", status);
-    println!("{:?}", status.is_success());
+    let status = client.head(url).send().await?.status();
 
     Ok(status.is_success())
 }
