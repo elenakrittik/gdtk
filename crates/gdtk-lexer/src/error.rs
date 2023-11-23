@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use gdtk_diag::{Diagnostic, Span};
 
 #[derive(Debug, thiserror::Error, Default, PartialEq, Clone)]
 pub enum Error {
@@ -11,23 +11,37 @@ pub enum Error {
     #[error("Used tab character for indentation instead of space as used before in the file.")]
     TabIndent,
 
-    #[error("Unknown character.")]
+    #[error("Expected another \" at the end of the string literal.")]
+    UnclosedDoubleStringLiteral,
+
+    #[error("Expected another \' at the end of the string literal.")]
+    UnclosedSingleStringLiteral,
+
+    #[error("Unknown character sequence.")]
     #[default]
-    UnknownCharacter,
+    UnknownCharacterSequence,
 }
 
-#[derive(Debug, Default, PartialEq, Clone)]
-pub struct SpannedError(pub Error, pub std::ops::Range<usize>);
+pub trait WithSpan<T> {
+    fn with_span(self, span: Span) -> (T, Span);
+}
 
-impl Display for SpannedError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        self.0.fmt(f)
+impl<T> WithSpan<T> for T {
+    fn with_span(self, span: Span) -> (T, Span) {
+        (self, span)
     }
 }
+pub(crate) trait IntoDiag {
+    fn into_diag(self) -> Diagnostic;
+}
 
-#[macro_export]
-macro_rules! spanned {
-    ($lex: expr, $err: expr) => {
-        $crate::error::SpannedError($err, $lex.span())
-    };
+impl IntoDiag for (Error, Span) {
+    fn into_diag(self) -> Diagnostic {
+        Diagnostic {
+            kind: gdtk_diag::DiagnosticKind::Error,
+            message: self.0.to_string(),
+            hint: None,
+            span: self.1,
+        }
+    }
 }

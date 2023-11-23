@@ -1,25 +1,34 @@
 pub mod callbacks;
 pub mod error;
-pub mod indent;
-pub mod state;
 pub mod token;
+#[cfg(test)]
+mod tests;
 
+use error::{WithSpan, IntoDiag};
 use logos::Logos;
+use gdtk_diag::Diagnostic;
+use token::Token;
 
-pub fn lex(input: &str) -> Result<Vec<token::Token>, error::SpannedError> {
-    preprocess(token::Token::lexer(input))
+pub type Lexeme<'a> = (Token<'a>, logos::Span);
+pub type LexOutput<'a> = (Vec<Lexeme<'a>>, Vec<Diagnostic>);
+
+pub fn lex(input: &str) -> LexOutput {
+    preprocess(Token::lexer(input))
 }
 
+/// Arranges results by their span.
 fn preprocess<'a>(
-    tokens: logos::Lexer<'a, token::Token<'a>>,
-) -> Result<Vec<token::Token<'a>>, error::SpannedError> {
-    let mut vec = vec![];
+    lexer: logos::Lexer<'a, Token<'a>>,
+) ->  LexOutput {
+    let mut tokens: Vec<Lexeme> = vec![];
+    let mut diags: Vec<Diagnostic> = vec![];
 
-    for token in tokens {
-        let token = token?;
-
-        vec.push(token);
+    for (result, span) in lexer.spanned() {
+        match result {
+            Ok(token) => tokens.push(token.with_span(span)),
+            Err(err) => diags.push(err.with_span(span).into_diag()),
+        }
     }
 
-    Ok(vec)
+    (tokens, diags)
 }

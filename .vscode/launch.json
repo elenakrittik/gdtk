@@ -1,0 +1,33 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Run gdtk",
+            "cargo": {
+                "args": [
+                    "build",
+                ],
+                "filter": {
+                    "name": "gdtk",
+                    "kind": "bin",
+                }
+            },
+            "args": ["godot", "install", "4.2-beta1"]
+        }
+    ],
+    "inputs": [
+        {
+            "id": "subcommand",
+            "description": "Enter gdtk CLI args",
+            "default": "",
+            "type": "promptString"
+        },
+        {
+            "id": "subsubcommand",
+            "description": "Enter gdtk CLI args",
+            "default": "",
+            "type": "promptString"
+        }
+    ]
+}

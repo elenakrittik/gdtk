@@ -5,4 +5,4 @@
 @icon("res://path/to/optional/icon.svg")
 
 # (optional) class definition:
-class_name 
+class_name Player

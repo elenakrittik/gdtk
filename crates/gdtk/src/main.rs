@@ -1,21 +1,26 @@
-use gdtk::commands::parse::run as parse;
-use gdtk::display::{print_error, ACTION};
-use owo_colors::OwoColorize;
+use gdtk::cli::{Commands, GodotCommands};
+use gdtk::commands::{
+    godot::list::run as run_godot_list, godot::run as run_godot, parse::run as run_parse,
+    run as run_main, godot::install::run as run_godot_install,
+};
 
-fn main() -> anyhow::Result<()> {
-    let cli = gdtk::cli::parse();
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    let cli = gdtk::cli::cli();
 
     match &cli.command {
-        Some(gdtk::cli::Commands::Parse { file }) => match parse(file) {
-            Ok(_) => (),
-            Err(e) => print_error(e.to_string()),
+        Some(Commands::Parse { file }) => run_parse(file)?,
+        Some(Commands::Godot { command }) => match command {
+            Some(GodotCommands::List {
+                online,
+                unsupported,
+                dev,
+                unsupported_dev,
+            }) => run_godot_list(online, unsupported, dev, unsupported_dev).await?,
+            Some(GodotCommands::Install { version }) => run_godot_install(version).await?,
+            None => run_godot()?,
         },
-        None => {
-            print_error(format!(
-                "no command specified. Run {} to view help message.",
-                "`gdtk help`".style(*ACTION)
-            ));
-        }
+        None => run_main()?,
     }
 
     Ok(())

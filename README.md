@@ -11,10 +11,10 @@ extensible CLI.
 
 ## Planned features*
 
-this is essentially a public todo-list
+this is essentially a public roadmap
 
 - [ ] Parser
-- - [ ] Lexer
+- - [x] Lexer
 - - [ ] Actual parser
 - [ ] Formatter
 - [ ] Linter

@@ -1,9 +1,11 @@
 use logos::Logos;
 
 use crate::{
-    callbacks::{parse_float, parse_integer, trim_comment, trim_string},
-    error::SpannedError,
-    state::State,
+    callbacks::{
+        parse_binary, parse_bool, parse_e_notation, parse_float, parse_hex, parse_integer,
+        strip_prefix_and_quotes, strip_quotes, trim_comment, check_indent_style,
+    },
+    error::Error,
 };
 
 // Some reference materials:
@@ -11,28 +13,59 @@ use crate::{
 // - everything mentioned at https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/index.html
 // Note that we do not and will not (unless deemed necessary) 1/1 match Godot's token set and/or naming.
 
-// i literally feel how my "chars per LOC" stat goes lower and lower with each token definiton..
+// i *feel* how my "chars per LOC" stat goes lower and lower with each token definiton..
 #[rustfmt::skip]
 #[derive(Logos, Debug, PartialEq)]
-#[logos(error = SpannedError, extras = State)]
-#[logos(subpattern int = "[0-9]+")]
-#[logos(subpattern nint = "[-]*(?&int)")]
+#[logos(error = Error)]
+#[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
+#[logos(subpattern float = r"(?&int)\.(?&int)")]
+#[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
+#[logos(subpattern invalid_string = "(\"[^\'\r\n)]*\'?)|('[^\"\r\n)]*\"?)")] // TODO: more handles for "valid invalid" syntax
 pub enum Token<'a> {
     /* Essentials */
     
-    #[regex("[_a-zA-Z][_a-zA-Z0-9]*", |lex| lex.slice())] // TODO: UAX-31 identifiers
+    #[regex(r"(\p{XID_Start}|_)\p{XID_Continue}*")]
     Identifier(&'a str),
 
     /* Literals */
-    
-    #[regex("(?&nint)", parse_integer)]
+
+    // TODO: multiline strings
+
+    #[regex("(?&int)", parse_integer)]
     Integer(i64),
 
-    #[regex("(?&nint)(?&int)", parse_float)]
+    #[regex("0b[01](_?[01])*", parse_binary)]
+    BinaryInteger(u64),
+
+    #[regex("0x[0-9abcdefABCDEF](_?[0-9abcdefABCDEF])*", parse_hex)]
+    HexInteger(u64),
+
+    #[regex(r"(?&float)[eE][+-](?&int)", parse_e_notation)]
+    ScientificFloat(f64),
+
+    #[regex(r"(?&float)", parse_float)]
     Float(f64),
 
-    #[regex("\"[^\"]*\"", trim_string)]
+    #[regex("(?&string)|(?&invalid_string)", strip_quotes)]
     String(&'a str),
+
+    #[regex("\\&(?&string)", |lex| strip_prefix_and_quotes(lex, '&'))]
+    StringName(&'a str),
+
+    #[regex("\\$(?&string)", |lex| strip_prefix_and_quotes(lex, '$'))]
+    Node(&'a str),
+
+    #[regex("%(?&string)", |lex| strip_prefix_and_quotes(lex, '%'))]
+    UniqueNode(&'a str),
+
+    #[regex("\\^(?&string)", |lex| strip_prefix_and_quotes(lex, '^'))]
+    NodePath(&'a str),
+
+    #[regex("true|false", parse_bool)]
+    Boolean(bool),
+
+    #[token("null")]
+    Null,
 
     /* Comparison */
 
@@ -234,28 +267,25 @@ pub enum Token<'a> {
     #[token("var")]
     Var,
 
-    #[token("void")]
-    Void,
-
     /* Punctuation */
     
     #[regex("@")]
     Annotation,
 
     #[token("(")]
-    OpenParenthesis,
+    OpeningParenthesis,
 
     #[token(")")]
     ClosingParenthesis,
 
     #[token("[")]
-    OpenBracket,
+    OpeningBracket,
 
     #[token("]")]
     ClosingBracket,
 
     #[token("{")]
-    OpenBrace,
+    OpeningBrace,
 
     #[token("}")]
     ClosingBrace,
@@ -281,21 +311,18 @@ pub enum Token<'a> {
     #[token("->")]
     Arrow,
 
-    #[token("_")]
-    Wildcard,
-
     /* Whitespace */
 
     #[regex("(\r\n)|(\n)")]
     Newline,
 
-    // these three emitted manually from Blank
+    // these three are emitted manually from Blank
     Indent,
     Dedent,
     Spaces,
 
-    #[regex("([ ]|[\t])+")]
-    Blank(&'a str), // handled by gdtk-indent
+    #[regex("([ ]|[\t])+", |lex| { unsafe { check_indent_style(lex) } })]
+    Blank(&'a str),
 
     /* Specials */
 
@@ -320,4 +347,10 @@ pub enum Token<'a> {
 
     // #[token("self")]
     // Self,
+
+    // #[token("_")]
+    // Wildcard,
+
+    // #[token("void")]
+    // Void,
 }
