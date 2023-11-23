@@ -9,7 +9,7 @@ async fn main() -> anyhow::Result<()> {
     match &cli.command {
         Some(Commands::Parse { file }) => run_parse(file)?,
         Some(Commands::Godot { command }) => match command {
-            Some(GodotCommands::List { online, unsupported, dev }) => run_godot_list(online, unsupported, dev).await?,
+            Some(GodotCommands::List { online, unsupported, dev, unsupported_dev }) => run_godot_list(online, unsupported, dev, unsupported_dev).await?,
             None => run_godot()?,
         },
         None => run_main()?,

@@ -2,9 +2,9 @@ use comfy_table::{
     modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL, ContentArrangement, Row, Table,
 };
 
-pub async fn run(online: &bool, unsupported: &bool, dev: &bool) -> anyhow::Result<()> {
+pub async fn run(online: &bool, unsupported: &bool, dev: &bool, unsupported_dev: &bool) -> anyhow::Result<()> {
     if *online {
-        show_online_versions(*unsupported, *dev).await?;
+        show_online_versions(*unsupported, *dev, *unsupported_dev).await?;
     } else {
         show_local_versions()?;
     }
@@ -40,9 +40,9 @@ fn show_local_versions() -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn show_online_versions(unsupported: bool, dev: bool) -> anyhow::Result<()> {
+async fn show_online_versions(unsupported: bool, dev: bool, unsupported_dev: bool) -> anyhow::Result<()> {
     print!("Fetching versions..");
-    let versions = gdtk_gvm::online::fetch_versions(gdtk_gvm::online::FetchVersionsOptions { unsupported, dev }).await?;
+    let versions = gdtk_gvm::online::fetch_versions(gdtk_gvm::online::FetchVersionsOptions { unsupported, dev, unsupported_dev }).await?;
 
     println!("\rAvailable versions:");
 

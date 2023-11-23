@@ -23,8 +23,10 @@ const GODOT_SUPPORT_DATA: &str =
 pub struct FetchVersionsOptions {
     // Fetch versions that are no longer supported. See https://github.com/godotengine/godot-docs/blob/master/about/release_policy.rst
     pub unsupported: bool,
-    // Fetch in-development versions (dev, alpha, beta and rc).
+    // Fetch development snapshots (dev, alpha, beta and rc).
     pub dev: bool,
+    /// Fetch development snapshots for unsupported versions.
+    pub unsupported_dev: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -119,6 +121,10 @@ pub async fn fetch_versions(opt: FetchVersionsOptions) -> Result<Vec<String>, Er
     }
 
     if opt.dev {
+        if opt.unsupported_dev {
+            unstables.extend(versions);
+        }
+
         let unstables = join_all(
                 unstables
                     .iter()
@@ -162,6 +168,12 @@ pub fn get_version_download_url(version: String) -> Result<String, Error> {
 
 pub async fn check_version_exists(version: String) -> Result<bool, Error> {
     let url = get_version_download_url(version)?;
+    let client = reqwest::Client::new();
 
-    Ok(false)
+    let status = client.head(url).send().await?.status;
+
+    println!("{:?}", status);
+    println!("{:?}", status.is_success());
+
+    Ok(status.is_success())
 }

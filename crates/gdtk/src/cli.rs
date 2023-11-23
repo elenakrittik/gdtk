@@ -38,7 +38,18 @@ pub enum GodotCommands {
         /// Requires `--online`.
         #[arg(long, requires = "online")]
         dev: bool,
+
+        /// Include development snapshots of unsupported versions.
+        /// Requires both `--unsupported` and `--dev`.
+        #[arg(long = "unsupported-dev", requires = "unsupported", requires = "dev")]
+        unsupported_dev: bool,
     },
+
+    /// Install the specified Godot version.
+    Install {
+        /// The Godot version to install.
+        version: String,
+    }
 }
 
 pub fn cli() -> Cli {
