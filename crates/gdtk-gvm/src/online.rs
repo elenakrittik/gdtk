@@ -8,7 +8,7 @@ use versions::Versioning;
 
 use crate::Error;
 
-const GODOT_DOWNLOADS_ROOT: &str = "http://downloads.tuxfamily.org/godotengine/";
+const GODOT_DOWNLOADS_ROOT: &str = "http://download.tuxfamily.org/godotengine/";
 const IGNORED_IDENTIFIERS: &[&str] = &[
     "Parent Directory",
     "media",
@@ -174,6 +174,7 @@ pub fn get_version_download_url(version: String) -> Result<String, Error> {
 
 pub async fn check_version_exists(version: String) -> Result<bool, Error> {
     let url = get_version_download_url(version)?;
+    dbg!(&url);
     let client = reqwest::Client::new();
 
     let status = client.head(url).send().await?.status();

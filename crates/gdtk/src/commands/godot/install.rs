@@ -15,6 +15,5 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
 
     let data_dir = gdtk_utils::base_data_dir()?;
 
-
     Ok(())
 }
