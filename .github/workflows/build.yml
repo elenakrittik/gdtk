@@ -12,6 +12,7 @@ jobs:
       - uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: nightly
+          rustflags: "" # this action checks whether it builds, not whether it builds w/o warnings
 
       - run: cargo build --release
 
