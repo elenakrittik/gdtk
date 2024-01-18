@@ -21,7 +21,7 @@ var typed_var: int
 # var inferred_type := "String"
 
 # Constants.
-const ANSWER = 42
+const ANSWER: int = 42
 # const THE_NAME = "Charly"
 
 # Enums.
