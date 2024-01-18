@@ -13,7 +13,7 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
 
     gdtk_gvm::ensure_godots()?;
 
-    let data_dir = gdtk_utils::base_data_dir()?;
+    let _data_dir = gdtk_utils::base_data_dir()?;
 
     Ok(())
 }

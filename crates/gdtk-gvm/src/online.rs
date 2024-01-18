@@ -112,13 +112,9 @@ pub async fn fetch_versions(opt: FetchVersionsOptions) -> Result<Vec<String>, Er
             }
         }
 
-        versions = latest_versions
-            .values()
-            .into_iter()
-            .map(|v| v.to_string())
-            .collect();
+        versions = latest_versions.values().map(|v| v.to_string()).collect();
     } else {
-        versions = versions.into_iter().filter(|v| !unstables.contains(&v.as_str())).collect();
+        versions.retain(|v| !unstables.contains(&v.as_str()));
     }
 
     if opt.dev {
@@ -126,15 +122,10 @@ pub async fn fetch_versions(opt: FetchVersionsOptions) -> Result<Vec<String>, Er
             unstables.extend(versions.iter().map(|v| v.as_str()));
         }
 
-        let unstables = join_all(
-                unstables
-                    .iter()
-                    .map(|v| fetch_unstable_versions(v))
-            )
+        let unstables = join_all(unstables.iter().map(|v| fetch_unstable_versions(v)))
             .await
             .into_iter()
-            .map(|v| v.unwrap_or(vec![]))
-            .flatten()
+            .flat_map(|v| v.unwrap_or_default())
             .collect::<Vec<_>>();
 
         versions.extend(unstables);
@@ -165,7 +156,10 @@ pub fn get_version_download_url(version: String) -> Result<String, Error> {
     let url = url + &version.replace('-', "/");
 
     let majorminor_ver = version.chars().take(3).collect();
-    let release = Version::new(&version).unwrap().release.map(|v| v.to_string());
+    let release = Version::new(&version)
+        .unwrap()
+        .release
+        .map(|v| v.to_string());
 
     let url = url + "/" + crate::utils::get_version_archive_name(majorminor_ver, release)?.as_str();
 

@@ -1,12 +1,12 @@
 pub mod callbacks;
 pub mod error;
-pub mod token;
 #[cfg(test)]
 mod tests;
+pub mod token;
 
-use error::{WithSpan, IntoDiag};
-use logos::Logos;
+use error::{IntoDiag, WithSpan};
 use gdtk_diag::Diagnostic;
+use logos::Logos;
 use token::Token;
 
 pub type Lexeme<'a> = (Token<'a>, logos::Span);
@@ -17,9 +17,7 @@ pub fn lex(input: &str) -> LexOutput {
 }
 
 /// Arranges results by their span.
-fn preprocess<'a>(
-    lexer: logos::Lexer<'a, Token<'a>>,
-) ->  LexOutput {
+fn preprocess<'a>(lexer: logos::Lexer<'a, Token<'a>>) -> LexOutput {
     let mut tokens: Vec<Lexeme> = vec![];
     let mut diags: Vec<Diagnostic> = vec![];
 

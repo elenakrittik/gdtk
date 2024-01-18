@@ -10,7 +10,7 @@ pub mod error;
 
 // type TokenIter<'a> = impl Iterator<Item = Token<'a>>;
 
-pub fn parse_file<'a>(lexed: LexOutput<'a>) -> Result<ASTClass, Error> {
+pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
     let (tokens, _diags) = lexed;
 
     let mut class_name = None;
@@ -22,12 +22,7 @@ pub fn parse_file<'a>(lexed: LexOutput<'a>) -> Result<ASTClass, Error> {
 
     let mut iter = tokens.into_iter().map(|v| v.0);
 
-    loop {
-        let token = match iter.next() {
-            Some(tkn) => tkn,
-            None => break,
-        };
-
+    while let Some(token) = iter.next() {
         dbg!(&token);
 
         match token {
@@ -52,17 +47,17 @@ pub fn parse_file<'a>(lexed: LexOutput<'a>) -> Result<ASTClass, Error> {
                 }
 
                 class_name = Some(parse_classname(&mut iter));
-            },
+            }
             Token::Const => variables.push(parse_const(&mut iter)),
-            Token::Enum => todo!(),    //parse_enum(iter),
+            Token::Enum => todo!(), //parse_enum(iter),
             Token::Extends => {
                 if extends.is_some() {
                     panic!("more than one extends");
                 }
 
                 extends = Some(parse_extends(&mut iter));
-            },
-            Token::Func => todo!(),    //parse_func(iter),
+            }
+            Token::Func => todo!(), //parse_func(iter),
             Token::In => todo!(),
             Token::Is => todo!(),
             Token::Signal => todo!(), //parse_signal(iter),
@@ -71,12 +66,12 @@ pub fn parse_file<'a>(lexed: LexOutput<'a>) -> Result<ASTClass, Error> {
             Token::Annotation => {
                 let ann = parse_annotation(&mut iter);
 
-                if ann.identifier == "icon" && matches!(class_name, None) {
+                if ann.identifier == "icon" && class_name.is_none() {
                     icon = Some(ann);
                 } else {
                     ann_stack.push(ann);
                 }
-            },
+            }
             Token::OpeningParenthesis => todo!(),
             Token::ClosingParenthesis => todo!(),
             Token::OpeningBracket => todo!(),
@@ -103,7 +98,7 @@ pub fn parse_file<'a>(lexed: LexOutput<'a>) -> Result<ASTClass, Error> {
         }
     }
 
-    if ann_stack.len() > 0 {
+    if !ann_stack.is_empty() {
         panic!("unapplied annotations: {ann_stack:?}");
     }
 
@@ -180,7 +175,7 @@ where
     let mut args = vec![];
     let mut expect_comma = false;
 
-    while let Some(token) = iter.next() {
+    for token in iter {
         match token {
             Token::String(s) => {
                 if expect_comma {
@@ -188,13 +183,13 @@ where
                 }
                 args.push(ASTValue::String(s));
                 expect_comma = true;
-            },
+            }
             Token::Comma => {
                 if !expect_comma {
                     panic!("unexpected comma");
                 }
                 expect_comma = false;
-            },
+            }
             Token::Blank(_) => (),
             Token::ClosingParenthesis => break,
             other => panic!("unexpected {other:?}"),
@@ -206,7 +201,7 @@ where
 
 pub fn parse_const<'a, T>(iter: &mut T) -> ASTVariable<'a>
 where
-    T: Iterator<Item = Token<'a>>
+    T: Iterator<Item = Token<'a>>,
 {
     expect!(iter, Token::Blank(_), ());
     let identifier = expect_blank_prefixed!(iter, Token::Identifier(s), s);
@@ -238,12 +233,17 @@ where
             typehint = expect_blank_prefixed!(iter, Token::Identifier(s), Some(s));
 
             match next_non_blank!(iter) {
-                Token::Assignment => value = expect_blank_prefixed!(iter, Token::Integer(i), Some(ASTValue::Number(i))),
+                Token::Assignment => {
+                    value =
+                        expect_blank_prefixed!(iter, Token::Integer(i), Some(ASTValue::Number(i)))
+                }
                 Token::Newline => (),
                 other => panic!("unexpected {other:?}, expected assignment or newline"),
             }
-        },
-        Token::Assignment => value = expect_blank_prefixed!(iter, Token::Integer(i), Some(ASTValue::Number(i))),
+        }
+        Token::Assignment => {
+            value = expect_blank_prefixed!(iter, Token::Integer(i), Some(ASTValue::Number(i)))
+        }
         Token::Newline => (),
         other => panic!("unexpected {other:?}, expected colon, assignment or newline"),
     }
@@ -258,7 +258,7 @@ where
 
 pub fn parse_extends<'a, T>(iter: &mut T) -> &'a str
 where
-    T: Iterator<Item = Token<'a>>
+    T: Iterator<Item = Token<'a>>,
 {
     expect!(iter, Token::Blank(_), ());
     expect_blank_prefixed!(iter, Token::Identifier(s), s)

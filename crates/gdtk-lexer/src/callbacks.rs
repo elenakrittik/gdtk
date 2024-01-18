@@ -30,13 +30,15 @@ fn get_style(blank: &str) -> Result<IndentStyle, Error> {
 }
 
 // quick & dirty, exactly what i need.
-pub unsafe fn check_indent_style<'a>(
-    lex: &mut logos::Lexer<'a, Token<'a>>,
-) -> Result<&'a str, Error> {
+/// Checks indentation style, what else.
+///
+/// # Safety
+/// Must be called at least once before becoming thread-safe. Maybe.
+pub unsafe fn check_indent_style<'a>(lex: &logos::Lexer<'a, Token<'a>>) -> Result<&'a str, Error> {
     let slc = lex.slice();
     let style = get_style(slc)?;
 
-    if matches!(INDENT_LENGTH, None) {
+    if INDENT_LENGTH.is_none() {
         INDENT_LENGTH = Some(slc.len() as u8); // if someone has 64-level indent, then it's their problem
     }
 
@@ -112,10 +114,9 @@ pub fn parse_float<'a>(lex: &logos::Lexer<'a, Token<'a>>) -> f64 {
 
 pub fn parse_hex<'a>(lex: &logos::Lexer<'a, Token<'a>>) -> u64 {
     let slc = lex.slice()[2..].replace('_', "").to_lowercase();
-    let mut mantissa = 0;
     let mut result: u64 = 0;
 
-    for c in slc.chars().rev() {
+    for (mantissa, c) in slc.chars().rev().enumerate() {
         let val = match c {
             '0' => 0,
             '1' => 1,
@@ -139,8 +140,7 @@ pub fn parse_hex<'a>(lex: &logos::Lexer<'a, Token<'a>>) -> u64 {
             ),
         };
 
-        result += val * (16u64.pow(mantissa));
-        mantissa += 1;
+        result += val * (16u64.pow(mantissa as u32));
     }
 
     result
@@ -218,7 +218,7 @@ fn strip_quotes_impl(slice: &str) -> Result<&str, Error> {
         }
     }
 
-    let c = slice.chars().nth(0).unwrap();
+    let c = slice.chars().next().unwrap();
 
     if c == '"' {
         return Err(Error::UnclosedDoubleStringLiteral);

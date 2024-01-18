@@ -5,7 +5,7 @@ macro_rules! test_eq {
         {
             let lexed = $crate::lex($input);
             let mut lexemes = vec![];
-            
+
             for (token, _) in lexed.0 {
                 lexemes.push(token);
             }
@@ -16,12 +16,10 @@ macro_rules! test_eq {
 }
 
 macro_rules! test_all_fails {
-    ($input: expr) => {
-        {
-            let lexed = $crate::lex($input);
-            assert!(lexed.0.len() == 0 && lexed.1.len() > 0);
-        }
-    };
+    ($input: expr) => {{
+        let lexed = $crate::lex($input);
+        assert!(lexed.0.len() == 0 && lexed.1.len() > 0);
+    }};
 }
 
 #[test]
@@ -54,7 +52,7 @@ fn test_identifier() {
     test_eq!("你1_你", Token::Identifier("你1_你"));
     test_eq!("你__你", Token::Identifier("你__你"));
     test_eq!("你_你1", Token::Identifier("你_你1"));
-    
+
     test_eq!("п", Token::Identifier("п"));
     test_eq!("привет", Token::Identifier("привет"));
     test_eq!("ПРИВЕТ", Token::Identifier("ПРИВЕТ"));
@@ -176,7 +174,10 @@ fn test_stringname() {
     test_eq!(r#"&"hello""#, Token::StringName("hello"));
     test_eq!(r#"&"你好""#, Token::StringName("你好"));
     test_eq!(r#"&"привет""#, Token::StringName("привет"));
-    test_eq!(r#"&"~!@#$%^&*()_+-=`|""#, Token::StringName("~!@#$%^&*()_+-=`|"));
+    test_eq!(
+        r#"&"~!@#$%^&*()_+-=`|""#,
+        Token::StringName("~!@#$%^&*()_+-=`|")
+    );
     test_eq!(r#"&"\r\n\f\\""#, Token::StringName(r"\r\n\f\\")); // TODO
     test_eq!(r#"&"""#, Token::StringName(""));
 }
@@ -190,7 +191,10 @@ fn test_node() {
 
 #[test]
 fn test_uniquenode() {
-    test_eq!(r#"%"PlayerAnimation""#, Token::UniqueNode("PlayerAnimation"));
+    test_eq!(
+        r#"%"PlayerAnimation""#,
+        Token::UniqueNode("PlayerAnimation")
+    );
 }
 
 #[test]
