@@ -2,16 +2,12 @@ use comfy_table::{
     modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL, ContentArrangement, Row, Table,
 };
 
-<<<<<<< HEAD
-pub async fn run(online: &bool, unsupported: &bool, dev: &bool, unsupported_dev: &bool) -> anyhow::Result<()> {
-=======
 pub async fn run(
     online: &bool,
     unsupported: &bool,
     dev: &bool,
     unsupported_dev: &bool,
 ) -> anyhow::Result<()> {
->>>>>>> e3c7acc4c6a15018f7d8b2178accdf27a97edf24
     if *online {
         show_online_versions(*unsupported, *dev, *unsupported_dev).await?;
     } else {
@@ -38,26 +34,13 @@ fn show_local_versions() -> anyhow::Result<()> {
         .apply_modifier(UTF8_ROUND_CORNERS)
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(["Version", "Path"])
-<<<<<<< HEAD
-        .add_rows(
-            versions
-                .into_iter()
-                .map(|(v, p)| Row::from([v, p])),
-        );
-=======
         .add_rows(versions.into_iter().map(|(v, p)| Row::from([v, p])));
->>>>>>> e3c7acc4c6a15018f7d8b2178accdf27a97edf24
 
     println!("{table}");
 
     Ok(())
 }
 
-<<<<<<< HEAD
-async fn show_online_versions(unsupported: bool, dev: bool, unsupported_dev: bool) -> anyhow::Result<()> {
-    print!("Fetching versions..");
-    let versions = gdtk_gvm::online::fetch_versions(gdtk_gvm::online::FetchVersionsOptions { unsupported, dev, unsupported_dev }).await?;
-=======
 async fn show_online_versions(
     unsupported: bool,
     dev: bool,
@@ -70,7 +53,6 @@ async fn show_online_versions(
         unsupported_dev,
     })
     .await?;
->>>>>>> e3c7acc4c6a15018f7d8b2178accdf27a97edf24
 
     println!("\rAvailable versions:");
 
