@@ -5,7 +5,6 @@ macro_rules! test_eq {
         {
             let lexed = $crate::lex($input);
             let mut lexemes = vec![];
-            
             for (token, _) in lexed.0 {
                 lexemes.push(token);
             }
@@ -16,12 +15,10 @@ macro_rules! test_eq {
 }
 
 macro_rules! test_all_fails {
-    ($input: expr) => {
-        {
-            let lexed = $crate::lex($input);
-            assert!(lexed.0.len() == 0 && lexed.1.len() > 0);
-        }
-    };
+    ($input: expr) => {{
+        let lexed = $crate::lex($input);
+        assert!(lexed.0.len() == 0 && lexed.1.len() > 0);
+    }};
 }
 
 #[test]
@@ -40,7 +37,6 @@ fn test_identifier() {
     test_eq!("X1_X", Token::Identifier("X1_X"));
     test_eq!("X__X", Token::Identifier("X__X"));
     test_eq!("X_X1", Token::Identifier("X_X1"));
-
     test_eq!("你", Token::Identifier("你"));
     test_eq!("你好", Token::Identifier("你好"));
     test_eq!("你1", Token::Identifier("你1"));
@@ -54,7 +50,6 @@ fn test_identifier() {
     test_eq!("你1_你", Token::Identifier("你1_你"));
     test_eq!("你__你", Token::Identifier("你__你"));
     test_eq!("你_你1", Token::Identifier("你_你1"));
-    
     test_eq!("п", Token::Identifier("п"));
     test_eq!("привет", Token::Identifier("привет"));
     test_eq!("ПРИВЕТ", Token::Identifier("ПРИВЕТ"));

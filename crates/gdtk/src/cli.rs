@@ -49,7 +49,11 @@ pub enum GodotCommands {
     Install {
         /// The Godot version to install.
         version: String,
+<<<<<<< HEAD
     }
+=======
+    },
+>>>>>>> e3c7acc4c6a15018f7d8b2178accdf27a97edf24
 }
 
 pub fn cli() -> Cli {

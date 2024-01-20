@@ -3,17 +3,17 @@
 
 pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ASTClass<'a> {
     pub class_name: Option<&'a str>,
     pub extends: Option<&'a str>,
-    pub icon_path: Option<&'a str>,
+    pub icon: Option<ASTAnnotation<'a>>,
     pub variables: Vec<ASTVariable<'a>>,
     pub enums: Vec<ASTEnum<'a>>,
     pub functions: Vec<ASTFunction<'a>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ASTVariable<'a> {
     pub identifier: &'a str,
     pub typehint: Option<&'a str>,
@@ -21,7 +21,7 @@ pub struct ASTVariable<'a> {
     pub kind: ASTVariableKind,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ASTVariableKind {
     /// Regular (`var`) variable.
     Regular,
@@ -33,19 +33,19 @@ pub enum ASTVariableKind {
     Static,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ASTEnum<'a> {
     pub identifier: Option<&'a str>,
     pub variants: Vec<ASTEnumVariant<'a>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ASTEnumVariant<'a> {
     pub identifier: &'a str,
     pub value: Option<i64>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ASTFunction<'a> {
     pub identifier: Option<&'a str>,
     pub parameters: Vec<ASTFunctionParameter<'a>>,
@@ -53,14 +53,14 @@ pub struct ASTFunction<'a> {
     pub body: CodeBlock<'a>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ASTFunctionParameter<'a> {
     pub identifier: &'a str,
     pub typehint: Option<&'a str>,
     pub default: Option<ASTValue<'a>>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, enum_as_inner::EnumAsInner)]
 pub enum ASTValue<'a> {
     Identifier(&'a str),
     Number(i64),
@@ -75,18 +75,20 @@ pub enum ASTValue<'a> {
     Array(Vec<ASTValue<'a>>),
     Dictionary(Vec<(&'a str, ASTValue<'a>)>),
     Lambda(ASTFunction<'a>),
-    Expression(ASTExpression<'a>),
+    BinaryExpr(ASTBinaryExpr<'a>),
+    /// (function_expr, arguments)
+    Call(Box<ASTValue<'a>>, Vec<ASTValue<'a>>),
 }
 
-#[derive(Debug)]
-pub struct ASTExpression<'a> {
+#[derive(Debug, Clone)]
+pub struct ASTBinaryExpr<'a> {
     pub left: Box<ASTValue<'a>>,
     pub right: Box<ASTValue<'a>>,
-    pub op: ASTOperation,
+    pub op: ASTBinaryOp,
 }
 
-#[derive(Debug)]
-pub enum ASTOperation {
+#[derive(Debug, Clone)]
+pub enum ASTBinaryOp {
     Less,
     LessEqual,
     Greater,
@@ -108,15 +110,15 @@ pub enum ASTOperation {
     Power,
     Divide,
     Remainder,
-    TypeCast, // x as y
+    TypeCast,  // x as y
     TypeCheck, // x is y
-    Contains, // x in y
+    Contains,  // x in y
     Await,
     PropertyAccess, // x.y
     Range,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ASTStatement<'a> {
     Assert(ASTValue<'a>),
     /// (identifier, kind, value)
@@ -137,7 +139,7 @@ pub enum ASTStatement<'a> {
     Value(ASTValue<'a>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ASTAssignmentKind {
     Regular,
     Plus,
@@ -154,16 +156,22 @@ pub enum ASTAssignmentKind {
     BitwiseShiftRight,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ASTMatchPattern<'a> {
     pub kind: ASTMatchPatternKind<'a>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ASTMatchPatternKind<'a> {
     Expression(ASTValue<'a>),
     Binding(ASTVariable<'a>),
     Array(Vec<ASTMatchPattern<'a>>),
     Multiple(Vec<ASTMatchPattern<'a>>),
     // TODO: Dictionary patterns
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTAnnotation<'a> {
+    pub identifier: &'a str,
+    pub arguments: Vec<ASTValue<'a>>,
 }
