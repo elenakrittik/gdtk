@@ -13,7 +13,7 @@ extends BaseClass
 
 # Member variables.
 var a = 5
-# var s = "Hello"
+var s = "Hello"
 # var arr = [1, 2, 3]
 # var dict = {"key": "value", 2: 3}
 # var other_dict = {key = "value", other_key = 2}
@@ -21,8 +21,9 @@ var typed_var: int
 # var inferred_type := "String"
 
 # Constants.
+const ANSWER = 42
 const ANSWER: int = 42
-# const THE_NAME = "Charly"
+const THE_NAME = "Charly"
 
 # Enums.
 # enum {UNIT_NEUTRAL, UNIT_ENEMY, UNIT_ALLY}

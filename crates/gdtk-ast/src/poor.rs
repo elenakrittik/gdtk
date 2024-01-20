@@ -75,18 +75,20 @@ pub enum ASTValue<'a> {
     Array(Vec<ASTValue<'a>>),
     Dictionary(Vec<(&'a str, ASTValue<'a>)>),
     Lambda(ASTFunction<'a>),
-    Expression(ASTExpression<'a>),
+    BinaryExpr(ASTBinaryExpr<'a>),
+    /// (function_expr, arguments)
+    Call(Box<ASTValue<'a>>, Vec<ASTValue<'a>>),
 }
 
 #[derive(Debug, Clone)]
-pub struct ASTExpression<'a> {
+pub struct ASTBinaryExpr<'a> {
     pub left: Box<ASTValue<'a>>,
     pub right: Box<ASTValue<'a>>,
-    pub op: ASTOperation,
+    pub op: ASTBinaryOp,
 }
 
 #[derive(Debug, Clone)]
-pub enum ASTOperation {
+pub enum ASTBinaryOp {
     Less,
     LessEqual,
     Greater,

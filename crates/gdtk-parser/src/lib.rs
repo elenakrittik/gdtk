@@ -175,24 +175,23 @@ where
     let mut args = vec![];
     let mut expect_comma = false;
 
-    for token in iter {
+    while let Some(token) = iter.next() {
         match token {
-            Token::String(s) => {
-                if expect_comma {
-                    panic!("expected comma, got string {:?}", s);
-                }
-                args.push(ASTValue::String(s));
-                expect_comma = true;
-            }
             Token::Comma => {
                 if !expect_comma {
-                    panic!("unexpected comma");
+                    panic!("unexpected comma, expected a value");
                 }
                 expect_comma = false;
             }
             Token::Blank(_) => (),
             Token::ClosingParenthesis => break,
-            other => panic!("unexpected {other:?}"),
+            other => {
+                if expect_comma {
+                    panic!("expected comma, got {other:?}");
+                }
+                args.push(parse_value(iter, Some(other)));
+                expect_comma = true;
+            }
         }
     }
 
@@ -205,10 +204,20 @@ where
 {
     expect!(iter, Token::Blank(_), ());
     let identifier = expect_blank_prefixed!(iter, Token::Identifier(s), s);
-    expect_blank_prefixed!(iter, Token::Colon, ());
-    let typehint = expect_blank_prefixed!(iter, Token::Identifier(s), Some(s)); // TODO: support subscription
-    expect_blank_prefixed!(iter, Token::Assignment, ());
-    let value = expect_blank_prefixed!(iter, Token::Integer(i), Some(ASTValue::Number(i))); // TODO: parse value
+    let mut typehint = None;
+
+    let value = Some(match next_non_blank!(iter) {
+        Token::Colon => {
+            typehint = expect_blank_prefixed!(iter, Token::Identifier(s), Some(s));
+            #[allow(clippy::unused_unit)] // false positive
+            {
+                expect_blank_prefixed!(iter, Token::Assignment, ());
+            }
+            parse_value(iter, None)
+        }
+        Token::Assignment => parse_value(iter, None),
+        other => panic!("unexpected {other:?}, expected colon or assignment"),
+    });
 
     ASTVariable {
         identifier,
@@ -233,17 +242,12 @@ where
             typehint = expect_blank_prefixed!(iter, Token::Identifier(s), Some(s));
 
             match next_non_blank!(iter) {
-                Token::Assignment => {
-                    value =
-                        expect_blank_prefixed!(iter, Token::Integer(i), Some(ASTValue::Number(i)))
-                }
+                Token::Assignment => value = Some(parse_value(iter, None)),
                 Token::Newline => (),
                 other => panic!("unexpected {other:?}, expected assignment or newline"),
             }
         }
-        Token::Assignment => {
-            value = expect_blank_prefixed!(iter, Token::Integer(i), Some(ASTValue::Number(i)))
-        }
+        Token::Assignment => value = Some(parse_value(iter, None)),
         Token::Newline => (),
         other => panic!("unexpected {other:?}, expected colon, assignment or newline"),
     }
@@ -262,4 +266,29 @@ where
 {
     expect!(iter, Token::Blank(_), ());
     expect_blank_prefixed!(iter, Token::Identifier(s), s)
+}
+
+pub fn parse_value<'a, T>(iter: &mut T, mut token: Option<Token<'a>>) -> ASTValue<'a>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    if token.is_none() {
+        token = Some(next_non_blank!(iter));
+    }
+
+    match token.unwrap() {
+        Token::Identifier(s) => ASTValue::Identifier(s),
+        Token::Integer(i) => ASTValue::Number(i),
+        Token::BinaryInteger(i) => ASTValue::Number(i as i64),
+        Token::HexInteger(i) => ASTValue::Number(i as i64),
+        Token::ScientificFloat(f) => ASTValue::Float(f),
+        Token::Float(f) => ASTValue::Float(f),
+        Token::String(s) => ASTValue::String(s),
+        Token::StringName(s) => ASTValue::StringName(s),
+        Token::Node(s) => ASTValue::Node(s),
+        Token::UniqueNode(s) => ASTValue::UniqueNode(s),
+        Token::NodePath(s) => ASTValue::NodePath(s),
+        Token::Boolean(b) => ASTValue::Boolean(b),
+        other => panic!("unknown or unsupported expression: {other:?}"),
+    }
 }
