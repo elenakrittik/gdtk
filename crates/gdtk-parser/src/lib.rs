@@ -124,7 +124,7 @@ where
     T: Iterator<Item = Token<'a>>,
 {
     let identifier = expect_blank_prefixed!(iter, Token::Identifier(i), i);
-    let arguments = collect_args(iter);
+    let arguments = collect_args!(iter, Token::OpeningParenthesis, Token::ClosingParenthesis);
 
     ASTAnnotation {
         identifier,
@@ -166,16 +166,16 @@ pub macro next_non_blank($iter:expr) {
     }
 }
 
-pub fn collect_args<'a, T>(iter: &mut T) -> Vec<ASTValue<'a>>
-where
-    T: Iterator<Item = Token<'a>>,
-{
-    expect!(iter, Token::OpeningParenthesis, ());
+pub macro collect_args($iter:expr, $opening:pat, $closing:pat) {{
+    expect!($iter, $opening, ());
+    collect_args_raw!($iter, $closing)
+}}
 
+pub macro collect_args_raw($iter:expr, $closing:pat) {{
     let mut args = vec![];
     let mut expect_comma = false;
 
-    while let Some(token) = iter.next() {
+    while let Some(token) = $iter.next() {
         match token {
             Token::Comma => {
                 if !expect_comma {
@@ -184,19 +184,19 @@ where
                 expect_comma = false;
             }
             Token::Blank(_) => (),
-            Token::ClosingParenthesis => break,
+            $closing => break,
             other => {
                 if expect_comma {
                     panic!("expected comma, got {other:?}");
                 }
-                args.push(parse_value(iter, Some(other)));
+                args.push(parse_value($iter, Some(other)));
                 expect_comma = true;
             }
         }
     }
 
     args
-}
+}}
 
 pub fn parse_const<'a, T>(iter: &mut T) -> ASTVariable<'a>
 where
@@ -204,25 +204,36 @@ where
 {
     expect!(iter, Token::Blank(_), ());
     let identifier = expect_blank_prefixed!(iter, Token::Identifier(s), s);
-    let mut typehint = None;
 
-    let value = Some(match next_non_blank!(iter) {
+    let mut typehint = None;
+    let mut infer_type = false;
+
+    // either colon or an assignment
+    let value = match next_non_blank!(iter) {
+        // got a colon, has to be followed by an identifier (type hint) or an assignment
         Token::Colon => {
-            typehint = expect_blank_prefixed!(iter, Token::Identifier(s), Some(s));
-            #[allow(clippy::unused_unit)] // false positive
-            {
-                expect_blank_prefixed!(iter, Token::Assignment, ());
+            match next_non_blank!(iter) {
+                Token::Identifier(s) => {
+                    typehint = Some(s);
+                    expect_blank_prefixed!(iter, Token::Assignment, ());
+                    parse_value(iter, None)
+                },
+                Token::Assignment => {
+                    infer_type = true;
+                    parse_value(iter, None)
+                }
+                other => panic!("unexpected {other:?}, expected identifier or assignment"),
             }
-            parse_value(iter, None)
-        }
+        },
         Token::Assignment => parse_value(iter, None),
         other => panic!("unexpected {other:?}, expected colon or assignment"),
-    });
+    };
 
     ASTVariable {
         identifier,
+        infer_type,
         typehint,
-        value,
+        value: Some(value),
         kind: ASTVariableKind::Constant,
     }
 }
@@ -234,26 +245,43 @@ where
     expect!(iter, Token::Blank(_), ());
     let identifier = expect_blank_prefixed!(iter, Token::Identifier(s), s);
 
+    let mut infer_type = false;
     let mut typehint = None;
     let mut value = None;
 
+    // a colon, an assignment or a newline
     match next_non_blank!(iter) {
         Token::Colon => {
-            typehint = expect_blank_prefixed!(iter, Token::Identifier(s), Some(s));
-
+            // colon can be followed by an identifier (typehint) or an assignment (means the type should be inferred)
             match next_non_blank!(iter) {
-                Token::Assignment => value = Some(parse_value(iter, None)),
-                Token::Newline => (),
+                Token::Identifier(s) => {
+                    // we got the typehint
+                    typehint = Some(s);
+
+                    // typehint can be followed by an assignment or a newline
+                    match next_non_blank!(iter) {
+                        // found assignment, then there must be a value
+                        Token::Assignment => value = Some(parse_value(iter, None)),
+                        // no value
+                        Token::Newline => (),
+                        other => panic!("unexpected {other:?}, expected assignment or newline"),
+                    }
+                },
+                Token::Assignment => {
+                    infer_type = true;
+                    value = Some(parse_value(iter, None));
+                },
                 other => panic!("unexpected {other:?}, expected assignment or newline"),
             }
-        }
+        },
         Token::Assignment => value = Some(parse_value(iter, None)),
-        Token::Newline => (),
+        Token::Newline => (), // both typehint and value are optional
         other => panic!("unexpected {other:?}, expected colon, assignment or newline"),
     }
 
     ASTVariable {
         identifier,
+        infer_type: false, // TODO
         typehint,
         value,
         kind: ASTVariableKind::Regular,
@@ -289,6 +317,7 @@ where
         Token::UniqueNode(s) => ASTValue::UniqueNode(s),
         Token::NodePath(s) => ASTValue::NodePath(s),
         Token::Boolean(b) => ASTValue::Boolean(b),
+        Token::OpeningBracket => ASTValue::Array(collect_args_raw!(iter, Token::ClosingBracket)),
         other => panic!("unknown or unsupported expression: {other:?}"),
     }
 }

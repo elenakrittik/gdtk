@@ -16,6 +16,7 @@ pub struct ASTClass<'a> {
 #[derive(Debug, Clone)]
 pub struct ASTVariable<'a> {
     pub identifier: &'a str,
+    pub infer_type: bool,
     pub typehint: Option<&'a str>,
     pub value: Option<ASTValue<'a>>,
     pub kind: ASTVariableKind,
