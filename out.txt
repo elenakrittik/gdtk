@@ -1,0 +1,1695 @@
+   Compiling gdtk-lexer v0.1.0 (C:\Users\lena\Development\Projects\Rust\gdtk\crates\gdtk-lexer)
+   Compiling gdtk-parser v0.1.0 (C:\Users\lena\Development\Projects\Rust\gdtk\crates\gdtk-parser)
+warning: unused import: `hashbrown::HashMap`
+ --> crates\gdtk-parser\src\lib.rs:6:5
+  |
+6 | use hashbrown::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused variable: `iter`
+   --> crates\gdtk-parser\src\lib.rs:377:33
+    |
+377 | pub fn parse_python_dict<'a, T>(iter: &mut T, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
+    |                                 ^^^^ help: if this is intentional, prefix it with an underscore: `_iter`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `vec`
+   --> crates\gdtk-parser\src\lib.rs:377:47
+    |
+377 | pub fn parse_python_dict<'a, T>(iter: &mut T, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
+    |                                               ^^^ help: if this is intentional, prefix it with an underscore: `_vec`
+
+warning: unused variable: `first_key`
+   --> crates\gdtk-parser\src\lib.rs:377:72
+    |
+377 | pub fn parse_python_dict<'a, T>(iter: &mut T, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
+    |                                                                        ^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_first_key`
+
+   Compiling gdtk v0.1.0 (C:\Users\lena\Development\Projects\Rust\gdtk\crates\gdtk)
+warning: `gdtk-parser` (lib) generated 4 warnings (run `cargo fix --lib -p gdtk-parser` to apply 4 suggestions)
+    Finished dev [unoptimized + debuginfo] target(s) in 3.12s
+     Running `target\debug\gdtk.exe parse --file .\incremental.gd`
+[crates\gdtk-lexer\src\callbacks.rs:203:5] "parsing str!" = "parsing str!"
+[crates\gdtk-lexer\src\callbacks.rs:203:5] &slice = "\"res://path/to/optional/icon.svg\""
+[crates\gdtk-lexer\src\callbacks.rs:203:5] "parsing str!" = "parsing str!"
+[crates\gdtk-lexer\src\callbacks.rs:203:5] &slice = "\"Hello\""
+[crates\gdtk-lexer\src\callbacks.rs:203:5] "parsing str!" = "parsing str!"
+[crates\gdtk-lexer\src\callbacks.rs:203:5] &slice = "\"value\""
+[crates\gdtk-lexer\src\callbacks.rs:203:5] "parsing str!" = "parsing str!"
+[crates\gdtk-lexer\src\callbacks.rs:203:5] &slice = "\"String\""
+[crates\gdtk-lexer\src\callbacks.rs:203:5] "parsing str!" = "parsing str!"
+[crates\gdtk-lexer\src\callbacks.rs:203:5] &slice = "\"Charly\""
+[crates\gdtk-lexer\src\callbacks.rs:203:5] "parsing str!" = "parsing str!"
+[crates\gdtk-lexer\src\callbacks.rs:203:5] &slice = "\"Charly\""
+[crates\gdtk\src\commands\parse.rs:9:5] &lexed = (
+    [
+        (
+            Comment(
+                " Everything after \"#\" is a comment.",
+            ),
+            0..37,
+        ),
+        (
+            Newline,
+            37..38,
+        ),
+        (
+            Comment(
+                " A file is a class!",
+            ),
+            38..59,
+        ),
+        (
+            Newline,
+            59..60,
+        ),
+        (
+            Newline,
+            60..62,
+        ),
+        (
+            Comment(
+                " (optional) icon to show in the editor dialogs:",
+            ),
+            62..111,
+        ),
+        (
+            Newline,
+            111..112,
+        ),
+        (
+            Annotation,
+            112..113,
+        ),
+        (
+            Identifier(
+                "icon",
+            ),
+            113..117,
+        ),
+        (
+            OpeningParenthesis,
+            117..118,
+        ),
+        (
+            String(
+                "res://path/to/optional/icon.svg",
+            ),
+            118..151,
+        ),
+        (
+            ClosingParenthesis,
+            151..152,
+        ),
+        (
+            Newline,
+            152..154,
+        ),
+        (
+            Newline,
+            154..156,
+        ),
+        (
+            Comment(
+                " (optional) class definition:",
+            ),
+            156..187,
+        ),
+        (
+            Newline,
+            187..188,
+        ),
+        (
+            ClassName,
+            188..198,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            198..199,
+        ),
+        (
+            Identifier(
+                "MyClass",
+            ),
+            199..206,
+        ),
+        (
+            Newline,
+            206..208,
+        ),
+        (
+            Newline,
+            208..210,
+        ),
+        (
+            Comment(
+                " Inheritance:",
+            ),
+            210..225,
+        ),
+        (
+            Newline,
+            225..226,
+        ),
+        (
+            Extends,
+            226..233,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            233..234,
+        ),
+        (
+            Identifier(
+                "BaseClass",
+            ),
+            234..243,
+        ),
+        (
+            Newline,
+            243..245,
+        ),
+        (
+            Newline,
+            245..247,
+        ),
+        (
+            Newline,
+            247..249,
+        ),
+        (
+            Comment(
+                " Member variables.",
+            ),
+            249..269,
+        ),
+        (
+            Newline,
+            269..270,
+        ),
+        (
+            Var,
+            270..273,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            273..274,
+        ),
+        (
+            Identifier(
+                "a",
+            ),
+            274..275,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            275..276,
+        ),
+        (
+            Assignment,
+            276..277,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            277..278,
+        ),
+        (
+            Integer(
+                5,
+            ),
+            278..279,
+        ),
+        (
+            Newline,
+            279..281,
+        ),
+        (
+            Var,
+            281..284,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            284..285,
+        ),
+        (
+            Identifier(
+                "s",
+            ),
+            285..286,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            286..287,
+        ),
+        (
+            Assignment,
+            287..288,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            288..289,
+        ),
+        (
+            String(
+                "Hello",
+            ),
+            289..296,
+        ),
+        (
+            Newline,
+            296..298,
+        ),
+        (
+            Var,
+            298..301,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            301..302,
+        ),
+        (
+            Identifier(
+                "arr",
+            ),
+            302..305,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            305..306,
+        ),
+        (
+            Assignment,
+            306..307,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            307..308,
+        ),
+        (
+            OpeningBracket,
+            308..309,
+        ),
+        (
+            Integer(
+                1,
+            ),
+            309..310,
+        ),
+        (
+            Comma,
+            310..311,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            311..312,
+        ),
+        (
+            Integer(
+                2,
+            ),
+            312..313,
+        ),
+        (
+            Comma,
+            313..314,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            314..315,
+        ),
+        (
+            Integer(
+                3,
+            ),
+            315..316,
+        ),
+        (
+            ClosingBracket,
+            316..317,
+        ),
+        (
+            Newline,
+            317..319,
+        ),
+        (
+            Comment(
+                " var dict = {\"key\": \"value\", 2: 3}",
+            ),
+            319..355,
+        ),
+        (
+            Newline,
+            355..356,
+        ),
+        (
+            Var,
+            356..359,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            359..360,
+        ),
+        (
+            Identifier(
+                "other_dict",
+            ),
+            360..370,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            370..371,
+        ),
+        (
+            Assignment,
+            371..372,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            372..373,
+        ),
+        (
+            OpeningBrace,
+            373..374,
+        ),
+        (
+            Identifier(
+                "key",
+            ),
+            374..377,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            377..378,
+        ),
+        (
+            Assignment,
+            378..379,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            379..380,
+        ),
+        (
+            String(
+                "value",
+            ),
+            380..387,
+        ),
+        (
+            Comma,
+            387..388,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            388..389,
+        ),
+        (
+            Identifier(
+                "other_key",
+            ),
+            389..398,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            398..399,
+        ),
+        (
+            Assignment,
+            399..400,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            400..401,
+        ),
+        (
+            Integer(
+                2,
+            ),
+            401..402,
+        ),
+        (
+            ClosingBrace,
+            402..403,
+        ),
+        (
+            Newline,
+            403..405,
+        ),
+        (
+            Var,
+            405..408,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            408..409,
+        ),
+        (
+            Identifier(
+                "typed_var",
+            ),
+            409..418,
+        ),
+        (
+            Colon,
+            418..419,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            419..420,
+        ),
+        (
+            Identifier(
+                "int",
+            ),
+            420..423,
+        ),
+        (
+            Newline,
+            423..425,
+        ),
+        (
+            Var,
+            425..428,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            428..429,
+        ),
+        (
+            Identifier(
+                "inferred_type",
+            ),
+            429..442,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            442..443,
+        ),
+        (
+            Colon,
+            443..444,
+        ),
+        (
+            Assignment,
+            444..445,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            445..446,
+        ),
+        (
+            String(
+                "String",
+            ),
+            446..454,
+        ),
+        (
+            Newline,
+            454..456,
+        ),
+        (
+            Newline,
+            456..458,
+        ),
+        (
+            Comment(
+                " Constants.",
+            ),
+            458..471,
+        ),
+        (
+            Newline,
+            471..472,
+        ),
+        (
+            Const,
+            472..477,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            477..478,
+        ),
+        (
+            Identifier(
+                "ANSWER",
+            ),
+            478..484,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            484..485,
+        ),
+        (
+            Assignment,
+            485..486,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            486..487,
+        ),
+        (
+            Integer(
+                42,
+            ),
+            487..489,
+        ),
+        (
+            Newline,
+            489..491,
+        ),
+        (
+            Const,
+            491..496,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            496..497,
+        ),
+        (
+            Identifier(
+                "ANSWER",
+            ),
+            497..503,
+        ),
+        (
+            Colon,
+            503..504,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            504..505,
+        ),
+        (
+            Identifier(
+                "int",
+            ),
+            505..508,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            508..509,
+        ),
+        (
+            Assignment,
+            509..510,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            510..511,
+        ),
+        (
+            Integer(
+                42,
+            ),
+            511..513,
+        ),
+        (
+            Newline,
+            513..515,
+        ),
+        (
+            Const,
+            515..520,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            520..521,
+        ),
+        (
+            Identifier(
+                "THE_NAME",
+            ),
+            521..529,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            529..530,
+        ),
+        (
+            Assignment,
+            530..531,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            531..532,
+        ),
+        (
+            String(
+                "Charly",
+            ),
+            532..540,
+        ),
+        (
+            Newline,
+            540..542,
+        ),
+        (
+            Const,
+            542..547,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            547..548,
+        ),
+        (
+            Identifier(
+                "THE_NAME",
+            ),
+            548..556,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            556..557,
+        ),
+        (
+            Colon,
+            557..558,
+        ),
+        (
+            Assignment,
+            558..559,
+        ),
+        (
+            Blank(
+                " ",
+            ),
+            559..560,
+        ),
+        (
+            String(
+                "Charly",
+            ),
+            560..568,
+        ),
+        (
+            Newline,
+            568..570,
+        ),
+        (
+            Newline,
+            570..572,
+        ),
+        (
+            Comment(
+                " Enums.",
+            ),
+            572..581,
+        ),
+        (
+            Newline,
+            581..582,
+        ),
+        (
+            Comment(
+                " enum {UNIT_NEUTRAL, UNIT_ENEMY, UNIT_ALLY}",
+            ),
+            582..627,
+        ),
+        (
+            Newline,
+            627..628,
+        ),
+        (
+            Comment(
+                " enum Named {THING_1, THING_2, ANOTHER_THING = -1}",
+            ),
+            628..680,
+        ),
+        (
+            Newline,
+            680..681,
+        ),
+        (
+            Newline,
+            681..683,
+        ),
+        (
+            Comment(
+                " Built-in vector types.",
+            ),
+            683..708,
+        ),
+        (
+            Newline,
+            708..709,
+        ),
+        (
+            Comment(
+                " var v2 = Vector2(1, 2)",
+            ),
+            709..734,
+        ),
+        (
+            Newline,
+            734..735,
+        ),
+        (
+            Comment(
+                " var v3 = Vector3(1, 2, 3)",
+            ),
+            735..763,
+        ),
+        (
+            Newline,
+            763..764,
+        ),
+        (
+            Newline,
+            764..766,
+        ),
+        (
+            Newline,
+            766..768,
+        ),
+        (
+            Comment(
+                " Functions.",
+            ),
+            768..781,
+        ),
+        (
+            Newline,
+            781..782,
+        ),
+        (
+            Comment(
+                " func some_function(param1, param2, param3):",
+            ),
+            782..828,
+        ),
+        (
+            Newline,
+            828..829,
+        ),
+        (
+            Comment(
+                "     const local_const = 5",
+            ),
+            829..857,
+        ),
+        (
+            Newline,
+            857..858,
+        ),
+        (
+            Comment(
+                " ",
+            ),
+            858..861,
+        ),
+        (
+            Newline,
+            861..862,
+        ),
+        (
+            Comment(
+                "     if param1 < local_const:",
+            ),
+            862..893,
+        ),
+        (
+            Newline,
+            893..894,
+        ),
+        (
+            Comment(
+                "         print(param1)",
+            ),
+            894..918,
+        ),
+        (
+            Newline,
+            918..919,
+        ),
+        (
+            Comment(
+                "     elif param2 > 5:",
+            ),
+            919..942,
+        ),
+        (
+            Newline,
+            942..943,
+        ),
+        (
+            Comment(
+                "         print(param2)",
+            ),
+            943..967,
+        ),
+        (
+            Newline,
+            967..968,
+        ),
+        (
+            Comment(
+                "     else:",
+            ),
+            968..980,
+        ),
+        (
+            Newline,
+            980..981,
+        ),
+        (
+            Comment(
+                "         print(\"Fail!\")",
+            ),
+            981..1006,
+        ),
+        (
+            Newline,
+            1006..1007,
+        ),
+        (
+            Comment(
+                " ",
+            ),
+            1007..1010,
+        ),
+        (
+            Newline,
+            1010..1011,
+        ),
+        (
+            Comment(
+                "     for i in range(20):",
+            ),
+            1011..1037,
+        ),
+        (
+            Newline,
+            1037..1038,
+        ),
+        (
+            Comment(
+                "         print(i)",
+            ),
+            1038..1057,
+        ),
+        (
+            Newline,
+            1057..1058,
+        ),
+        (
+            Comment(
+                " ",
+            ),
+            1058..1061,
+        ),
+        (
+            Newline,
+            1061..1062,
+        ),
+        (
+            Comment(
+                "     while param2 != 0:",
+            ),
+            1062..1087,
+        ),
+        (
+            Newline,
+            1087..1088,
+        ),
+        (
+            Comment(
+                "         param2 -= 1",
+            ),
+            1088..1110,
+        ),
+        (
+            Newline,
+            1110..1111,
+        ),
+        (
+            Comment(
+                " ",
+            ),
+            1111..1114,
+        ),
+        (
+            Newline,
+            1114..1115,
+        ),
+        (
+            Comment(
+                "     match param3:",
+            ),
+            1115..1135,
+        ),
+        (
+            Newline,
+            1135..1136,
+        ),
+        (
+            Comment(
+                "         3:",
+            ),
+            1136..1149,
+        ),
+        (
+            Newline,
+            1149..1150,
+        ),
+        (
+            Comment(
+                "             print(\"param3 is 3!\")",
+            ),
+            1150..1186,
+        ),
+        (
+            Newline,
+            1186..1187,
+        ),
+        (
+            Comment(
+                "         _:",
+            ),
+            1187..1200,
+        ),
+        (
+            Newline,
+            1200..1201,
+        ),
+        (
+            Comment(
+                "             print(\"param3 is not 3!\")",
+            ),
+            1201..1241,
+        ),
+        (
+            Newline,
+            1241..1242,
+        ),
+        (
+            Comment(
+                " ",
+            ),
+            1242..1245,
+        ),
+        (
+            Newline,
+            1245..1246,
+        ),
+        (
+            Comment(
+                "     var local_var = param1 + 3",
+            ),
+            1246..1279,
+        ),
+        (
+            Newline,
+            1279..1280,
+        ),
+        (
+            Comment(
+                "     return local_var",
+            ),
+            1280..1303,
+        ),
+        (
+            Newline,
+            1303..1304,
+        ),
+        (
+            Newline,
+            1304..1306,
+        ),
+        (
+            Newline,
+            1306..1308,
+        ),
+        (
+            Comment(
+                " Functions override functions with the same name on the base/super class.",
+            ),
+            1308..1383,
+        ),
+        (
+            Newline,
+            1383..1384,
+        ),
+        (
+            Comment(
+                " If you still want to call them, use \"super\":",
+            ),
+            1384..1431,
+        ),
+        (
+            Newline,
+            1431..1432,
+        ),
+        (
+            Comment(
+                " func something(p1, p2):",
+            ),
+            1432..1458,
+        ),
+        (
+            Newline,
+            1458..1459,
+        ),
+        (
+            Comment(
+                "     super(p1, p2)",
+            ),
+            1459..1479,
+        ),
+        (
+            Newline,
+            1479..1480,
+        ),
+        (
+            Newline,
+            1480..1482,
+        ),
+        (
+            Newline,
+            1482..1484,
+        ),
+        (
+            Comment(
+                " It's also possible to call another function in the super class:",
+            ),
+            1484..1550,
+        ),
+        (
+            Newline,
+            1550..1551,
+        ),
+        (
+            Comment(
+                " func other_something(p1, p2):",
+            ),
+            1551..1583,
+        ),
+        (
+            Newline,
+            1583..1584,
+        ),
+        (
+            Comment(
+                "     super.something(p1, p2)",
+            ),
+            1584..1614,
+        ),
+        (
+            Newline,
+            1614..1615,
+        ),
+        (
+            Newline,
+            1615..1617,
+        ),
+        (
+            Newline,
+            1617..1619,
+        ),
+        (
+            Comment(
+                " Inner class",
+            ),
+            1619..1633,
+        ),
+        (
+            Newline,
+            1633..1634,
+        ),
+        (
+            Comment(
+                " class Something:",
+            ),
+            1634..1653,
+        ),
+        (
+            Newline,
+            1653..1654,
+        ),
+        (
+            Comment(
+                "     var a = 10",
+            ),
+            1654..1671,
+        ),
+        (
+            Newline,
+            1671..1672,
+        ),
+        (
+            Newline,
+            1672..1674,
+        ),
+        (
+            Newline,
+            1674..1676,
+        ),
+        (
+            Comment(
+                " Constructor",
+            ),
+            1676..1690,
+        ),
+        (
+            Newline,
+            1690..1691,
+        ),
+        (
+            Comment(
+                " func _init():",
+            ),
+            1691..1707,
+        ),
+        (
+            Newline,
+            1707..1708,
+        ),
+        (
+            Comment(
+                "     print(\"Constructed!\")",
+            ),
+            1708..1736,
+        ),
+        (
+            Newline,
+            1736..1737,
+        ),
+        (
+            Comment(
+                "     var lv = Something.new()",
+            ),
+            1737..1768,
+        ),
+        (
+            Newline,
+            1768..1769,
+        ),
+        (
+            Comment(
+                "     print(lv.a)",
+            ),
+            1769..1787,
+        ),
+        (
+            Newline,
+            1787..1788,
+        ),
+    ],
+    [],
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Everything after \"#\" is a comment.",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " A file is a class!",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " (optional) icon to show in the editor dialogs:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Annotation
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " (optional) class definition:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = ClassName
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Inheritance:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Extends
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Member variables.",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Var
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Var
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Var
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " var dict = {\"key\": \"value\", 2: 3}",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Var
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Var
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Var
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Constants.",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Const
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Const
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Const
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Const
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Enums.",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " enum {UNIT_NEUTRAL, UNIT_ENEMY, UNIT_ALLY}",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " enum Named {THING_1, THING_2, ANOTHER_THING = -1}",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Built-in vector types.",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " var v2 = Vector2(1, 2)",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " var v3 = Vector3(1, 2, 3)",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Functions.",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " func some_function(param1, param2, param3):",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     const local_const = 5",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " ",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     if param1 < local_const:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "         print(param1)",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     elif param2 > 5:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "         print(param2)",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     else:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "         print(\"Fail!\")",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " ",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     for i in range(20):",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "         print(i)",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " ",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     while param2 != 0:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "         param2 -= 1",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " ",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     match param3:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "         3:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "             print(\"param3 is 3!\")",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "         _:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "             print(\"param3 is not 3!\")",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " ",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     var local_var = param1 + 3",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     return local_var",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Functions override functions with the same name on the base/super class.",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " If you still want to call them, use \"super\":",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " func something(p1, p2):",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     super(p1, p2)",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " It's also possible to call another function in the super class:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " func other_something(p1, p2):",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     super.something(p1, p2)",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Inner class",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " class Something:",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     var a = 10",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " Constructor",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    " func _init():",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     print(\"Constructed!\")",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     var lv = Something.new()",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Comment(
+    "     print(lv.a)",
+)
+[crates\gdtk-parser\src\lib.rs:27:9] &token = Newline
+[crates\gdtk\src\commands\parse.rs:10:5] parse_file(lexed)? = ASTClass {
+    class_name: Some(
+        "MyClass",
+    ),
+    extends: Some(
+        "BaseClass",
+    ),
+    icon: Some(
+        ASTAnnotation {
+            identifier: "icon",
+            arguments: [
+                String(
+                    "res://path/to/optional/icon.svg",
+                ),
+            ],
+        },
+    ),
+    variables: [
+        ASTVariable {
+            identifier: "a",
+            infer_type: false,
+            typehint: None,
+            value: Some(
+                Number(
+                    5,
+                ),
+            ),
+            kind: Regular,
+        },
+        ASTVariable {
+            identifier: "s",
+            infer_type: false,
+            typehint: None,
+            value: Some(
+                String(
+                    "Hello",
+                ),
+            ),
+            kind: Regular,
+        },
+        ASTVariable {
+            identifier: "arr",
+            infer_type: false,
+            typehint: None,
+            value: Some(
+                Array(
+                    [
+                        Number(
+                            1,
+                        ),
+                        Number(
+                            2,
+                        ),
+                        Number(
+                            3,
+                        ),
+                    ],
+                ),
+            ),
+            kind: Regular,
+        },
+        ASTVariable {
+            identifier: "other_dict",
+            infer_type: false,
+            typehint: None,
+            value: Some(
+                Dictionary(
+                    [
+                        (
+                            String(
+                                "key",
+                            ),
+                            String(
+                                "value",
+                            ),
+                        ),
+                        (
+                            String(
+                                "other_key",
+                            ),
+                            Number(
+                                2,
+                            ),
+                        ),
+                    ],
+                ),
+            ),
+            kind: Regular,
+        },
+        ASTVariable {
+            identifier: "typed_var",
+            infer_type: false,
+            typehint: Some(
+                "int",
+            ),
+            value: None,
+            kind: Regular,
+        },
+        ASTVariable {
+            identifier: "inferred_type",
+            infer_type: true,
+            typehint: None,
+            value: Some(
+                String(
+                    "String",
+                ),
+            ),
+            kind: Regular,
+        },
+        ASTVariable {
+            identifier: "ANSWER",
+            infer_type: false,
+            typehint: None,
+            value: Some(
+                Number(
+                    42,
+                ),
+            ),
+            kind: Constant,
+        },
+        ASTVariable {
+            identifier: "ANSWER",
+            infer_type: false,
+            typehint: Some(
+                "int",
+            ),
+            value: Some(
+                Number(
+                    42,
+                ),
+            ),
+            kind: Constant,
+        },
+        ASTVariable {
+            identifier: "THE_NAME",
+            infer_type: false,
+            typehint: None,
+            value: Some(
+                String(
+                    "Charly",
+                ),
+            ),
+            kind: Constant,
+        },
+        ASTVariable {
+            identifier: "THE_NAME",
+            infer_type: true,
+            typehint: None,
+            value: Some(
+                String(
+                    "Charly",
+                ),
+            ),
+            kind: Constant,
+        },
+    ],
+    enums: [],
+    functions: [],
+}

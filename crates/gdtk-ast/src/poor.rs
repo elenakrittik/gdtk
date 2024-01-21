@@ -2,6 +2,7 @@
 //! and instead represents them as raw strings.
 
 pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
+pub type DictValue<'a> = Vec<(ASTValue<'a>, ASTValue<'a>)>;
 
 #[derive(Debug, Clone)]
 pub struct ASTClass<'a> {
@@ -61,6 +62,7 @@ pub struct ASTFunctionParameter<'a> {
     pub default: Option<ASTValue<'a>>,
 }
 
+
 #[derive(Debug, Clone, enum_as_inner::EnumAsInner)]
 pub enum ASTValue<'a> {
     Identifier(&'a str),
@@ -74,7 +76,7 @@ pub enum ASTValue<'a> {
     Group(Vec<ASTValue<'a>>),
     Boolean(bool),
     Array(Vec<ASTValue<'a>>),
-    Dictionary(Vec<(&'a str, ASTValue<'a>)>),
+    Dictionary(DictValue<'a>),
     Lambda(ASTFunction<'a>),
     BinaryExpr(ASTBinaryExpr<'a>),
     /// (function_expr, arguments)

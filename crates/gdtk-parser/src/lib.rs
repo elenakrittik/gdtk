@@ -1,8 +1,9 @@
 // #![feature(type_alias_impl_trait)]
 #![feature(decl_macro)]
 
-use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTValue, ASTVariable, ASTVariableKind};
+use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTValue, ASTVariable, ASTVariableKind, DictValue};
 use gdtk_lexer::{token::Token, LexOutput};
+use hashbrown::HashMap;
 
 use crate::error::Error;
 
@@ -215,9 +216,11 @@ where
             match next_non_blank!(iter) {
                 Token::Identifier(s) => {
                     typehint = Some(s);
+
                     expect_blank_prefixed!(iter, Token::Assignment, ());
                     parse_value(iter, None)
                 },
+                // infer type
                 Token::Assignment => {
                     infer_type = true;
                     parse_value(iter, None)
@@ -281,7 +284,7 @@ where
 
     ASTVariable {
         identifier,
-        infer_type: false, // TODO
+        infer_type,
         typehint,
         value,
         kind: ASTVariableKind::Regular,
@@ -318,6 +321,62 @@ where
         Token::NodePath(s) => ASTValue::NodePath(s),
         Token::Boolean(b) => ASTValue::Boolean(b),
         Token::OpeningBracket => ASTValue::Array(collect_args_raw!(iter, Token::ClosingBracket)),
+        Token::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
         other => panic!("unknown or unsupported expression: {other:?}"),
     }
+}
+
+pub fn parse_dictionary<'a, T>(iter: &mut T) -> DictValue<'a>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    let mut vec: DictValue<'a> = vec![];
+
+    match next_non_blank!(iter) {
+        Token::ClosingBrace => (), // empty dict
+        Token::Identifier(s) => parse_lua_dict(iter, &mut vec, ASTValue::String(s)),
+        other => {
+            let first_key = parse_value(iter, Some(other));
+            parse_python_dict(iter, &mut vec, first_key);
+        },
+    }
+
+    vec
+}
+
+pub fn parse_lua_dict<'a, T>(iter: &mut T, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    expect_blank_prefixed!(iter, Token::Assignment, ());
+    let tkn = next_non_blank!(iter);
+    let first_val = parse_value(iter, Some(tkn));
+    vec.push((first_key, first_val));
+
+    let mut expect_comma = true; // just got our pair, expect a comma
+
+    loop {
+        match next_non_blank!(iter) {
+            Token::Comma => {
+                if !expect_comma {
+                    panic!("unexpected comma, expected a value");
+                }
+                expect_comma = false;
+            },
+            Token::Identifier(s) => {
+                expect_blank_prefixed!(iter, Token::Assignment, ());
+                vec.push((ASTValue::String(s), parse_value(iter, None)));
+                expect_comma = true;
+            },
+            Token::ClosingBrace => break,
+            other => panic!("unexpected {other:?}"),
+        }
+    }
+}
+
+pub fn parse_python_dict<'a, T>(iter: &mut T, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    todo!()
 }

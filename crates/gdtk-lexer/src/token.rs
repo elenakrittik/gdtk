@@ -20,7 +20,6 @@ use crate::{
 #[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
 #[logos(subpattern float = r"(?&int)\.(?&int)")]
 #[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
-#[logos(subpattern invalid_string = "(\"[^\'\r\n)]*\'?)|('[^\"\r\n)]*\"?)")] // TODO: more handles for "valid invalid" syntax
 pub enum Token<'a> {
     /* Essentials */
     
@@ -46,7 +45,7 @@ pub enum Token<'a> {
     #[regex(r"(?&float)", parse_float)]
     Float(f64),
 
-    #[regex("(?&string)|(?&invalid_string)", strip_quotes)]
+    #[regex("(?&string)", strip_quotes)]
     String(&'a str),
 
     #[regex("\\&(?&string)", |lex| strip_prefix_and_quotes(lex, '&'))]
