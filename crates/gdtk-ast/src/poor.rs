@@ -58,6 +58,7 @@ pub struct ASTFunction<'a> {
 #[derive(Debug, Clone)]
 pub struct ASTFunctionParameter<'a> {
     pub identifier: &'a str,
+    pub infer_type: bool,
     pub typehint: Option<&'a str>,
     pub default: Option<ASTValue<'a>>,
 }

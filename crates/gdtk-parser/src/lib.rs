@@ -1,12 +1,14 @@
 // #![feature(type_alias_impl_trait)]
 #![feature(decl_macro)]
 
-use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTValue, ASTVariable, ASTVariableKind, DictValue, ASTEnum, ASTEnumVariant};
+use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTValue, ASTVariable, ASTVariableKind, DictValue, ASTEnum, ASTEnumVariant, ASTFunction, ASTFunctionParameter};
 use gdtk_lexer::{token::Token, LexOutput};
 
 use crate::error::Error;
 
 pub mod error;
+
+// TODO: some expressions of form "expect!(iter, Token::Blank(_), ())" may be unnecessary
 
 // type TokenIter<'a> = impl Iterator<Item = Token<'a>>;
 
@@ -246,6 +248,18 @@ where
     T: Iterator<Item = Token<'a>>,
 {
     expect!(iter, Token::Blank(_), ());
+    let (identifier, infer_type, typehint, value) = parse_idtydef!(iter, Token::Newline, ());
+
+    ASTVariable {
+        identifier,
+        infer_type,
+        typehint,
+        value,
+        kind: ASTVariableKind::Regular,
+    }
+}
+
+pub macro parse_idtydef($iter:expr, $endpat:pat, $endcode:expr) {
     let identifier = expect_blank_prefixed!(iter, Token::Identifier(s), s);
 
     let mut infer_type = false;
@@ -266,7 +280,7 @@ where
                         // found assignment, then there must be a value
                         Token::Assignment => value = Some(parse_value(iter, None)),
                         // no value
-                        Token::Newline => (),
+                        $endwhen,
                         other => panic!("unexpected {other:?}, expected assignment or newline"),
                     }
                 },
@@ -278,17 +292,11 @@ where
             }
         },
         Token::Assignment => value = Some(parse_value(iter, None)),
-        Token::Newline => (), // both typehint and value are optional
+        $envwhen,
         other => panic!("unexpected {other:?}, expected colon, assignment or newline"),
     }
 
-    ASTVariable {
-        identifier,
-        infer_type,
-        typehint,
-        value,
-        kind: ASTVariableKind::Regular,
-    }
+    (identifier, infer_type, typehint, value)
 }
 
 pub fn parse_extends<'a, T>(iter: &mut T) -> &'a str
@@ -332,7 +340,7 @@ where
         Token::Minus => match parse_value(iter, None) {
             ASTValue::Number(n) => ASTValue::Number(-n),
             ASTValue::Float(f) => ASTValue::Float(f),
-            other => panic!("unary minus is supported for numbers and float only"),
+            _ => panic!("unary minus is supported for numbers and float only"),
         }
         other => panic!("unknown or unsupported expression: {other:?}"),
     }
@@ -466,4 +474,20 @@ where
         identifier,
         variants,
     }
+}
+
+pub fn parse_func<'a, T>(iter: &mut T) -> ASTFunction<'a>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    expect!(iter, Token::Blank(_), ());
+    let identifier = expect_blank_prefixed!(iter, Token::Identifier(s), s);
+    expect_blank_prefixed!(iter, Token::OpeningParenthesis, ());
+    let params = vec![];
+
+    let mut expect_comma = false;
+
+    loop {}
+
+    params
 }
