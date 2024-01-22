@@ -1,9 +1,8 @@
 // #![feature(type_alias_impl_trait)]
 #![feature(decl_macro)]
 
-use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTValue, ASTVariable, ASTVariableKind, DictValue};
+use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTValue, ASTVariable, ASTVariableKind, DictValue, ASTEnum, ASTEnumVariant};
 use gdtk_lexer::{token::Token, LexOutput};
-use hashbrown::HashMap;
 
 use crate::error::Error;
 
@@ -18,6 +17,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
     let mut extends = None;
     let mut icon = None;
     let mut variables: Vec<ASTVariable<'_>> = vec![];
+    let mut enums: Vec<ASTEnum<'_>> = vec![];
 
     let mut ann_stack: Vec<ASTAnnotation<'_>> = vec![];
 
@@ -48,16 +48,16 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
                 }
 
                 class_name = Some(parse_classname(&mut iter));
-            }
+            },
             Token::Const => variables.push(parse_const(&mut iter)),
-            Token::Enum => todo!(), //parse_enum(iter),
+            Token::Enum => enums.push(parse_enum(&mut iter)),
             Token::Extends => {
                 if extends.is_some() {
                     panic!("more than one extends");
                 }
 
                 extends = Some(parse_extends(&mut iter));
-            }
+            },
             Token::Func => todo!(), //parse_func(iter),
             Token::In => todo!(),
             Token::Is => todo!(),
@@ -108,7 +108,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
         extends,
         icon,
         variables,
-        enums: vec![],
+        enums,
         functions: vec![],
     })
 }
@@ -308,7 +308,14 @@ where
     }
 
     match token.unwrap() {
-        Token::Identifier(s) => ASTValue::Identifier(s),
+        Token::Identifier(s) => {
+            match next_non_blank!(iter) {
+                Token::OpeningParenthesis => ASTValue::Call(Box::new(ASTValue::Identifier(s)), collect_args_raw!(iter, Token::ClosingParenthesis)),
+                Token::Newline => ASTValue::Identifier(s),
+                // TODO: prop access
+                other => panic!("unexpected {other:?}, expected parenthesis"),
+            }
+        },
         Token::Integer(i) => ASTValue::Number(i),
         Token::BinaryInteger(i) => ASTValue::Number(i as i64),
         Token::HexInteger(i) => ASTValue::Number(i as i64),
@@ -322,6 +329,11 @@ where
         Token::Boolean(b) => ASTValue::Boolean(b),
         Token::OpeningBracket => ASTValue::Array(collect_args_raw!(iter, Token::ClosingBracket)),
         Token::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
+        Token::Minus => match parse_value(iter, None) {
+            ASTValue::Number(n) => ASTValue::Number(-n),
+            ASTValue::Float(f) => ASTValue::Float(f),
+            other => panic!("unary minus is supported for numbers and float only"),
+        }
         other => panic!("unknown or unsupported expression: {other:?}"),
     }
 }
@@ -349,8 +361,7 @@ where
     T: Iterator<Item = Token<'a>>,
 {
     expect_blank_prefixed!(iter, Token::Assignment, ());
-    let tkn = next_non_blank!(iter);
-    let first_val = parse_value(iter, Some(tkn));
+    let first_val = parse_value(iter, None);
     vec.push((first_key, first_val));
 
     let mut expect_comma = true; // just got our pair, expect a comma
@@ -378,5 +389,81 @@ pub fn parse_python_dict<'a, T>(iter: &mut T, vec: &mut DictValue<'a>, first_key
 where
     T: Iterator<Item = Token<'a>>,
 {
-    todo!()
+    expect_blank_prefixed!(iter, Token::Colon, ());
+    let first_val = parse_value(iter, None);
+    vec.push((first_key, first_val));
+
+    let mut expect_comma = true; // just got our pair, expect a comma
+
+    loop {
+        match next_non_blank!(iter) {
+            Token::Comma => {
+                if !expect_comma {
+                    panic!("unexpected comma, expected a value");
+                }
+                expect_comma = false;
+            },
+            Token::ClosingBrace => break,
+            other => {
+                let key = parse_value(iter, Some(other));
+                expect_blank_prefixed!(iter, Token::Colon, ());
+                vec.push((key, parse_value(iter, None)));
+                expect_comma = true;
+            },
+        }
+    }
+}
+
+pub fn parse_enum<'a, T>(iter: &mut T) -> ASTEnum<'a>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    let identifier = match next_non_blank!(iter) {
+        Token::Identifier(s) => {
+            expect_blank_prefixed!(iter, Token::OpeningBrace, ());
+            Some(s)
+        },
+        Token::OpeningBrace => None,
+        other => panic!("unexpected {other:?}, expected identifier or opening brace"),
+    };
+
+    let mut variants = vec![];
+    let mut expect_comma = false;
+
+    loop {
+        match next_non_blank!(iter) {
+            Token::Comma => {
+                if !expect_comma {
+                    panic!("unexpected comma, expected a value");
+                }
+                expect_comma = false;
+            },
+            Token::Identifier(identifier) => {
+                if expect_comma {
+                    panic!("unexpected identifier, expected comma");
+                }
+
+                match next_non_blank!(iter) {
+                    Token::Comma => variants.push(ASTEnumVariant { identifier, value: None }),
+                    Token::Assignment => {
+                        let value = Some(parse_value(iter, None).into_number().unwrap());
+                        variants.push(ASTEnumVariant { identifier, value });
+                        expect_comma = true;
+                    },
+                    Token::ClosingBrace => {
+                        variants.push(ASTEnumVariant { identifier, value: None });
+                        break;
+                    },
+                    other => panic!("unxpected {other:?}, expected comma, assignment or closing brace"),
+                }
+            },
+            Token::ClosingBrace => break,
+            other => panic!("unexpected {other:?}"),
+        }
+    }
+
+    ASTEnum {
+        identifier,
+        variants,
+    }
 }

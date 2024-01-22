@@ -13,7 +13,6 @@ use crate::{
 // - everything mentioned at https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/index.html
 // Note that we do not and will not (unless deemed necessary) 1/1 match Godot's token set and/or naming.
 
-// i *feel* how my "chars per LOC" stat goes lower and lower with each token definiton..
 #[rustfmt::skip]
 #[derive(Logos, Debug, PartialEq)]
 #[logos(error = Error)]

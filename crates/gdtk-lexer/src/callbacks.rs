@@ -157,6 +157,8 @@ pub fn parse_e_notation<'a>(lex: &logos::Lexer<'a, Token<'a>>) -> f64 {
     parse_number(&slc)
 }
 
+// TODO: minus is not actually supported by lexer yet and is currently
+// handled by parser
 fn parse_number<T>(slc: &str) -> T
 where
     T: FromStr + Neg<Output = T>,

@@ -15,7 +15,7 @@ extends BaseClass
 var a = 5
 var s = "Hello"
 var arr = [1, 2, 3]
-# var dict = {"key": "value", 2: 3}
+var dict = {"key": "value", 2: 3}
 var other_dict = {key = "value", other_key = 2}
 var typed_var: int
 var inferred_type := "String"
@@ -27,13 +27,14 @@ const THE_NAME = "Charly"
 const THE_NAME := "Charly"
 
 # Enums.
-# enum {UNIT_NEUTRAL, UNIT_ENEMY, UNIT_ALLY}
-# enum Named {THING_1, THING_2, ANOTHER_THING = -1}
+enum {UNIT_NEUTRAL, UNIT_ENEMY, UNIT_ALLY}
+enum Named {THING_1, THING_2, ANOTHER_THING = -1}
 
 # Built-in vector types.
-# var v2 = Vector2(1, 2)
-# var v3 = Vector3(1, 2, 3)
-
+var v2 = Vector2(1, 2)
+var v3 = Vector3(1, 2, 3)
+var i = callme()
+var hi = callv(callme())
 
 # Functions.
 # func some_function(param1, param2, param3):
