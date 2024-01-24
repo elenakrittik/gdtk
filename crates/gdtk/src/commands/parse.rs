@@ -4,10 +4,19 @@ use gdtk_parser::parse_file;
 // use crate::display::print_error;
 
 pub fn run(file: &String) -> anyhow::Result<()> {
-    let content = std::fs::read_to_string(file)?;
-    let lexed = gdtk_lexer::lex(&content);
-    dbg!(&lexed);
-    dbg!(parse_file(lexed)?);
+    let mut i = 0;
+    loop {
+        i += 1;
+        let content = std::fs::read_to_string(file)?;
+        let lexed = gdtk_lexer::lex(&content);
+        let parsed = parse_file(lexed)?;
+
+        dbg!(&parsed);
+
+        if i >= 1 {
+            break;
+        }
+    }
 
     // dbg!(&lexed.0);
     // dbg!(&lexed.1);

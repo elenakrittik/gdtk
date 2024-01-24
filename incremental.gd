@@ -37,8 +37,8 @@ var i = callme()
 var hi = callv(callme())
 
 # Functions.
-# func some_function(param1, param2, param3):
-#     const local_const = 5
+func some_function(param1, param2: int, param3 = 1, param4: int = 1, param5 := 1):
+     const local_const = 5
 # 
 #     if param1 < local_const:
 #         print(param1)

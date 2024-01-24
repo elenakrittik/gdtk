@@ -171,7 +171,10 @@ fn test_stringname() {
     test_eq!(r#"&"hello""#, Token::StringName("hello"));
     test_eq!(r#"&"你好""#, Token::StringName("你好"));
     test_eq!(r#"&"привет""#, Token::StringName("привет"));
-    test_eq!(r#"&"~!@#$%^&*()_+-=`|""#, Token::StringName("~!@#$%^&*()_+-=`|"));
+    test_eq!(
+        r#"&"~!@#$%^&*()_+-=`|""#,
+        Token::StringName("~!@#$%^&*()_+-=`|")
+    );
     test_eq!(r#"&"\r\n\f\\""#, Token::StringName(r"\r\n\f\\")); // TODO
     test_eq!(r#"&"""#, Token::StringName(""));
 }
@@ -185,7 +188,10 @@ fn test_node() {
 
 #[test]
 fn test_uniquenode() {
-    test_eq!(r#"%"PlayerAnimation""#, Token::UniqueNode("PlayerAnimation"));
+    test_eq!(
+        r#"%"PlayerAnimation""#,
+        Token::UniqueNode("PlayerAnimation")
+    );
 }
 
 #[test]

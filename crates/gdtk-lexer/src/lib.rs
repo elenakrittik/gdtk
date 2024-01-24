@@ -1,8 +1,8 @@
 pub mod callbacks;
 pub mod error;
-pub mod token;
 #[cfg(test)]
 mod tests;
+pub mod token;
 
 use error::{IntoDiag, WithSpan};
 use gdtk_diag::Diagnostic;

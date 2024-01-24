@@ -1,7 +1,10 @@
 // #![feature(type_alias_impl_trait)]
 #![feature(decl_macro)]
 
-use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTValue, ASTVariable, ASTVariableKind, DictValue, ASTEnum, ASTEnumVariant, ASTFunction, ASTFunctionParameter};
+use gdtk_ast::poor::{
+    ASTAnnotation, ASTClass, ASTEnum, ASTEnumVariant, ASTFunction, ASTFunctionParameter, ASTValue,
+    ASTVariable, ASTVariableKind, CodeBlock, DictValue,
+};
 use gdtk_lexer::{token::Token, LexOutput};
 
 use crate::error::Error;
@@ -9,6 +12,7 @@ use crate::error::Error;
 pub mod error;
 
 // TODO: some expressions of form "expect!(iter, Token::Blank(_), ())" may be unnecessary
+// due to guarantees given by the lexer
 
 // type TokenIter<'a> = impl Iterator<Item = Token<'a>>;
 
@@ -20,14 +24,13 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
     let mut icon = None;
     let mut variables: Vec<ASTVariable<'_>> = vec![];
     let mut enums: Vec<ASTEnum<'_>> = vec![];
+    let mut functions: Vec<ASTFunction<'_>> = vec![];
 
     let mut ann_stack: Vec<ASTAnnotation<'_>> = vec![];
 
     let mut iter = tokens.into_iter().map(|v| v.0);
 
     while let Some(token) = iter.next() {
-        dbg!(&token);
-
         match token {
             Token::If => todo!(),
             Token::Elif => todo!(),
@@ -50,7 +53,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
                 }
 
                 class_name = Some(parse_classname(&mut iter));
-            },
+            }
             Token::Const => variables.push(parse_const(&mut iter)),
             Token::Enum => enums.push(parse_enum(&mut iter)),
             Token::Extends => {
@@ -59,8 +62,8 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
                 }
 
                 extends = Some(parse_extends(&mut iter));
-            },
-            Token::Func => todo!(), //parse_func(iter),
+            }
+            Token::Func => functions.push(parse_func(&mut iter)),
             Token::In => todo!(),
             Token::Is => todo!(),
             Token::Signal => todo!(), //parse_signal(iter),
@@ -111,7 +114,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
         icon,
         variables,
         enums,
-        functions: vec![],
+        functions,
     })
 }
 
@@ -138,7 +141,7 @@ where
 pub macro expect($iter:expr, $variant:pat, $ret:expr) {
     match $iter.next() {
         Some($variant) => $ret,
-        _ => panic!("expected {{__macro_arg1}}"),
+        other => panic!("expected {}, found {other:?}", stringify!($variant)),
     }
 }
 
@@ -148,7 +151,7 @@ pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {
             match token {
                 Token::Blank(_) => (),
                 $variant => break $ret,
-                _ => panic!("expected {{__macro_arg1}}"),
+                other => panic!("expected {}, found {other:?}", stringify!($variant)),
             }
         } else {
             panic!("unexpected EOF");
@@ -221,7 +224,7 @@ where
 
                     expect_blank_prefixed!(iter, Token::Assignment, ());
                     parse_value(iter, None)
-                },
+                }
                 // infer type
                 Token::Assignment => {
                     infer_type = true;
@@ -229,7 +232,7 @@ where
                 }
                 other => panic!("unexpected {other:?}, expected identifier or assignment"),
             }
-        },
+        }
         Token::Assignment => parse_value(iter, None),
         other => panic!("unexpected {other:?}, expected colon or assignment"),
     };
@@ -248,7 +251,7 @@ where
     T: Iterator<Item = Token<'a>>,
 {
     expect!(iter, Token::Blank(_), ());
-    let (identifier, infer_type, typehint, value) = parse_idtydef!(iter, Token::Newline, ());
+    let (identifier, infer_type, typehint, value) = parse_idtydef!(iter, Token::Newline => (),);
 
     ASTVariable {
         identifier,
@@ -259,45 +262,60 @@ where
     }
 }
 
-pub macro parse_idtydef($iter:expr, $endpat:pat, $endcode:expr) {
-    let identifier = expect_blank_prefixed!(iter, Token::Identifier(s), s);
+pub macro parse_idtydef($iter:expr, $($endpat:pat => $endcode:expr,)*) {{
+    let identifier = expect_blank_prefixed!($iter, Token::Identifier(s), s);
+
+    dbg!(&identifier);
 
     let mut infer_type = false;
     let mut typehint = None;
     let mut value = None;
 
     // a colon, an assignment or a newline
-    match next_non_blank!(iter) {
+    match next_non_blank!($iter) {
         Token::Colon => {
+            eprintln!("got colon");
             // colon can be followed by an identifier (typehint) or an assignment (means the type should be inferred)
-            match next_non_blank!(iter) {
+            match next_non_blank!($iter) {
                 Token::Identifier(s) => {
+                    eprintln!("got identifier/typehint");
                     // we got the typehint
                     typehint = Some(s);
 
                     // typehint can be followed by an assignment or a newline
-                    match next_non_blank!(iter) {
+                    match next_non_blank!($iter) {
                         // found assignment, then there must be a value
-                        Token::Assignment => value = Some(parse_value(iter, None)),
+                        Token::Assignment => {
+                            dbg!("expecting value");
+                            value = Some(parse_value($iter, None));
+                            dbg!("got value: {}", &value);
+                        },
                         // no value
-                        $endwhen,
+                        $($endpat => $endcode,)*
                         other => panic!("unexpected {other:?}, expected assignment or newline"),
                     }
                 },
                 Token::Assignment => {
+                    dbg!("got assignment => infer type");
                     infer_type = true;
-                    value = Some(parse_value(iter, None));
+                    dbg!("expecting value");
+                    value = Some(parse_value($iter, None));
+                    dbg!("got value: {}", &value);
                 },
                 other => panic!("unexpected {other:?}, expected assignment or newline"),
             }
         },
-        Token::Assignment => value = Some(parse_value(iter, None)),
-        $envwhen,
+        Token::Assignment => {
+            dbg!("got assignment, expecting value");
+            value = Some(parse_value($iter, None));
+            dbg!("got value: {}", &value);
+        },
+        $($endpat => $endcode,)*
         other => panic!("unexpected {other:?}, expected colon, assignment or newline"),
     }
 
     (identifier, infer_type, typehint, value)
-}
+}}
 
 pub fn parse_extends<'a, T>(iter: &mut T) -> &'a str
 where
@@ -318,12 +336,15 @@ where
     match token.unwrap() {
         Token::Identifier(s) => {
             match next_non_blank!(iter) {
-                Token::OpeningParenthesis => ASTValue::Call(Box::new(ASTValue::Identifier(s)), collect_args_raw!(iter, Token::ClosingParenthesis)),
+                Token::OpeningParenthesis => ASTValue::Call(
+                    Box::new(ASTValue::Identifier(s)),
+                    collect_args_raw!(iter, Token::ClosingParenthesis),
+                ),
                 Token::Newline => ASTValue::Identifier(s),
                 // TODO: prop access
                 other => panic!("unexpected {other:?}, expected parenthesis"),
             }
-        },
+        }
         Token::Integer(i) => ASTValue::Number(i),
         Token::BinaryInteger(i) => ASTValue::Number(i as i64),
         Token::HexInteger(i) => ASTValue::Number(i as i64),
@@ -341,7 +362,7 @@ where
             ASTValue::Number(n) => ASTValue::Number(-n),
             ASTValue::Float(f) => ASTValue::Float(f),
             _ => panic!("unary minus is supported for numbers and float only"),
-        }
+        },
         other => panic!("unknown or unsupported expression: {other:?}"),
     }
 }
@@ -358,7 +379,7 @@ where
         other => {
             let first_key = parse_value(iter, Some(other));
             parse_python_dict(iter, &mut vec, first_key);
-        },
+        }
     }
 
     vec
@@ -381,12 +402,12 @@ where
                     panic!("unexpected comma, expected a value");
                 }
                 expect_comma = false;
-            },
+            }
             Token::Identifier(s) => {
                 expect_blank_prefixed!(iter, Token::Assignment, ());
                 vec.push((ASTValue::String(s), parse_value(iter, None)));
                 expect_comma = true;
-            },
+            }
             Token::ClosingBrace => break,
             other => panic!("unexpected {other:?}"),
         }
@@ -410,14 +431,14 @@ where
                     panic!("unexpected comma, expected a value");
                 }
                 expect_comma = false;
-            },
+            }
             Token::ClosingBrace => break,
             other => {
                 let key = parse_value(iter, Some(other));
                 expect_blank_prefixed!(iter, Token::Colon, ());
                 vec.push((key, parse_value(iter, None)));
                 expect_comma = true;
-            },
+            }
         }
     }
 }
@@ -430,7 +451,7 @@ where
         Token::Identifier(s) => {
             expect_blank_prefixed!(iter, Token::OpeningBrace, ());
             Some(s)
-        },
+        }
         Token::OpeningBrace => None,
         other => panic!("unexpected {other:?}, expected identifier or opening brace"),
     };
@@ -445,26 +466,34 @@ where
                     panic!("unexpected comma, expected a value");
                 }
                 expect_comma = false;
-            },
+            }
             Token::Identifier(identifier) => {
                 if expect_comma {
                     panic!("unexpected identifier, expected comma");
                 }
 
                 match next_non_blank!(iter) {
-                    Token::Comma => variants.push(ASTEnumVariant { identifier, value: None }),
+                    Token::Comma => variants.push(ASTEnumVariant {
+                        identifier,
+                        value: None,
+                    }),
                     Token::Assignment => {
                         let value = Some(parse_value(iter, None).into_number().unwrap());
                         variants.push(ASTEnumVariant { identifier, value });
                         expect_comma = true;
-                    },
+                    }
                     Token::ClosingBrace => {
-                        variants.push(ASTEnumVariant { identifier, value: None });
+                        variants.push(ASTEnumVariant {
+                            identifier,
+                            value: None,
+                        });
                         break;
-                    },
-                    other => panic!("unxpected {other:?}, expected comma, assignment or closing brace"),
+                    }
+                    other => {
+                        panic!("unxpected {other:?}, expected comma, assignment or closing brace")
+                    }
                 }
-            },
+            }
             Token::ClosingBrace => break,
             other => panic!("unexpected {other:?}"),
         }
@@ -483,11 +512,50 @@ where
     expect!(iter, Token::Blank(_), ());
     let identifier = expect_blank_prefixed!(iter, Token::Identifier(s), s);
     expect_blank_prefixed!(iter, Token::OpeningParenthesis, ());
-    let params = vec![];
+    let mut parameters = vec![];
 
-    let mut expect_comma = false;
+    loop {
+        let mut expect_comma = true;
+        let mut break_ = false;
 
-    loop {}
+        let (identifier, infer_type, typehint, default) = parse_idtydef!(
+            iter,
+            Token::Comma => { dbg!("got comma"); expect_comma = false; },
+            Token::ClosingParenthesis => { break_ = true; dbg!("got end paren"); },
+        );
 
-    params
+        parameters.push(ASTFunctionParameter {
+            identifier,
+            infer_type,
+            typehint,
+            default,
+        });
+
+        if break_ {
+            break;
+        }
+
+        if expect_comma {
+            match next_non_blank!(iter) {
+                Token::Comma => (),
+                Token::ClosingParenthesis => break,
+                other => panic!("expected comma or closing parenthesis, found {other:?}"),
+            }
+        }
+    }
+
+    expect_blank_prefixed!(iter, Token::Colon, ());
+
+    ASTFunction {
+        identifier,
+        parameters,
+        body: vec![],
+    }
+}
+
+pub fn parse_func_body<'a, T>(iter: &mut T) -> CodeBlock<'a>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    vec![]
 }

@@ -202,8 +202,6 @@ fn strip_quotes_impl(slice: &str) -> Result<&str, Error> {
     let double = slice.contains('"');
     let single = slice.contains('\'');
 
-    dbg!("parsing str!", &slice);
-
     if double && !single {
         let slc = slice.strip_prefix('"').unwrap();
 

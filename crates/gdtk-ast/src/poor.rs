@@ -49,9 +49,8 @@ pub struct ASTEnumVariant<'a> {
 
 #[derive(Debug, Clone)]
 pub struct ASTFunction<'a> {
-    pub identifier: Option<&'a str>,
+    pub identifier: &'a str,
     pub parameters: Vec<ASTFunctionParameter<'a>>,
-    pub typehint: &'a str,
     pub body: CodeBlock<'a>,
 }
 
@@ -62,7 +61,6 @@ pub struct ASTFunctionParameter<'a> {
     pub typehint: Option<&'a str>,
     pub default: Option<ASTValue<'a>>,
 }
-
 
 #[derive(Debug, Clone, enum_as_inner::EnumAsInner)]
 pub enum ASTValue<'a> {
