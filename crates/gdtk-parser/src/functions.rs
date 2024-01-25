@@ -1,5 +1,5 @@
-use gdtk_lexer::{Token, TokenKind};
 use gdtk_ast::poor::{ASTFunction, ASTFunctionParameter, CodeBlock};
+use gdtk_lexer::{Token, TokenKind};
 
 use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
 
@@ -34,8 +34,14 @@ where
 
         if expect_comma {
             match next_non_blank!(iter) {
-                Token { kind: TokenKind::Comma, .. } => (),
-                Token { kind: TokenKind::ClosingParenthesis, .. } => break,
+                Token {
+                    kind: TokenKind::Comma,
+                    ..
+                } => (),
+                Token {
+                    kind: TokenKind::ClosingParenthesis,
+                    ..
+                } => break,
                 other => panic!("expected comma or closing parenthesis, found {other:?}"),
             }
         }

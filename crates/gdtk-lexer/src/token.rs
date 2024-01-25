@@ -3,8 +3,8 @@ use logos::Logos;
 
 use crate::{
     callbacks::{
-        parse_binary, parse_bool, parse_e_notation, parse_float, parse_hex,
-        parse_integer, strip_prefix_and_quotes, strip_quotes, trim_comment,
+        parse_binary, parse_bool, parse_e_notation, parse_float, parse_hex, parse_integer,
+        strip_prefix_and_quotes, strip_quotes, trim_comment,
     },
     error::Error,
 };

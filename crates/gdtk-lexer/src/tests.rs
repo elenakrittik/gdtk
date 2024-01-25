@@ -162,7 +162,10 @@ fn test_string() {
     test_eq!(r#""hello""#, TokenKind::String("hello"));
     test_eq!(r#""你好""#, TokenKind::String("你好"));
     test_eq!(r#""привет""#, TokenKind::String("привет"));
-    test_eq!(r#""~!@#$%^&*()_+-=`|""#, TokenKind::String("~!@#$%^&*()_+-=`|"));
+    test_eq!(
+        r#""~!@#$%^&*()_+-=`|""#,
+        TokenKind::String("~!@#$%^&*()_+-=`|")
+    );
     test_eq!(r#""\r\n\f\\""#, TokenKind::String(r"\r\n\f\\")); // TODO
     test_eq!(r#""""#, TokenKind::String(""));
 }
@@ -198,7 +201,10 @@ fn test_uniquenode() {
 #[test]
 fn test_nodepath() {
     test_eq!(r#"^"Sprite2D""#, TokenKind::NodePath("Sprite2D"));
-    test_eq!(r#"^"Player/Sprite2D""#, TokenKind::NodePath("Player/Sprite2D"));
+    test_eq!(
+        r#"^"Player/Sprite2D""#,
+        TokenKind::NodePath("Player/Sprite2D")
+    );
     test_eq!(r#"^"Player/привет""#, TokenKind::NodePath("Player/привет"));
 }
 
@@ -349,7 +355,11 @@ fn test_comment() {
     test_eq!("# hello#", TokenKind::Comment(" hello#"));
     test_eq!("#hello #", TokenKind::Comment("hello #"));
     test_eq!("# hello #", TokenKind::Comment(" hello #"));
-    test_eq!("# hello\n", TokenKind::Comment(" hello"), TokenKind::Newline);
+    test_eq!(
+        "# hello\n",
+        TokenKind::Comment(" hello"),
+        TokenKind::Newline
+    );
 }
 
 #[test]

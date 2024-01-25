@@ -56,7 +56,7 @@ pub macro collect_args_raw($iter:expr, $closing:pat) {{
                     panic!("unexpected comma, expected a value");
                 }
                 expect_comma = false;
-            },
+            }
             &TokenKind::Blank(_) => (),
             &$closing => break,
             other => {

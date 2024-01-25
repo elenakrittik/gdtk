@@ -1,22 +1,21 @@
 #![feature(decl_macro)]
 
-use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTVariable, ASTFunction, ASTEnum};
+use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTEnum, ASTFunction, ASTVariable};
 use gdtk_lexer::{token::TokenKind, LexOutput};
 
+use crate::classes::{parse_classname, parse_enum, parse_extends};
 pub use crate::error::Error;
-
 use crate::functions::parse_func;
-use crate::classes::{parse_classname, parse_extends, parse_enum};
 use crate::misc::parse_annotation;
 use crate::variables::{parse_const, parse_var};
 
+pub mod classes;
 pub mod error;
 pub mod functions;
-pub mod classes;
 pub mod misc;
 pub mod utils;
-pub mod variables;
 pub mod values;
+pub mod variables;
 
 pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
     let (tokens, _diags) = lexed;
@@ -55,7 +54,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
                 }
 
                 class_name = Some(parse_classname(&mut iter));
-            },
+            }
             TokenKind::Const => variables.push(parse_const(&mut iter)),
             TokenKind::Enum => enums.push(parse_enum(&mut iter)),
             TokenKind::Extends => {
@@ -64,7 +63,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
                 }
 
                 extends = Some(parse_extends(&mut iter));
-            },
+            }
             TokenKind::Func => functions.push(parse_func(&mut iter)),
             TokenKind::In => todo!(),
             TokenKind::Is => todo!(),
@@ -79,7 +78,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
                 } else {
                     ann_stack.push(ann);
                 }
-            },
+            }
             TokenKind::OpeningParenthesis => todo!(),
             TokenKind::ClosingParenthesis => todo!(),
             TokenKind::OpeningBracket => todo!(),

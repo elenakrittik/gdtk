@@ -1,6 +1,7 @@
-use gdtk_lexer::{Token, TokenKind};
 use gdtk_ast::poor::{ASTValue, DictValue};
-use crate::utils::{expect_blank_prefixed, next_non_blank, collect_args_raw};
+use gdtk_lexer::{Token, TokenKind};
+
+use crate::utils::{collect_args_raw, expect_blank_prefixed, next_non_blank};
 
 pub fn parse_value<'a, T>(iter: &mut T, mut token: Option<Token<'a>>) -> ASTValue<'a>
 where
@@ -13,15 +14,21 @@ where
     match token.unwrap().kind {
         TokenKind::Identifier(s) => {
             match next_non_blank!(iter) {
-                Token { kind: TokenKind::OpeningParenthesis, .. } => ASTValue::Call(
+                Token {
+                    kind: TokenKind::OpeningParenthesis,
+                    ..
+                } => ASTValue::Call(
                     Box::new(ASTValue::Identifier(s)),
                     collect_args_raw!(iter, TokenKind::ClosingParenthesis),
                 ),
-                Token { kind: TokenKind::Newline, .. } => ASTValue::Identifier(s),
+                Token {
+                    kind: TokenKind::Newline,
+                    ..
+                } => ASTValue::Identifier(s),
                 // TODO: prop access
                 other => panic!("unexpected {other:?}, expected parenthesis"),
             }
-        },
+        }
         TokenKind::Integer(i) => ASTValue::Number(i),
         TokenKind::BinaryInteger(i) => ASTValue::Number(i as i64),
         TokenKind::HexInteger(i) => ASTValue::Number(i as i64),
@@ -33,7 +40,9 @@ where
         TokenKind::UniqueNode(s) => ASTValue::UniqueNode(s),
         TokenKind::NodePath(s) => ASTValue::NodePath(s),
         TokenKind::Boolean(b) => ASTValue::Boolean(b),
-        TokenKind::OpeningBracket => ASTValue::Array(collect_args_raw!(iter, TokenKind::ClosingBracket)),
+        TokenKind::OpeningBracket => {
+            ASTValue::Array(collect_args_raw!(iter, TokenKind::ClosingBracket))
+        }
         TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
         TokenKind::Minus => match parse_value(iter, None) {
             ASTValue::Number(n) => ASTValue::Number(-n),
@@ -51,8 +60,14 @@ where
     let mut vec: DictValue<'a> = vec![];
 
     match next_non_blank!(iter) {
-        Token { kind: TokenKind::ClosingBrace, .. } => (), // empty dict
-        Token { kind: TokenKind::Identifier(s), .. } => parse_lua_dict(iter, &mut vec, ASTValue::String(s)),
+        Token {
+            kind: TokenKind::ClosingBrace,
+            ..
+        } => (), // empty dict
+        Token {
+            kind: TokenKind::Identifier(s),
+            ..
+        } => parse_lua_dict(iter, &mut vec, ASTValue::String(s)),
         other => {
             let first_key = parse_value(iter, Some(other));
             parse_python_dict(iter, &mut vec, first_key);
@@ -74,18 +89,27 @@ where
 
     loop {
         match next_non_blank!(iter) {
-            Token { kind: TokenKind::Comma, .. } => {
+            Token {
+                kind: TokenKind::Comma,
+                ..
+            } => {
                 if !expect_comma {
                     panic!("unexpected comma, expected a value");
                 }
                 expect_comma = false;
             }
-            Token { kind: TokenKind::Identifier(s), .. } => {
+            Token {
+                kind: TokenKind::Identifier(s),
+                ..
+            } => {
                 expect_blank_prefixed!(iter, TokenKind::Assignment, ());
                 vec.push((ASTValue::String(s), parse_value(iter, None)));
                 expect_comma = true;
             }
-            Token { kind: TokenKind::ClosingBrace, .. } => break,
+            Token {
+                kind: TokenKind::ClosingBrace,
+                ..
+            } => break,
             other => panic!("unexpected {other:?}"),
         }
     }
@@ -103,13 +127,19 @@ where
 
     loop {
         match next_non_blank!(iter) {
-            Token { kind: TokenKind::Comma, .. } => {
+            Token {
+                kind: TokenKind::Comma,
+                ..
+            } => {
                 if !expect_comma {
                     panic!("unexpected comma, expected a value");
                 }
                 expect_comma = false;
             }
-            Token { kind: TokenKind::ClosingBrace, .. } => break,
+            Token {
+                kind: TokenKind::ClosingBrace,
+                ..
+            } => break,
             other => {
                 let key = parse_value(iter, Some(other));
                 expect_blank_prefixed!(iter, TokenKind::Colon, ());

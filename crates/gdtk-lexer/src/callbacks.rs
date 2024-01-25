@@ -1,8 +1,6 @@
 use std::{fmt::Debug, ops::Neg, str::FromStr};
-use crate::{
-    error::Error,
-    token::TokenKind,
-};
+
+use crate::{error::Error, token::TokenKind};
 
 pub fn trim_comment<'a>(lex: &logos::Lexer<'a, TokenKind<'a>>) -> &'a str {
     let mut slc = &lex.slice()[1..];

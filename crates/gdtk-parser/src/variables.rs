@@ -1,6 +1,7 @@
-use gdtk_lexer::{Token, TokenKind};
 use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
-use crate::utils::{expect_blank_prefixed, parse_idtydef, next_non_blank};
+use gdtk_lexer::{Token, TokenKind};
+
+use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
 use crate::values::parse_value;
 
 pub fn parse_const<'a, T>(iter: &mut T) -> ASTVariable<'a>
@@ -15,23 +16,35 @@ where
     // either colon or an assignment
     let value = match next_non_blank!(iter) {
         // got a colon, has to be followed by an identifier (type hint) or an assignment
-        Token { kind: TokenKind::Colon, .. } => {
+        Token {
+            kind: TokenKind::Colon,
+            ..
+        } => {
             match next_non_blank!(iter) {
-                Token { kind: TokenKind::Identifier(s), .. } => {
+                Token {
+                    kind: TokenKind::Identifier(s),
+                    ..
+                } => {
                     typehint = Some(s);
 
                     expect_blank_prefixed!(iter, TokenKind::Assignment, ());
                     parse_value(iter, None)
                 }
                 // infer type
-                Token { kind: TokenKind::Assignment, .. } => {
+                Token {
+                    kind: TokenKind::Assignment,
+                    ..
+                } => {
                     infer_type = true;
                     parse_value(iter, None)
                 }
                 other => panic!("unexpected {other:?}, expected identifier or assignment"),
             }
         }
-        Token { kind: TokenKind::Assignment, .. } => parse_value(iter, None),
+        Token {
+            kind: TokenKind::Assignment,
+            ..
+        } => parse_value(iter, None),
         other => panic!("unexpected {other:?}, expected colon or assignment"),
     };
 
