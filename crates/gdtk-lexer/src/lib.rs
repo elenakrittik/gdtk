@@ -1,13 +1,12 @@
 pub mod callbacks;
 pub mod error;
-#[cfg(test)]
-mod tests;
+#[cfg(test)] mod tests;
 pub mod token;
 
-use error::{IntoDiag, WithSpan};
+use crate::error::{IntoDiag, WithSpan};
 use gdtk_diag::Diagnostic;
 use logos::Logos;
-use token::Token;
+pub use crate::token::Token;
 
 pub type Lexeme<'a> = (Token<'a>, logos::Span);
 pub type LexOutput<'a> = (Vec<Lexeme<'a>>, Vec<Diagnostic>);
