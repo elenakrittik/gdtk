@@ -1,7 +1,7 @@
 #![feature(decl_macro)]
 
 use gdtk_ast::poor::{ASTAnnotation, ASTClass, ASTVariable, ASTFunction, ASTEnum};
-use gdtk_lexer::{token::Token, LexOutput};
+use gdtk_lexer::{token::TokenKind, LexOutput};
 
 pub use crate::error::Error;
 
@@ -30,48 +30,48 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
 
     let mut ann_stack: Vec<ASTAnnotation<'_>> = vec![];
 
-    let mut iter = tokens.into_iter().map(|v| v.0);
+    let mut iter = tokens.into_iter();
 
     while let Some(token) = iter.next() {
-        match token {
-            Token::If => todo!(),
-            Token::Elif => todo!(),
-            Token::Else => todo!(),
-            Token::For => todo!(),
-            Token::While => todo!(),
-            Token::Break => todo!(),
-            Token::Continue => todo!(),
-            Token::Pass => todo!(),
-            Token::Return => todo!(),
-            Token::Match => todo!(),
-            Token::As => todo!(),
-            Token::Assert => todo!(),
-            Token::Await => todo!(),
-            Token::Breakpoint => todo!(),
-            Token::Class => todo!(),
-            Token::ClassName => {
+        match token.kind {
+            TokenKind::If => todo!(),
+            TokenKind::Elif => todo!(),
+            TokenKind::Else => todo!(),
+            TokenKind::For => todo!(),
+            TokenKind::While => todo!(),
+            TokenKind::Break => todo!(),
+            TokenKind::Continue => todo!(),
+            TokenKind::Pass => todo!(),
+            TokenKind::Return => todo!(),
+            TokenKind::Match => todo!(),
+            TokenKind::As => todo!(),
+            TokenKind::Assert => todo!(),
+            TokenKind::Await => todo!(),
+            TokenKind::Breakpoint => todo!(),
+            TokenKind::Class => todo!(),
+            TokenKind::ClassName => {
                 if class_name.is_some() {
                     panic!("more than one class_name")
                 }
 
                 class_name = Some(parse_classname(&mut iter));
             },
-            Token::Const => variables.push(parse_const(&mut iter)),
-            Token::Enum => enums.push(parse_enum(&mut iter)),
-            Token::Extends => {
+            TokenKind::Const => variables.push(parse_const(&mut iter)),
+            TokenKind::Enum => enums.push(parse_enum(&mut iter)),
+            TokenKind::Extends => {
                 if extends.is_some() {
                     panic!("more than one extends");
                 }
 
                 extends = Some(parse_extends(&mut iter));
             },
-            Token::Func => functions.push(parse_func(&mut iter)),
-            Token::In => todo!(),
-            Token::Is => todo!(),
-            Token::Signal => todo!(), //parse_signal(iter),
-            Token::Static => todo!(), //variables.push(parse_static(iter)),
-            Token::Var => variables.push(parse_var(&mut iter)),
-            Token::Annotation => {
+            TokenKind::Func => functions.push(parse_func(&mut iter)),
+            TokenKind::In => todo!(),
+            TokenKind::Is => todo!(),
+            TokenKind::Signal => todo!(), //parse_signal(iter),
+            TokenKind::Static => todo!(), //variables.push(parse_static(iter)),
+            TokenKind::Var => variables.push(parse_var(&mut iter)),
+            TokenKind::Annotation => {
                 let ann = parse_annotation(&mut iter);
 
                 if ann.identifier == "icon" && class_name.is_none() {
@@ -80,28 +80,28 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
                     ann_stack.push(ann);
                 }
             },
-            Token::OpeningParenthesis => todo!(),
-            Token::ClosingParenthesis => todo!(),
-            Token::OpeningBracket => todo!(),
-            Token::ClosingBracket => todo!(),
-            Token::OpeningBrace => todo!(),
-            Token::ClosingBrace => todo!(),
-            Token::Comma => todo!(),
-            Token::Semicolon => todo!(),
-            Token::Period => todo!(),
-            Token::Range => todo!(),
-            Token::Colon => todo!(),
-            Token::Dollar => todo!(),
-            Token::Arrow => todo!(),
-            Token::Newline => (),
-            Token::Indent => todo!(),
-            Token::Dedent => todo!(),
-            Token::Spaces => todo!(),
-            Token::Blank(_) => (),
-            Token::Comment(_) => (),
-            Token::Namespace => todo!(),
-            Token::Trait => todo!(),
-            Token::Yield => todo!(),
+            TokenKind::OpeningParenthesis => todo!(),
+            TokenKind::ClosingParenthesis => todo!(),
+            TokenKind::OpeningBracket => todo!(),
+            TokenKind::ClosingBracket => todo!(),
+            TokenKind::OpeningBrace => todo!(),
+            TokenKind::ClosingBrace => todo!(),
+            TokenKind::Comma => todo!(),
+            TokenKind::Semicolon => todo!(),
+            TokenKind::Period => todo!(),
+            TokenKind::Range => todo!(),
+            TokenKind::Colon => todo!(),
+            TokenKind::Dollar => todo!(),
+            TokenKind::Arrow => todo!(),
+            TokenKind::Newline => (),
+            TokenKind::Indent => todo!(),
+            TokenKind::Dedent => todo!(),
+            TokenKind::Spaces => todo!(),
+            TokenKind::Blank(_) => (),
+            TokenKind::Comment(_) => (),
+            TokenKind::Namespace => todo!(),
+            TokenKind::Trait => todo!(),
+            TokenKind::Yield => todo!(),
             _ => panic!("not allowed"),
         }
     }

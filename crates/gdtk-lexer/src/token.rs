@@ -1,12 +1,19 @@
+use gdtk_diag::Span;
 use logos::Logos;
 
 use crate::{
     callbacks::{
-        check_indent_style, parse_binary, parse_bool, parse_e_notation, parse_float, parse_hex,
+        parse_binary, parse_bool, parse_e_notation, parse_float, parse_hex,
         parse_integer, strip_prefix_and_quotes, strip_quotes, trim_comment,
     },
     error::Error,
 };
+
+#[derive(Debug)]
+pub struct Token<'a> {
+    pub range: Span,
+    pub kind: TokenKind<'a>,
+}
 
 // Some reference materials:
 // - https://github.com/godotengine/godot/blob/master/modules/gdscript/gdscript_tokenizer.cpp
@@ -19,7 +26,7 @@ use crate::{
 #[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
 #[logos(subpattern float = r"(?&int)\.(?&int)")]
 #[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
-pub enum Token<'a> {
+pub enum TokenKind<'a> {
     /* Essentials */
     
     #[regex(r"(\p{XID_Start}|_)\p{XID_Continue}*")]
@@ -319,7 +326,7 @@ pub enum Token<'a> {
     Dedent,
     Spaces,
 
-    #[regex("([ ]|[\t])+", |lex| { unsafe { check_indent_style(lex) } })]
+    #[regex("([ ]|[\t])+")]
     Blank(&'a str),
 
     /* Specials */

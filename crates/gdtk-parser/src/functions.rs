@@ -1,4 +1,4 @@
-use gdtk_lexer::Token;
+use gdtk_lexer::{Token, TokenKind};
 use gdtk_ast::poor::{ASTFunction, ASTFunctionParameter, CodeBlock};
 
 use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
@@ -7,8 +7,8 @@ pub fn parse_func<'a, T>(iter: &mut T) -> ASTFunction<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    let identifier = expect_blank_prefixed!(iter, Token::Identifier(s), s);
-    expect_blank_prefixed!(iter, Token::OpeningParenthesis, ());
+    let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
+    expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
     let mut parameters = vec![];
 
     loop {
@@ -17,8 +17,8 @@ where
 
         let (identifier, infer_type, typehint, default) = parse_idtydef!(
             iter,
-            Token::Comma => { dbg!("got comma"); expect_comma = false; },
-            Token::ClosingParenthesis => { break_ = true; dbg!("got end paren"); },
+            TokenKind::Comma => { dbg!("got comma"); expect_comma = false; },
+            TokenKind::ClosingParenthesis => { break_ = true; dbg!("got end paren"); },
         );
 
         parameters.push(ASTFunctionParameter {
@@ -34,14 +34,14 @@ where
 
         if expect_comma {
             match next_non_blank!(iter) {
-                Token::Comma => (),
-                Token::ClosingParenthesis => break,
+                Token { kind: TokenKind::Comma, .. } => (),
+                Token { kind: TokenKind::ClosingParenthesis, .. } => break,
                 other => panic!("expected comma or closing parenthesis, found {other:?}"),
             }
         }
     }
 
-    expect_blank_prefixed!(iter, Token::Colon, ());
+    expect_blank_prefixed!(iter, TokenKind::Colon, ());
 
     ASTFunction {
         identifier,

@@ -22,26 +22,17 @@ pub enum Error {
     UnknownCharacterSequence,
 }
 
-pub trait WithSpan<T> {
-    fn with_span(self, span: Span) -> (T, Span);
-}
-
-impl<T> WithSpan<T> for T {
-    fn with_span(self, span: Span) -> (T, Span) {
-        (self, span)
-    }
-}
 pub(crate) trait IntoDiag {
-    fn into_diag(self) -> Diagnostic;
+    fn into_diag(self, span: Span) -> Diagnostic;
 }
 
-impl IntoDiag for (Error, Span) {
-    fn into_diag(self) -> Diagnostic {
+impl IntoDiag for Error {
+    fn into_diag(self, span: Span) -> Diagnostic {
         Diagnostic {
             kind: gdtk_diag::DiagnosticKind::Error,
-            message: self.0.to_string(),
+            message: self.to_string(),
             hint: None,
-            span: self.1,
+            span,
         }
     }
 }

@@ -1,17 +1,19 @@
 pub macro expect($iter:expr, $variant:pat, $ret:expr) {
+    type Token<'a> = ::gdtk_lexer::Token<'a>;
+
     match $iter.next() {
-        Some($variant) => $ret,
+        Some(Token { kind: $variant, .. }) => $ret,
         other => panic!("expected {}, found {other:?}", stringify!($variant)),
     }
 }
 
 pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {{
-    type Token<'a> = ::gdtk_lexer::Token<'a>;
+    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
 
     loop {
         if let Some(token) = $iter.next() {
-            match token {
-                Token::Blank(_) => (),
+            match token.kind {
+                TokenKind::Blank(_) => (),
                 $variant => break $ret,
                 other => panic!("expected {}, found {other:?}", stringify!($variant)),
             }
@@ -22,13 +24,13 @@ pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {{
 }}
 
 pub macro next_non_blank($iter:expr) {{
-    type Token<'a> = ::gdtk_lexer::Token<'a>;
+    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
 
     loop {
         if let Some(token) = $iter.next() {
-            match token {
-                Token::Blank(_) => (),
-                other => break other,
+            match token.kind {
+                TokenKind::Blank(_) => (),
+                _ => break token,
             }
         } else {
             panic!("unexpected EOF");
@@ -42,26 +44,26 @@ pub macro collect_args($iter:expr, $opening:pat, $closing:pat) {{
 }}
 
 pub macro collect_args_raw($iter:expr, $closing:pat) {{
-    type Token<'a> = ::gdtk_lexer::Token<'a>;
+    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
 
     let mut args = vec![];
     let mut expect_comma = false;
 
     while let Some(token) = $iter.next() {
-        match token {
-            Token::Comma => {
+        match &token.kind {
+            &TokenKind::Comma => {
                 if !expect_comma {
                     panic!("unexpected comma, expected a value");
                 }
                 expect_comma = false;
             },
-            Token::Blank(_) => (),
-            $closing => break,
+            &TokenKind::Blank(_) => (),
+            &$closing => break,
             other => {
                 if expect_comma {
                     panic!("expected comma, got {other:?}");
                 }
-                args.push($crate::values::parse_value($iter, Some(other)));
+                args.push($crate::values::parse_value($iter, Some(token)));
                 expect_comma = true;
             }
         }
@@ -72,8 +74,9 @@ pub macro collect_args_raw($iter:expr, $closing:pat) {{
 
 pub macro parse_idtydef($iter:expr, $($endpat:pat => $endcode:expr,)*) {{
     type Token<'a> = ::gdtk_lexer::Token<'a>;
+    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
 
-    let identifier = $crate::utils::expect_blank_prefixed!($iter, Token::Identifier(s), s);
+    let identifier = $crate::utils::expect_blank_prefixed!($iter, TokenKind::Identifier(s), s);
 
     let mut infer_type = false;
     let mut typehint = None;
@@ -81,31 +84,31 @@ pub macro parse_idtydef($iter:expr, $($endpat:pat => $endcode:expr,)*) {{
 
     // a colon, an assignment or a newline
     match $crate::utils::next_non_blank!($iter) {
-        Token::Colon => {
+        Token { kind: TokenKind::Colon, .. } => {
             // colon can be followed by an identifier (typehint) or an assignment (means the type should be inferred)
             match $crate::utils::next_non_blank!($iter) {
-                Token::Identifier(s) => {
+                Token { kind: TokenKind::Identifier(s), .. } => {
                     // we got the typehint
                     typehint = Some(s);
 
                     // typehint can be followed by an assignment or a newline
                     match $crate::utils::next_non_blank!($iter) {
                         // found assignment, then there must be a value
-                        Token::Assignment => value = Some($crate::values::parse_value($iter, None)),
+                        Token { kind: TokenKind::Assignment, .. } => value = Some($crate::values::parse_value($iter, None)),
                         // no value
-                        $($endpat => $endcode,)*
+                        $(Token { kind: $endpat, .. } => $endcode,)*
                         other => panic!("unexpected {other:?}, expected assignment or newline"),
                     }
                 },
-                Token::Assignment => {
+                Token { kind: TokenKind::Assignment, .. } => {
                     infer_type = true;
                     value = Some($crate::values::parse_value($iter, None));
                 },
                 other => panic!("unexpected {other:?}, expected assignment or newline"),
             }
         },
-        Token::Assignment => value = Some($crate::values::parse_value($iter, None)),
-        $($endpat => $endcode,)*
+        Token { kind: TokenKind::Assignment, .. } => value = Some($crate::values::parse_value($iter, None)),
+        $(Token { kind: $endpat, .. } => $endcode,)*
         other => panic!("unexpected {other:?}, expected colon, assignment or newline"),
     }
 
