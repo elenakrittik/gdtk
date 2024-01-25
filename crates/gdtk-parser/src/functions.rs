@@ -50,7 +50,7 @@ where
     }
 }
 
-pub fn parse_func_body<'a, T>(iter: &mut T) -> CodeBlock<'a>
+pub fn parse_func_body<'a, T>(_iter: &mut T) -> CodeBlock<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {

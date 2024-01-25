@@ -6,7 +6,7 @@ use gdtk_lexer::{token::Token, LexOutput};
 pub use crate::error::Error;
 
 use crate::functions::parse_func;
-use crate::classes::{parse_classname, parse_extends};
+use crate::classes::{parse_classname, parse_extends, parse_enum};
 use crate::misc::parse_annotation;
 use crate::variables::{parse_const, parse_var};
 

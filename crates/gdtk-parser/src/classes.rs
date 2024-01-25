@@ -1,6 +1,7 @@
 use gdtk_lexer::Token;
 use gdtk_ast::poor::{ASTEnum, ASTEnumVariant};
 
+use crate::values::parse_value;
 use crate::utils::{expect_blank_prefixed, next_non_blank};
 
 pub fn parse_classname<'a, T>(iter: &mut T) -> &'a str
