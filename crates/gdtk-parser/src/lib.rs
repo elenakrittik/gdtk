@@ -12,6 +12,7 @@ use crate::variables::{parse_const, parse_var};
 pub mod classes;
 pub mod error;
 pub mod functions;
+pub mod parser;
 pub mod misc;
 pub mod utils;
 pub mod values;
