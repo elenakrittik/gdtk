@@ -1,11 +1,11 @@
-pub macro expect($iter:expr, $variant:pat, $ret:expr) {
+pub macro expect($iter:expr, $variant:pat, $ret:expr) {{
     type Token<'a> = ::gdtk_lexer::Token<'a>;
 
     match $iter.next() {
         Some(Token { kind: $variant, .. }) => $ret,
         other => panic!("expected {}, found {other:?}", stringify!($variant)),
     }
-}
+}}
 
 pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {{
     type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;

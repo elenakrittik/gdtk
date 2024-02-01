@@ -1,7 +1,8 @@
-use gdtk_ast::poor::{ASTFunction, ASTFunctionParameter, CodeBlock};
+use gdtk_ast::poor::{ASTFunction, ASTFunctionParameter, CodeBlock, ASTStatement};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
+use crate::{variables::parse_const, values::parse_value};
+use crate::utils::{expect, expect_blank_prefixed, next_non_blank, parse_idtydef};
 
 pub fn parse_func<'a, T>(iter: &mut T) -> ASTFunction<'a>
 where
@@ -48,6 +49,9 @@ where
     }
 
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
+    expect_blank_prefixed!(iter, TokenKind::Newline, ());
+
+    let (body, exit_indent) = parse_func_body(iter);
 
     ASTFunction {
         identifier,
@@ -56,9 +60,53 @@ where
     }
 }
 
-pub fn parse_func_body<'a, T>(_iter: &mut T) -> CodeBlock<'a>
+pub fn parse_func_body<'a, T>(iter: &mut T) -> (CodeBlock<'a>, usize)
 where
     T: Iterator<Item = Token<'a>>,
 {
-    vec![]
+    let indent = expect!(iter, TokenKind::Blank(b), b).chars().count();
+    let mut exit_indent: usize = usize::MAX;
+    let mut body = vec![];
+
+    loop {
+        match iter.next() {
+            Some(token) => match token {
+                Token { kind: TokenKind::Const, .. } => body.push(ASTStatement::Variable(parse_const(iter))),
+                Token { kind: TokenKind::Pass, .. } => body.push(ASTStatement::Pass),
+                Token { kind: TokenKind::Continue, .. } => body.push(ASTStatement::Continue),
+                Token { kind: TokenKind::Break, .. } => body.push(ASTStatement::Break),
+                Token { kind: TokenKind::Return, .. } => body.push(ASTStatement::Return(parse_value(iter, None))),
+                _ => panic!("idk unsupported or smth just f u"),
+            },
+            None => {
+                if body.len() <= 0 {
+                    panic!("expected indented block, found EOF");
+                }
+
+                break;
+            },
+        }
+
+        expect_blank_prefixed!(iter, TokenKind::Newline, ());
+
+        match iter.next() {
+            Some(token) => match token {
+                // something indented
+                Token { kind: TokenKind::Blank(b), .. } => {
+                    if b.len() < indent { // dedent
+                        exit_indent = b.len();
+                        break;
+                    } else if b.len() == indent { // current block continues
+                        ()
+                    } else { // extraneous indent
+                        panic!("unexpected indentation level");
+                    }
+                },
+                other => panic!("unexpected {other:?}"),
+            },
+            None => break, // end of file
+        }
+    }
+
+    (body, exit_indent)
 }
