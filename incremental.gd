@@ -34,7 +34,7 @@ enum Named {THING_1, THING_2, ANOTHER_THING = -1}
 var v2 = Vector2(1, 2)
 var v3 = Vector3(1, 2, 3)
 var i = callme()
-var hi = callv(callme())
+var hi = callv(callme(1))
 
 # Functions.
 func some_function(param1, param2: int, param3 = 1, param4: int = 1, param5 := 1):

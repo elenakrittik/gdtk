@@ -9,6 +9,7 @@ use crate::functions::parse_func;
 use crate::misc::parse_annotation;
 use crate::variables::{parse_const, parse_var};
 
+pub mod block;
 pub mod classes;
 pub mod error;
 pub mod functions;

@@ -1,6 +1,6 @@
 pub type Span = std::ops::Range<usize>;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Diagnostic {
     pub kind: DiagnosticKind,
     pub message: String,
@@ -8,7 +8,7 @@ pub struct Diagnostic {
     pub span: Span,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum DiagnosticKind {
     // Info,
     Warning,

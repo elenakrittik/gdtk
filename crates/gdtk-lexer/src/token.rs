@@ -9,7 +9,7 @@ use crate::{
     error::Error,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token<'a> {
     pub range: Span,
     pub kind: TokenKind<'a>,
@@ -30,11 +30,10 @@ impl<'a> Token<'a> {
 // Note that we do not and will not (unless deemed necessary) 1/1 match Godot's token set and/or naming.
 
 #[rustfmt::skip]
-#[derive(Logos, Debug, PartialEq)]
+#[derive(Logos, Debug, PartialEq, Clone)]
 #[logos(error = Error)]
 #[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
-#[logos(subpattern minusable_int = r"[-]*(?&int)")]
-#[logos(subpattern float = r"(?&minusable_int)\.(?&int)")]
+#[logos(subpattern float = r"(?&int)\.(?&int)")]
 #[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
 pub enum TokenKind<'a> {
     /* Essentials */
@@ -49,10 +48,10 @@ pub enum TokenKind<'a> {
     #[regex("(?&int)", parse_integer)]
     Integer(i64),
 
-    #[regex("[-]*0b[01](_?[01])*", parse_binary)]
+    #[regex("0b[01](_?[01])*", parse_binary)]
     BinaryInteger(u64),
 
-    #[regex("[-]*0x[0-9abcdefABCDEF](_?[0-9abcdefABCDEF])*", parse_hex)]
+    #[regex("0x[0-9abcdefABCDEF](_?[0-9abcdefABCDEF])*", parse_hex)]
     HexInteger(u64),
 
     #[regex(r"(?&float)[eE][+-](?&int)", parse_e_notation)]
