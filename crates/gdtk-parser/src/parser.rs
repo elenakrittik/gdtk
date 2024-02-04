@@ -1,3 +1,5 @@
+/// WIP state-based parser. Currently unused.
+
 use gdtk_ast::poor::ASTStatement;
 use gdtk_lexer::Token;
 
@@ -8,20 +10,28 @@ pub enum State {
 }
 
 #[derive(Debug)]
-pub struct ParserStateMachine<'a> {
+pub struct ParserStateMachine<'a, T>
+where
+    T: Iterator<Item = Token<'a>>,
+{
     pub state: State,
-    pub iter: impl Iterator<Item = Token<'a>>,
+    pub iter: T,
 }
 
-impl<'a> ParserStateMachine<'a> {
-    pub fn new(iter: impl Iterator<Item = Token<'a>>) -> Self {
-        Self { state: State::TopLevel, iter }
+impl<'a, T> ParserStateMachine<'a, T>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    pub fn new(iter: T) -> Self {
+        Self {
+            state: State::TopLevel,
+            iter,
+        }
     }
 
-    pub fn next() -> ASTStatement<'a> {
+    pub fn next(&mut self) -> ASTStatement<'a> {
         match self.state {
             State::TopLevel => todo!(),
-            
         }
     }
 }

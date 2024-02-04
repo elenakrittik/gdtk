@@ -12,8 +12,8 @@ use crate::variables::{parse_const, parse_var};
 pub mod classes;
 pub mod error;
 pub mod functions;
-pub mod parser;
 pub mod misc;
+pub mod parser;
 pub mod utils;
 pub mod values;
 pub mod variables;
@@ -30,7 +30,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
 
     let mut ann_stack: Vec<ASTAnnotation<'_>> = vec![];
 
-    let mut iter = tokens.into_iter();
+    let mut iter = tokens.into_iter().peekable();
 
     while let Some(token) = iter.next() {
         match token.kind {
