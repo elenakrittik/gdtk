@@ -15,6 +15,15 @@ pub struct Token<'a> {
     pub kind: TokenKind<'a>,
 }
 
+impl<'a> Token<'a> {
+    pub fn transmute(self, new_kind: TokenKind<'a>) -> Token<'a> {
+        Self {
+            range: self.range,
+            kind: new_kind,
+        }
+    }
+}
+
 // Some reference materials:
 // - https://github.com/godotengine/godot/blob/master/modules/gdscript/gdscript_tokenizer.cpp
 // - everything mentioned at https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/index.html
@@ -24,7 +33,8 @@ pub struct Token<'a> {
 #[derive(Logos, Debug, PartialEq)]
 #[logos(error = Error)]
 #[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
-#[logos(subpattern float = r"(?&int)\.(?&int)")]
+#[logos(subpattern minusable_int = r"[-]*(?&int)")]
+#[logos(subpattern float = r"(?&minusable_int)\.(?&int)")]
 #[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
 pub enum TokenKind<'a> {
     /* Essentials */
@@ -39,10 +49,10 @@ pub enum TokenKind<'a> {
     #[regex("(?&int)", parse_integer)]
     Integer(i64),
 
-    #[regex("0b[01](_?[01])*", parse_binary)]
+    #[regex("[-]*0b[01](_?[01])*", parse_binary)]
     BinaryInteger(u64),
 
-    #[regex("0x[0-9abcdefABCDEF](_?[0-9abcdefABCDEF])*", parse_hex)]
+    #[regex("[-]*0x[0-9abcdefABCDEF](_?[0-9abcdefABCDEF])*", parse_hex)]
     HexInteger(u64),
 
     #[regex(r"(?&float)[eE][+-](?&int)", parse_e_notation)]

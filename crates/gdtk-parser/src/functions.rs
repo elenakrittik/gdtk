@@ -125,7 +125,7 @@ where
                         panic!("unexpected indentation level");
                     }
                 }
-                other => break, // outermost block exited
+                _ => break, // outermost block exited
             },
             None => break, // end of file
         }
