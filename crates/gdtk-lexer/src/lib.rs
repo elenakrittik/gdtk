@@ -85,6 +85,7 @@ fn generate_indents<'a>(tokens: Vec<Token<'a>>) -> Vec<Token<'a>> {
                 }
 
                 new_line = true;
+                out.push(token);
             },
             _ => {
                 out.push(token);

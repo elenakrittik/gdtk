@@ -1,8 +1,8 @@
-   Compiling gdtk-lexer v0.1.0 (C:\Users\lena\Development\Projects\Rust\gdtk\crates\gdtk-lexer)
-   Compiling gdtk-parser v0.1.0 (C:\Users\lena\Development\Projects\Rust\gdtk\crates\gdtk-parser)
-   Compiling gdtk v0.1.0 (C:\Users\lena\Development\Projects\Rust\gdtk\crates\gdtk)
+   Compiling gdtk-lexer v0.1.0 (/home/lena/Development/Projects/Rust/gdtk/crates/gdtk-lexer)
+   Compiling gdtk-parser v0.1.0 (/home/lena/Development/Projects/Rust/gdtk/crates/gdtk-parser)
+   Compiling gdtk v0.1.0 (/home/lena/Development/Projects/Rust/gdtk/crates/gdtk)
 warning: unused import: `gdtk_parser::parse_file`
- --> crates\gdtk\src\commands\parse.rs:1:5
+ --> crates/gdtk/src/commands/parse.rs:1:5
   |
 1 | use gdtk_parser::parse_file;
   |     ^^^^^^^^^^^^^^^^^^^^^^^
@@ -10,9 +10,9 @@ warning: unused import: `gdtk_parser::parse_file`
   = note: `#[warn(unused_imports)]` on by default
 
 warning: `gdtk` (lib) generated 1 warning (run `cargo fix --lib -p gdtk` to apply 1 suggestion)
-    Finished dev [unoptimized + debuginfo] target(s) in 2.41s
-     Running `target\debug\gdtk.exe parse --file .\quick.gd`
-[crates\gdtk\src\commands\parse.rs:14:9] &lexed = (
+    Finished dev [unoptimized + debuginfo] target(s) in 38.11s
+     Running `target/debug/gdtk parse --file ./quick.gd`
+[crates/gdtk/src/commands/parse.rs:14:9] &lexed = (
     [
         Token {
             range: 0..4,
@@ -43,120 +43,150 @@ warning: `gdtk` (lib) generated 1 warning (run `cargo fix --lib -p gdtk` to appl
             kind: Colon,
         },
         Token {
-            range: 16..20,
+            range: 14..15,
+            kind: Newline,
+        },
+        Token {
+            range: 15..19,
             kind: Indent,
         },
         Token {
-            range: 20..22,
+            range: 19..21,
             kind: If,
         },
         Token {
-            range: 22..23,
+            range: 21..22,
             kind: Blank(
                 " ",
             ),
         },
         Token {
-            range: 23..27,
+            range: 22..26,
             kind: Boolean(
                 true,
             ),
         },
         Token {
-            range: 27..28,
+            range: 26..27,
             kind: Colon,
         },
         Token {
-            range: 30..36,
+            range: 27..28,
+            kind: Newline,
+        },
+        Token {
+            range: 28..34,
             kind: Indent,
         },
         Token {
-            range: 36..41,
+            range: 34..39,
             kind: Identifier(
                 "print",
             ),
         },
         Token {
-            range: 41..42,
+            range: 39..40,
             kind: OpeningParenthesis,
         },
         Token {
-            range: 42..47,
+            range: 40..45,
             kind: String(
                 "yay",
             ),
         },
         Token {
-            range: 47..48,
+            range: 45..46,
             kind: ClosingParenthesis,
         },
         Token {
-            range: 50..54,
+            range: 46..47,
+            kind: Newline,
+        },
+        Token {
+            range: 47..51,
             kind: Dedent,
         },
         Token {
-            range: 54..58,
+            range: 51..55,
             kind: Else,
         },
         Token {
-            range: 58..59,
+            range: 55..56,
             kind: Colon,
         },
         Token {
-            range: 61..69,
+            range: 56..57,
+            kind: Newline,
+        },
+        Token {
+            range: 57..65,
             kind: Indent,
         },
         Token {
-            range: 69..73,
+            range: 65..69,
             kind: Pass,
         },
         Token {
-            range: 73..75,
+            range: 69..70,
             kind: Dedent,
         },
         Token {
-            range: 73..75,
+            range: 69..70,
             kind: Dedent,
         },
         Token {
-            range: 75..79,
+            range: 69..70,
+            kind: Newline,
+        },
+        Token {
+            range: 70..74,
             kind: Func,
         },
         Token {
-            range: 79..80,
-            kind: Indent,
-        },
-        Token {
-            range: 80..82,
-            kind: Identifier(
-                "_d",
-            ),
-        },
-        Token {
-            range: 82..83,
-            kind: OpeningParenthesis,
-        },
-        Token {
-            range: 83..84,
-            kind: ClosingParenthesis,
-        },
-        Token {
-            range: 84..85,
-            kind: Colon,
-        },
-        Token {
-            range: 85..86,
+            range: 74..75,
             kind: Blank(
                 " ",
             ),
         },
         Token {
-            range: 86..90,
+            range: 75..77,
+            kind: Identifier(
+                "_d",
+            ),
+        },
+        Token {
+            range: 77..78,
+            kind: OpeningParenthesis,
+        },
+        Token {
+            range: 78..79,
+            kind: ClosingParenthesis,
+        },
+        Token {
+            range: 79..80,
+            kind: Colon,
+        },
+        Token {
+            range: 80..81,
+            kind: Blank(
+                " ",
+            ),
+        },
+        Token {
+            range: 81..85,
             kind: Pass,
         },
         Token {
-            range: 90..92,
-            kind: Dedent,
+            range: 85..86,
+            kind: Newline,
+        },
+        Token {
+            range: 86..87,
+            kind: Newline,
+        },
+        Token {
+            range: 87..88,
+            kind: Newline,
         },
     ],
     [],
