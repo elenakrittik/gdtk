@@ -38,41 +38,40 @@ var hi = callv(callme(1))
 
 # Functions.
 func some_function(param1, param2: int, param3 = 1, param4: int = 1, param5 := 1):
-	pass
-#     const local_const = 5
-# 
-#     if param1 < local_const:
-#         print(param1)
-#     elif param2 > 5:
-#         print(param2)
-#     else:
-#         print("Fail!")
-# 
-#     for i in range(20):
-#         print(i)
-# 
-#     while param2 != 0:
-#         param2 -= 1
-# 
+    const local_const = 5
+
+    if param1 < local_const:
+        print(param1)
+    elif param2 > 5:
+        print(param2)
+    else:
+        print("Fail!")
+
+    for i in range(20):
+        print(i)
+
+    while param2 != 0:
+        param2 -= 1
+
 #     match param3:
 #         3:
 #             print("param3 is 3!")
 #         _:
 #             print("param3 is not 3!")
 # 
-#     var local_var = param1 + 3
-#     return local_var
+    var local_var = param1 + 3
+    return local_var
 
 
 # Functions override functions with the same name on the base/super class.
 # If you still want to call them, use "super":
-# func something(p1, p2):
-#     super(p1, p2)
+func something(p1, p2):
+    super(p1, p2)
 
 
 # It's also possible to call another function in the super class:
-# func other_something(p1, p2):
-#     super.something(p1, p2)
+func other_something(p1, p2):
+    super.something(p1, p2)
 
 
 # Inner class
@@ -81,7 +80,7 @@ func some_function(param1, param2: int, param3 = 1, param4: int = 1, param5 := 1
 
 
 # Constructor
-# func _init():
-#     print("Constructed!")
-#     var lv = Something.new()
-#     print(lv.a)
+func _init():
+    print("Constructed!")
+    var lv = Something.new()
+    print(lv.a)

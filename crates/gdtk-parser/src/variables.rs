@@ -1,10 +1,12 @@
+use std::iter::Peekable;
+
 use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
 use crate::values::parse_value;
 
-pub fn parse_const<'a, T>(iter: &mut T) -> ASTVariable<'a>
+pub fn parse_const<'a, T>(iter: &mut Peekable<T>) -> ASTVariable<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -57,7 +59,7 @@ where
     }
 }
 
-pub fn parse_var<'a, T>(iter: &mut T) -> ASTVariable<'a>
+pub fn parse_var<'a, T>(iter: &mut Peekable<T>) -> ASTVariable<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -71,3 +73,5 @@ where
         kind: ASTVariableKind::Regular,
     }
 }
+
+// TODO: static vars

@@ -15,6 +15,7 @@ pub mod error;
 pub mod functions;
 pub mod misc;
 pub mod parser;
+pub mod statement;
 pub mod utils;
 pub mod values;
 pub mod variables;
@@ -97,7 +98,6 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
             TokenKind::Newline => (),
             TokenKind::Indent => todo!(),
             TokenKind::Dedent => todo!(),
-            TokenKind::Spaces => todo!(),
             TokenKind::Blank(_) => (),
             TokenKind::Comment(_) => (),
             TokenKind::Namespace => todo!(),

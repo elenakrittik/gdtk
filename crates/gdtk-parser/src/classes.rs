@@ -1,24 +1,26 @@
+use std::iter::Peekable;
+
 use gdtk_ast::poor::{ASTEnum, ASTEnumVariant};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::utils::{expect_blank_prefixed, next_non_blank};
 use crate::values::parse_value;
 
-pub fn parse_classname<'a, T>(iter: &mut T) -> &'a str
+pub fn parse_classname<'a, T>(iter: &mut Peekable<T>) -> &'a str
 where
     T: Iterator<Item = Token<'a>>,
 {
     expect_blank_prefixed!(iter, TokenKind::Identifier(i), i)
 }
 
-pub fn parse_extends<'a, T>(iter: &mut T) -> &'a str
+pub fn parse_extends<'a, T>(iter: &mut Peekable<T>) -> &'a str
 where
     T: Iterator<Item = Token<'a>>,
 {
     expect_blank_prefixed!(iter, TokenKind::Identifier(s), s)
 }
 
-pub fn parse_enum<'a, T>(iter: &mut T) -> ASTEnum<'a>
+pub fn parse_enum<'a, T>(iter: &mut Peekable<T>) -> ASTEnum<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -71,7 +73,7 @@ where
                         kind: TokenKind::Assignment,
                         ..
                     } => {
-                        let value = Some(parse_value(iter, None).into_number().unwrap());
+                        let value = Some(parse_value(iter, None));
                         variants.push(ASTEnumVariant { identifier, value });
                         expect_comma = true;
                     }

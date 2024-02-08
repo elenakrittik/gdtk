@@ -1,3 +1,21 @@
+// TODO: refactor some stuff to utilize new option to .peek()
+
+pub macro any_assignment($enm:ident) {
+    $enm::Assignment
+    | $enm::PlusAssignment
+    | $enm::MinusAssignment
+    | $enm::MultiplyAssignment
+    | $enm::PowerAssignment
+    | $enm::DivideAssignment
+    | $enm::RemainderAssignment
+    | $enm::BitwiseAndAssignment
+    | $enm::BitwiseOrAssignment
+    | $enm::BitwiseNotAssignment
+    | $enm::BitwiseXorAssignment
+    | $enm::BitwiseShiftLeftAssignment
+    | $enm::BitwiseShiftRightAssignment
+}
+
 pub macro expect($iter:expr, $variant:pat, $ret:expr) {{
     type Token<'a> = ::gdtk_lexer::Token<'a>;
 
@@ -15,7 +33,22 @@ pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {{
             match token.kind {
                 TokenKind::Blank(_) => (),
                 $variant => break $ret,
-                other => panic!("expected {}, found {other:?}", stringify!($variant)),
+                _ => panic!("expected {}, found {token:?}", stringify!($variant)),
+            }
+        } else {
+            panic!("unexpected EOF");
+        }
+    }
+}}
+
+pub macro peek_non_blank($iter:expr) {{
+    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
+
+    loop {
+        if let Some(token) = $iter.peek() {
+            match token.kind {
+                TokenKind::Blank(_) => { $iter.next(); },
+                _ => break token,
             }
         } else {
             panic!("unexpected EOF");
@@ -72,6 +105,7 @@ pub macro collect_args_raw($iter:expr, $closing:pat) {{
     args
 }}
 
+/// Parse identifier: type = default
 pub macro parse_idtydef($iter:expr, $($endpat:pat => $endcode:expr,)*) {{
     type Token<'a> = ::gdtk_lexer::Token<'a>;
     type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;

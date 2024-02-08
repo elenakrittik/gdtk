@@ -15,6 +15,11 @@ where
     let mut parameters = vec![];
 
     loop {
+        if matches!(iter.peek(), Some(Token { kind: TokenKind::ClosingParenthesis, .. })) {
+            iter.next();
+            break;
+        }
+
         let mut expect_comma = true;
         let mut break_ = false;
 

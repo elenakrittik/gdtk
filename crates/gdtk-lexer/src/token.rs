@@ -87,13 +87,13 @@ pub enum TokenKind<'a> {
     Less,
 
     #[token("<=")]
-    LessEqual,
+    LessOrEqual,
 
     #[token(">")]
     Greater,
 
     #[token(">=")]
-    GreaterEqual,
+    GreaterOrEqual,
 
     #[token("==")]
     Equal,
@@ -330,10 +330,9 @@ pub enum TokenKind<'a> {
     #[regex("(\r\n)|(\n)")]
     Newline,
 
-    // these three are emitted manually from Blank
+    // these two are generated manually from Blank
     Indent,
     Dedent,
-    Spaces,
 
     #[regex("([ ]|[\t])+")]
     Blank(&'a str),

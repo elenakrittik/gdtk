@@ -1,9 +1,11 @@
-use gdtk_ast::poor::{ASTValue, DictValue};
+use std::iter::Peekable;
+
+use gdtk_ast::poor::{ASTValue, DictValue, ASTBinaryOp, ASTUnaryOp};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::utils::{collect_args_raw, expect_blank_prefixed, next_non_blank};
+use crate::utils::{collect_args_raw, collect_args, peek_non_blank, expect_blank_prefixed, next_non_blank};
 
-pub fn parse_value<'a, T>(iter: &mut T, mut token: Option<Token<'a>>) -> ASTValue<'a>
+pub fn parse_value<'a, T>(iter: &mut Peekable<T>, mut token: Option<Token<'a>>) -> ASTValue<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -11,24 +13,8 @@ where
         token = Some(next_non_blank!(iter));
     }
 
-    match token.unwrap().kind {
-        TokenKind::Identifier(s) => {
-            match next_non_blank!(iter) {
-                Token {
-                    kind: TokenKind::OpeningParenthesis,
-                    ..
-                } => ASTValue::Call(
-                    Box::new(ASTValue::Identifier(s)),
-                    collect_args_raw!(iter, TokenKind::ClosingParenthesis),
-                ),
-                Token {
-                    kind: TokenKind::Newline,
-                    ..
-                } => ASTValue::Identifier(s),
-                // TODO: prop access
-                other => panic!("unexpected {other:?}, expected parenthesis"),
-            }
-        }
+    let val = match token.unwrap().kind {
+        TokenKind::Identifier(s) => ASTValue::Identifier(s),
         TokenKind::Integer(i) => ASTValue::Number(i),
         TokenKind::BinaryInteger(i) => ASTValue::Number(i as i64),
         TokenKind::HexInteger(i) => ASTValue::Number(i as i64),
@@ -44,16 +30,18 @@ where
             ASTValue::Array(collect_args_raw!(iter, TokenKind::ClosingBracket))
         }
         TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
-        TokenKind::Minus => match parse_value(iter, None) {
-            ASTValue::Number(n) => ASTValue::Number(-n),
-            ASTValue::Float(f) => ASTValue::Float(f),
-            _ => panic!("unary minus is supported for numbers and float only"),
+        TokenKind::Minus => {
+            let value = parse_value(iter, None);
+            ASTValue::UnaryExpr(ASTUnaryOp::Minus, Box::new(value))
         },
+        TokenKind::Comment(c) => ASTValue::Comment(c),
         other => panic!("unknown or unsupported expression: {other:?}"),
-    }
+    };
+
+    maybe_op(iter, val)
 }
 
-pub fn parse_dictionary<'a, T>(iter: &mut T) -> DictValue<'a>
+pub fn parse_dictionary<'a, T>(iter: &mut Peekable<T>) -> DictValue<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -77,7 +65,7 @@ where
     vec
 }
 
-pub fn parse_lua_dict<'a, T>(iter: &mut T, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
+pub fn parse_lua_dict<'a, T>(iter: &mut Peekable<T>, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -115,7 +103,7 @@ where
     }
 }
 
-pub fn parse_python_dict<'a, T>(iter: &mut T, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
+pub fn parse_python_dict<'a, T>(iter: &mut Peekable<T>, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -147,5 +135,79 @@ where
                 expect_comma = true;
             }
         }
+    }
+}
+
+pub fn maybe_op<'a, T>(iter: &mut Peekable<T>, left: ASTValue<'a>) -> ASTValue<'a>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    let op = match &peek_non_blank!(iter).kind {
+        &TokenKind::Plus => Some(ASTBinaryOp::Plus),
+        &TokenKind::Minus => Some(ASTBinaryOp::Minus),
+        &TokenKind::Greater => Some(ASTBinaryOp::Greater),
+        &TokenKind::GreaterOrEqual => Some(ASTBinaryOp::GreaterOrEqual),
+        &TokenKind::Less => Some(ASTBinaryOp::Less),
+        &TokenKind::LessOrEqual => Some(ASTBinaryOp::LessOrEqual),
+        &TokenKind::Period => Some(ASTBinaryOp::PropertyAccess),
+        &TokenKind::Multiply => Some(ASTBinaryOp::Multiply),
+        &TokenKind::Divide => Some(ASTBinaryOp::Divide),
+        &TokenKind::Equal => Some(ASTBinaryOp::Equal),
+        &TokenKind::NotEqual => Some(ASTBinaryOp::NotEqual),
+        &TokenKind::And | &TokenKind::SymbolizedAnd => Some(ASTBinaryOp::And),
+        &TokenKind::Or | &TokenKind::SymbolizedOr => Some(ASTBinaryOp::Or),
+        &TokenKind::Not | &TokenKind::SymbolizedNot => Some(ASTBinaryOp::Not),
+        &TokenKind::BitwiseAnd => Some(ASTBinaryOp::BitwiseAnd),
+        &TokenKind::BitwiseOr => Some(ASTBinaryOp::BitwiseOr),
+        &TokenKind::BitwiseNot => Some(ASTBinaryOp::BitwiseNot),
+        &TokenKind::BitwiseXor => Some(ASTBinaryOp::BitwiseXor),
+        &TokenKind::BitwiseShiftLeft => Some(ASTBinaryOp::BitwiseShiftLeft),
+        &TokenKind::BitwiseShiftRight => Some(ASTBinaryOp::BitwiseShiftRight),
+        &TokenKind::Power => Some(ASTBinaryOp::Power),
+        &TokenKind::Remainder => Some(ASTBinaryOp::Remainder),
+        &TokenKind::As => Some(ASTBinaryOp::TypeCast),
+        &TokenKind::Is => Some(ASTBinaryOp::TypeCheck),
+        &TokenKind::In => Some(ASTBinaryOp::Contains),
+        &TokenKind::Range => Some(ASTBinaryOp::Range),
+        &TokenKind::OpeningParenthesis => {
+            return ASTValue::Call(
+                Box::new(left),
+                collect_args!(iter, TokenKind::OpeningParenthesis, TokenKind::ClosingParenthesis),
+            );
+        },
+        &TokenKind::OpeningBrace => return ASTValue::Subscript(Box::new(left), Box::new(parse_value(iter, None))),
+        _ => None,
+    };
+
+    if op.is_none() {
+        return left;
+    } else {
+        iter.next();
+    }
+
+    let right = parse_value(iter, None);
+
+    // TODO: precedence
+    ASTValue::BinaryExpr(Box::new(left), op.unwrap(), Box::new(right))
+}
+
+// TODO: use this by default for all values
+
+pub fn maybe_uop<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    let op = match &peek_non_blank!(iter).kind {
+        &TokenKind::Plus => Some(ASTUnaryOp::Plus),
+        &TokenKind::Minus => Some(ASTUnaryOp::Minus),
+        &TokenKind::Await => Some(ASTUnaryOp::Await),
+        _ => None,
+    };
+
+    if op.is_none() {
+        parse_value(iter, None)
+    } else {
+        iter.next();
+        ASTValue::UnaryExpr(op.unwrap(), Box::new(parse_value(iter, None)))
     }
 }

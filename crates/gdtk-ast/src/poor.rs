@@ -44,7 +44,7 @@ pub struct ASTEnum<'a> {
 #[derive(Debug, Clone)]
 pub struct ASTEnumVariant<'a> {
     pub identifier: &'a str,
-    pub value: Option<i64>,
+    pub value: Option<ASTValue<'a>>,
 }
 
 #[derive(Debug, Clone)]
@@ -77,24 +77,29 @@ pub enum ASTValue<'a> {
     Array(Vec<ASTValue<'a>>),
     Dictionary(DictValue<'a>),
     Lambda(ASTFunction<'a>),
-    BinaryExpr(ASTBinaryExpr<'a>),
+    UnaryExpr(ASTUnaryOp, Box<ASTValue<'a>>),
+    /// (left, op, right)
+    BinaryExpr(Box<ASTValue<'a>>, ASTBinaryOp, Box<ASTValue<'a>>),
     /// (function_expr, arguments)
     Call(Box<ASTValue<'a>>, Vec<ASTValue<'a>>),
+    /// (subcript_expr, index)
+    Subscript(Box<ASTValue<'a>>, Box<ASTValue<'a>>),
+    Comment(&'a str),
 }
 
 #[derive(Debug, Clone)]
-pub struct ASTBinaryExpr<'a> {
-    pub left: Box<ASTValue<'a>>,
-    pub right: Box<ASTValue<'a>>,
-    pub op: ASTBinaryOp,
+pub enum ASTUnaryOp {
+    Await,
+    Plus,
+    Minus,
 }
 
 #[derive(Debug, Clone)]
 pub enum ASTBinaryOp {
     Less,
-    LessEqual,
+    LessOrEqual,
     Greater,
-    GreaterEqual,
+    GreaterOrEqual,
     Equal,
     NotEqual,
     And,
@@ -115,7 +120,6 @@ pub enum ASTBinaryOp {
     TypeCast,  // x as y
     TypeCheck, // x is y
     Contains,  // x in y
-    Await,
     PropertyAccess, // x.y
     Range,
 }
@@ -130,8 +134,9 @@ pub enum ASTStatement<'a> {
     Continue,
     If(ASTValue<'a>, CodeBlock<'a>),
     Elif(ASTValue<'a>, CodeBlock<'a>),
-    Else(ASTValue<'a>, CodeBlock<'a>),
-    For(ASTVariable<'a>, ASTValue<'a>, CodeBlock<'a>),
+    Else(CodeBlock<'a>),
+    /// (identifier, type_hint, container, body)
+    For(&'a str, Option<ASTValue<'a>>, ASTValue<'a>, CodeBlock<'a>),
     Pass,
     Return(ASTValue<'a>),
     /// (expression_being_matched_on, vec_of_patterns)

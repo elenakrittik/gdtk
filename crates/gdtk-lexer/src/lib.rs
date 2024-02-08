@@ -77,13 +77,16 @@ fn generate_indents<'a>(tokens: Vec<Token<'a>>) -> Vec<Token<'a>> {
                 }
             },
             TokenKind::Newline => {
-                if !matches!(tokens.peek(), Some(Token { kind: TokenKind::Blank(_), .. })) {
+                // eprintln!("found newline");
+                if !matches!(tokens.peek(), Some(Token { kind: TokenKind::Blank(_) | TokenKind::Newline | TokenKind::Comment(_), .. })) {
+                    // eprintln!("next token is not a blank or a newline (meaning we are now at the top-most level)");
                     while stack.last().unwrap() != &0 {
                         stack.pop();
                         out.push(Token { range: token.range.clone(), kind: TokenKind::Dedent });
                     }
                 }
 
+                // eprintln!("next token is a blank or a newline, continue trying to match block");
                 new_line = true;
                 out.push(token);
             },
