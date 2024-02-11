@@ -6,3 +6,8 @@ resolver = "2"
 lto = "thin"
 strip = true
 codegen-units = 1
+
+# Use this profile for profiling with e.g. cargo-flamegraph
+[profile.debug_release]
+strip = false
+debug = true

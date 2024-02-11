@@ -222,9 +222,9 @@ fn test_null() {
 #[test]
 fn test_comparison() {
     test_eq!("<", TokenKind::Less);
-    test_eq!("<=", TokenKind::LessEqual);
+    test_eq!("<=", TokenKind::LessOrEqual);
     test_eq!(">", TokenKind::Greater);
-    test_eq!(">=", TokenKind::GreaterEqual);
+    test_eq!(">=", TokenKind::GreaterOrEqual);
     test_eq!("==", TokenKind::Equal);
     test_eq!("!=", TokenKind::NotEqual);
 }
