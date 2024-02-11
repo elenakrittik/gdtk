@@ -121,7 +121,7 @@ pub enum ASTBinaryOp {
     TypeCheck, // x is y
     Contains,  // x in y
     PropertyAccess, // x.y
-    Range,
+    Range, // x..y
 }
 
 #[derive(Debug, Clone)]

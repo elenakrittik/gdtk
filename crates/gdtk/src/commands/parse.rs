@@ -10,11 +10,13 @@ pub fn run(file: &String) -> anyhow::Result<()> {
         let content = std::fs::read_to_string(file)?;
         let lexed = gdtk_lexer::lex(&content);
 
-        // dbg!(&lexed);
+        #[cfg(debug_assertions)]
+        dbg!(&lexed);
 
         let parsed = parse_file(lexed.clone())?;
 
-        // dbg!(&parsed);
+        #[cfg(debug_assertions)]
+        dbg!(&parsed);
 
         if i >= 1 {
             break;

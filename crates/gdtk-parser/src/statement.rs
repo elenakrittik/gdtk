@@ -111,7 +111,12 @@ where
         TokenKind::PowerAssignment => ASTAssignmentKind::Power,
         TokenKind::DivideAssignment => ASTAssignmentKind::Divide,
         TokenKind::RemainderAssignment => ASTAssignmentKind::Remainder,
-        // TODO: bitwise assignments
+        TokenKind::BitwiseAndAssignment => ASTAssignmentKind::BitwiseAnd,
+        TokenKind::BitwiseOrAssignment => ASTAssignmentKind::BitwiseOr,
+        TokenKind::BitwiseNotAssignment => ASTAssignmentKind::BitwiseNot,
+        TokenKind::BitwiseXorAssignment => ASTAssignmentKind::BitwiseXor,
+        TokenKind::BitwiseShiftLeftAssignment => ASTAssignmentKind::BitwiseShiftLeft,
+        TokenKind::BitwiseShiftRightAssignment => ASTAssignmentKind::BitwiseShiftRight,
         _ => panic!("impossibal!!11!1"),
     };
 

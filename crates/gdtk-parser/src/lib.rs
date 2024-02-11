@@ -103,7 +103,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
             TokenKind::Namespace => todo!(),
             TokenKind::Trait => todo!(),
             TokenKind::Yield => todo!(),
-            _ => panic!("not allowed"),
+            other => panic!("not allowed: {other:?}"),
         }
     }
 
