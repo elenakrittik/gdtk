@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 gdtk-diag = { version = "0.1.0", path = "../gdtk-diag" }
-logos = "0.13.0"
+logos = "0.14.0"
 thiserror = "1.0.43"
 once_cell = "1.18.0"
 
