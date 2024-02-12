@@ -53,12 +53,12 @@ func some_function(param1, param2: int, param3 = 1, param4: int = 1, param5 := 1
     while param2 != 0:
         param2 -= 1
 
-#     match param3:
-#         3:
-#             print("param3 is 3!")
-#         _:
-#             print("param3 is not 3!")
-# 
+    match param3:
+        3:
+            print("param3 is 3!")
+        _:
+            print("param3 is not 3!")
+
     var local_var = param1 + 3
     return local_var
 

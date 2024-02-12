@@ -165,16 +165,17 @@ pub enum ASTAssignmentKind {
 
 #[derive(Debug, Clone)]
 pub struct ASTMatchPattern<'a> {
+    pub body: CodeBlock<'a>,
     pub kind: ASTMatchPatternKind<'a>,
 }
 
 #[derive(Debug, Clone)]
 pub enum ASTMatchPatternKind<'a> {
-    Expression(ASTValue<'a>),
+    Expr(ASTValue<'a>),
     Binding(ASTVariable<'a>),
     Array(Vec<ASTMatchPattern<'a>>),
-    Multiple(Vec<ASTMatchPattern<'a>>),
-    // TODO: Dictionary patterns
+    // TODO: Dictionary(???)
+    Alternative(Vec<ASTMatchPattern<'a>>),
 }
 
 #[derive(Debug, Clone)]

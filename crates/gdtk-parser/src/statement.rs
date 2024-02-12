@@ -1,12 +1,12 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTValue, ASTStatement, CodeBlock, ASTAssignmentKind};
+use gdtk_ast::poor::{ASTValue, ASTStatement, CodeBlock, ASTAssignmentKind, ASTMatchPattern, ASTMatchPatternKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::values::parse_value;
 use crate::variables::{parse_var, parse_const};
-use crate::utils::{peek_non_blank, next_non_blank, expect_blank_prefixed, any_assignment};
+use crate::utils::{peek_non_blank, next_non_blank, expect_blank_prefixed, expect, any_assignment};
 
 pub fn parse_statement<'a, T>(iter: &mut Peekable<T>, mut token: Option<Token<'a>>) -> ASTStatement<'a>
 where
@@ -117,10 +117,47 @@ where
         TokenKind::BitwiseXorAssignment => ASTAssignmentKind::BitwiseXor,
         TokenKind::BitwiseShiftLeftAssignment => ASTAssignmentKind::BitwiseShiftLeft,
         TokenKind::BitwiseShiftRightAssignment => ASTAssignmentKind::BitwiseShiftRight,
-        _ => panic!("impossibal!!11!1"),
+        other => panic!("impossible {other:?}"),
     };
 
     let value = parse_value(iter, None);
 
     ASTStatement::Assignment(identifier, kind, value)
 }
+
+// pub fn parse_match<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
+// where
+//     T: Iterator<Item = Token<'a>>,
+// {
+//     let expr = parse_value(iter, None);
+//     let mut pats = vec![];
+//     expect_blank_prefixed!(iter, TokenKind::Colon, ());
+//     expect_blank_prefixed!(iter, TokenKind::Newline, ());
+//     expect!(iter, TokenKind::Indent, ());
+
+//     loop {
+//         match peek_non_blank!(iter).kind {
+//             TokenKind::Dedent => {
+//                 iter.next();
+//                 break;
+//             },
+//             TokenKind::Newline => continue,
+//             _ => (),
+//         };
+
+//         let pat = parse_pat(iter);
+//         expect_blank_prefixed!(iter, TokenKind::Colon, ());
+//         let block = parse_block(iter);
+
+//         pats.push(ASTMatchPattern { body: block, kind: pat });
+//     }
+
+//     ASTStatement::Match(expr, pats)
+// }
+
+// pub fn parse_pat<'a, T>(iter: &mut Peekable<T>) -> ASTMatchPatternKind
+// where
+//     T: Iterator<Item = Token<'a>>,
+// {
+//     todo!()
+// }
