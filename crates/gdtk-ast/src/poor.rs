@@ -171,11 +171,12 @@ pub struct ASTMatchPattern<'a> {
 
 #[derive(Debug, Clone)]
 pub enum ASTMatchPatternKind<'a> {
-    Expr(ASTValue<'a>),
+    Value(ASTValue<'a>),
     Binding(ASTVariable<'a>),
-    Array(Vec<ASTMatchPattern<'a>>),
+    Array(Vec<ASTMatchPatternKind<'a>>),
     // TODO: Dictionary(???)
-    Alternative(Vec<ASTMatchPattern<'a>>),
+    Alternative(Vec<ASTMatchPatternKind<'a>>),
+    Rest,
 }
 
 #[derive(Debug, Clone)]

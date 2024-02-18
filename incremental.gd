@@ -56,6 +56,22 @@ func some_function(param1, param2: int, param3 = 1, param4: int = 1, param5 := 1
     match param3:
         3:
             print("param3 is 3!")
+        var x:
+            pass
+        []:
+            pass
+        [1]:
+            pass
+        [1, var x]:
+            pass
+        [var x, 1]:
+            pass
+        [1, ..]:
+            pass
+        [.., 1]:
+            pass
+        "":
+            pass
         _:
             print("param3 is not 3!")
 
