@@ -78,15 +78,9 @@ where
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
     let mut type_hint = None;
 
-    match peek_non_blank!(iter) {
-        Token {
-            kind: TokenKind::Colon,
-            ..
-        } => {
-            expect_blank_prefixed!(iter, TokenKind::Colon, ());
-            type_hint = Some(parse_value(iter, None));
-        }
-        _ => (),
+    if let TokenKind::Colon = peek_non_blank!(iter).kind {
+        iter.next();
+        type_hint = Some(parse_value(iter, None));
     }
 
     expect_blank_prefixed!(iter, TokenKind::In, ());

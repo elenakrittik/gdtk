@@ -211,14 +211,14 @@ pub fn maybe_uop<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    let op = match &peek_non_blank!(iter).kind {
-        &TokenKind::Plus => Some(ASTUnaryOp::Plus),
-        &TokenKind::Minus => Some(ASTUnaryOp::Minus),
-        &TokenKind::Await => Some(ASTUnaryOp::Await),
+    let op = match peek_non_blank!(iter).kind {
+        TokenKind::Plus => Some(ASTUnaryOp::Plus),
+        TokenKind::Minus => Some(ASTUnaryOp::Minus),
+        TokenKind::Await => Some(ASTUnaryOp::Await),
         _ => None,
     };
 
-    if op.is_none() {
+    if let Some(_op) = op {
         parse_value(iter, None)
     } else {
         iter.next();

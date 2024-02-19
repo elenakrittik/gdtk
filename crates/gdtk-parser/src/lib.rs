@@ -14,7 +14,6 @@ pub mod classes;
 pub mod error;
 pub mod functions;
 pub mod misc;
-pub mod parser;
 pub mod statement;
 pub mod utils;
 pub mod values;
