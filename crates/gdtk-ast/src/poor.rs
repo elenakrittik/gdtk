@@ -117,11 +117,11 @@ pub enum ASTBinaryOp {
     Power,
     Divide,
     Remainder,
-    TypeCast,  // x as y
-    TypeCheck, // x is y
-    Contains,  // x in y
+    TypeCast,       // x as y
+    TypeCheck,      // x is y
+    Contains,       // x in y
     PropertyAccess, // x.y
-    Range, // x..y
+    Range,          // x..y
 }
 
 #[derive(Debug, Clone)]

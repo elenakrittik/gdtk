@@ -39,7 +39,7 @@ fn preprocess<'a>(lexer: logos::Lexer<'a, TokenKind<'a>>) -> LexOutput<'a> {
     (tokens, diags)
 }
 
-fn generate_indents<'a>(tokens: Vec<Token<'a>>) -> Vec<Token<'a>> {
+fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
     let mut stack: Vec<u64> = vec![0];
     let mut out = vec![];
     let mut new_line = false;
@@ -62,38 +62,53 @@ fn generate_indents<'a>(tokens: Vec<Token<'a>>) -> Vec<Token<'a>> {
                     std::cmp::Ordering::Less => {
                         while len < stack.last().unwrap() {
                             stack.pop();
-                            out.push(Token { range: token.range.clone(), kind: TokenKind::Dedent });
+                            out.push(Token {
+                                range: token.range.clone(),
+                                kind: TokenKind::Dedent,
+                            });
                         }
 
                         if len > stack.last().unwrap() {
-                            out.push(Token { range: token.range.clone(), kind: TokenKind::Indent });
+                            out.push(Token {
+                                range: token.range.clone(),
+                                kind: TokenKind::Indent,
+                            });
                         }
-                    },
+                    }
                     std::cmp::Ordering::Equal => (),
                     std::cmp::Ordering::Greater => {
                         stack.push(b.len() as u64);
                         out.push(token.transmute(TokenKind::Indent));
-                    },
+                    }
                 }
-            },
+            }
             TokenKind::Newline => {
                 // eprintln!("found newline");
-                if !matches!(tokens.peek(), Some(Token { kind: TokenKind::Blank(_) | TokenKind::Newline | TokenKind::Comment(_), .. })) {
+                if !matches!(
+                    tokens.peek(),
+                    Some(Token {
+                        kind: TokenKind::Blank(_) | TokenKind::Newline | TokenKind::Comment(_),
+                        ..
+                    })
+                ) {
                     // eprintln!("next token is not a blank or a newline (meaning we are now at the top-most level)");
                     while stack.last().unwrap() != &0 {
                         stack.pop();
-                        out.push(Token { range: token.range.clone(), kind: TokenKind::Dedent });
+                        out.push(Token {
+                            range: token.range.clone(),
+                            kind: TokenKind::Dedent,
+                        });
                     }
                 }
 
                 // eprintln!("next token is a blank or a newline, continue trying to match block");
                 new_line = true;
                 out.push(token);
-            },
+            }
             _ => {
                 out.push(token);
                 new_line = false;
-            },
+            }
         }
     }
 

@@ -1,9 +1,11 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTValue, DictValue, ASTBinaryOp, ASTUnaryOp};
+use gdtk_ast::poor::{ASTBinaryOp, ASTUnaryOp, ASTValue, DictValue};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::utils::{collect_args_raw, collect_args, peek_non_blank, expect_blank_prefixed, next_non_blank};
+use crate::utils::{
+    collect_args, collect_args_raw, expect_blank_prefixed, next_non_blank, peek_non_blank,
+};
 
 pub fn parse_value<'a, T>(iter: &mut Peekable<T>, mut token: Option<Token<'a>>) -> ASTValue<'a>
 where
@@ -33,7 +35,7 @@ where
         TokenKind::Minus => {
             let value = parse_value(iter, None);
             ASTValue::UnaryExpr(ASTUnaryOp::Minus, Box::new(value))
-        },
+        }
         TokenKind::Comment(c) => ASTValue::Comment(c),
         other => panic!("unknown or unsupported expression: {other:?}"),
     };
@@ -65,8 +67,11 @@ where
     vec
 }
 
-pub fn parse_lua_dict<'a, T>(iter: &mut Peekable<T>, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
-where
+pub fn parse_lua_dict<'a, T>(
+    iter: &mut Peekable<T>,
+    vec: &mut DictValue<'a>,
+    first_key: ASTValue<'a>,
+) where
     T: Iterator<Item = Token<'a>>,
 {
     expect_blank_prefixed!(iter, TokenKind::Assignment, ());
@@ -103,8 +108,11 @@ where
     }
 }
 
-pub fn parse_python_dict<'a, T>(iter: &mut Peekable<T>, vec: &mut DictValue<'a>, first_key: ASTValue<'a>)
-where
+pub fn parse_python_dict<'a, T>(
+    iter: &mut Peekable<T>,
+    vec: &mut DictValue<'a>,
+    first_key: ASTValue<'a>,
+) where
     T: Iterator<Item = Token<'a>>,
 {
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
@@ -172,10 +180,16 @@ where
         &TokenKind::OpeningParenthesis => {
             return ASTValue::Call(
                 Box::new(left),
-                collect_args!(iter, TokenKind::OpeningParenthesis, TokenKind::ClosingParenthesis),
+                collect_args!(
+                    iter,
+                    TokenKind::OpeningParenthesis,
+                    TokenKind::ClosingParenthesis
+                ),
             );
-        },
-        &TokenKind::OpeningBrace => return ASTValue::Subscript(Box::new(left), Box::new(parse_value(iter, None))),
+        }
+        &TokenKind::OpeningBrace => {
+            return ASTValue::Subscript(Box::new(left), Box::new(parse_value(iter, None)))
+        }
         _ => None,
     };
 

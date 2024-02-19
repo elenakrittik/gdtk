@@ -2,18 +2,18 @@
 
 pub macro any_assignment($enm:ident) {
     $enm::Assignment
-    | $enm::PlusAssignment
-    | $enm::MinusAssignment
-    | $enm::MultiplyAssignment
-    | $enm::PowerAssignment
-    | $enm::DivideAssignment
-    | $enm::RemainderAssignment
-    | $enm::BitwiseAndAssignment
-    | $enm::BitwiseOrAssignment
-    | $enm::BitwiseNotAssignment
-    | $enm::BitwiseXorAssignment
-    | $enm::BitwiseShiftLeftAssignment
-    | $enm::BitwiseShiftRightAssignment
+        | $enm::PlusAssignment
+        | $enm::MinusAssignment
+        | $enm::MultiplyAssignment
+        | $enm::PowerAssignment
+        | $enm::DivideAssignment
+        | $enm::RemainderAssignment
+        | $enm::BitwiseAndAssignment
+        | $enm::BitwiseOrAssignment
+        | $enm::BitwiseNotAssignment
+        | $enm::BitwiseXorAssignment
+        | $enm::BitwiseShiftLeftAssignment
+        | $enm::BitwiseShiftRightAssignment
 }
 
 pub macro expect($iter:expr, $variant:pat, $ret:expr) {{
@@ -47,7 +47,9 @@ pub macro peek_non_blank($iter:expr) {{
     loop {
         if let Some(token) = $iter.peek() {
             match token.kind {
-                TokenKind::Blank(_) => { $iter.next(); },
+                TokenKind::Blank(_) => {
+                    $iter.next();
+                }
                 _ => break token,
             }
         } else {

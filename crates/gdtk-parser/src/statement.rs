@@ -1,14 +1,20 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTValue, ASTVariable, ASTVariableKind, ASTStatement, CodeBlock, ASTAssignmentKind, ASTMatchPattern, ASTMatchPatternKind};
+use gdtk_ast::poor::{
+    ASTAssignmentKind, ASTMatchPattern, ASTMatchPatternKind, ASTStatement, ASTValue, ASTVariable,
+    ASTVariableKind, CodeBlock,
+};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
+use crate::utils::{any_assignment, expect, expect_blank_prefixed, next_non_blank, peek_non_blank};
 use crate::values::parse_value;
-use crate::variables::{parse_var, parse_const};
-use crate::utils::{peek_non_blank, next_non_blank, expect_blank_prefixed, expect, any_assignment};
+use crate::variables::{parse_const, parse_var};
 
-pub fn parse_statement<'a, T>(iter: &mut Peekable<T>, mut token: Option<Token<'a>>) -> ASTStatement<'a>
+pub fn parse_statement<'a, T>(
+    iter: &mut Peekable<T>,
+    mut token: Option<Token<'a>>,
+) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -26,22 +32,22 @@ where
             } else {
                 ASTStatement::Value(parse_value(iter, Some(token)))
             }
-        },
+        }
         TokenKind::Break => ASTStatement::Break,
         TokenKind::Breakpoint => ASTStatement::Breakpoint,
         TokenKind::Continue => ASTStatement::Continue,
         TokenKind::If => {
             let tuple = parse_iflike(iter);
             ASTStatement::If(tuple.0, tuple.1)
-        },
+        }
         TokenKind::Elif => {
             let tuple = parse_iflike(iter);
             ASTStatement::Elif(tuple.0, tuple.1)
-        },
+        }
         TokenKind::Else => {
             expect_blank_prefixed!(iter, TokenKind::Colon, ());
             ASTStatement::Else(parse_block(iter))
-        },
+        }
         TokenKind::For => parse_for_loop(iter),
         TokenKind::Pass => ASTStatement::Pass,
         TokenKind::Return => ASTStatement::Return(parse_value(iter, None)),
@@ -73,11 +79,14 @@ where
     let mut type_hint = None;
 
     match peek_non_blank!(iter) {
-        Token { kind: TokenKind::Colon, .. } => {
+        Token {
+            kind: TokenKind::Colon,
+            ..
+        } => {
             expect_blank_prefixed!(iter, TokenKind::Colon, ());
             type_hint = Some(parse_value(iter, None));
-        },
-        _ => ()
+        }
+        _ => (),
     }
 
     expect_blank_prefixed!(iter, TokenKind::In, ());
@@ -138,11 +147,17 @@ where
 
     loop {
         match peek_non_blank!(iter) {
-            Token { kind: TokenKind::Dedent, .. } => {
+            Token {
+                kind: TokenKind::Dedent,
+                ..
+            } => {
                 iter.next();
                 break;
-            },
-            Token { kind: TokenKind::Newline, .. } => continue,
+            }
+            Token {
+                kind: TokenKind::Newline,
+                ..
+            } => continue,
             _ => (),
         };
 
@@ -150,7 +165,10 @@ where
         expect_blank_prefixed!(iter, TokenKind::Colon, ());
         let block = parse_block(iter);
 
-        pats.push(ASTMatchPattern { body: block, kind: pat });
+        pats.push(ASTMatchPattern {
+            body: block,
+            kind: pat,
+        });
     }
 
     eprintln!("end parse match with pats = {:?}", &pats);
@@ -177,7 +195,7 @@ where
                 value: None,
                 kind: ASTVariableKind::Regular,
             })
-        },
+        }
         TokenKind::OpeningBracket => {
             eprintln!("parsing pat array");
             iter.next();
@@ -188,11 +206,14 @@ where
             loop {
                 eprintln!("parsing array pat; expect pat is {expect_pat}");
                 match peek_non_blank!(iter) {
-                    Token { kind: TokenKind::ClosingBracket, .. } => {
+                    Token {
+                        kind: TokenKind::ClosingBracket,
+                        ..
+                    } => {
                         eprintln!("got closing bracket, breaking");
                         iter.next();
                         break;
-                    },
+                    }
                     other => {
                         eprintln!("got {:?}", &other);
                         if !expect_pat {
@@ -217,16 +238,16 @@ where
             eprintln!("end parsing pat array with pats = {:?}", &pats);
 
             ASTMatchPatternKind::Array(pats)
-        },
+        }
         TokenKind::Range => {
             eprintln!("parsing pat rest");
             iter.next();
             ASTMatchPatternKind::Rest
-        },
+        }
         _ => {
             eprintln!("parsing pat value");
             ASTMatchPatternKind::Value(parse_value(iter, None))
-        },
+        }
     };
 
     eprintln!("end parsing pattern");

@@ -1,5 +1,4 @@
 /// WIP state-based parser. Currently unused.
-
 use gdtk_ast::poor::ASTStatement;
 use gdtk_lexer::Token;
 

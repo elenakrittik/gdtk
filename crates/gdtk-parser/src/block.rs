@@ -3,8 +3,8 @@ use std::iter::Peekable;
 use gdtk_ast::poor::ASTStatement;
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::utils::expect;
 use crate::statement::parse_statement;
+use crate::utils::expect;
 
 pub fn parse_block<'a, T>(iter: &mut Peekable<T>) -> Vec<ASTStatement<'a>>
 where

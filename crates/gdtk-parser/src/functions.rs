@@ -3,8 +3,8 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTFunction, ASTFunctionParameter};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
 use crate::block::parse_block;
+use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
 
 pub fn parse_func<'a, T>(iter: &mut Peekable<T>) -> ASTFunction<'a>
 where
@@ -15,7 +15,13 @@ where
     let mut parameters = vec![];
 
     loop {
-        if matches!(iter.peek(), Some(Token { kind: TokenKind::ClosingParenthesis, .. })) {
+        if matches!(
+            iter.peek(),
+            Some(Token {
+                kind: TokenKind::ClosingParenthesis,
+                ..
+            })
+        ) {
             iter.next();
             break;
         }
