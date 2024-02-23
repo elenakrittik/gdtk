@@ -109,29 +109,36 @@ fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
                 out.push(token);
             },
             TokenKind::Colon => {
-                loop {
-                    match tokens.peek() {
-                        Token { kind: TokenKind::Newline | TokenKind::Comment(_), .. } => {
-                            treat_as_indent = false;
-                        },
-                        Token { kind: TokenKind::Blank(_), .. } => {
-                            tokens.next();
-                            continue;
-                        },
-                        _ => {
-                            treat_as_indent = true;
+                out.push(Token { kind: TokenKind::Colon, range: token.range.clone() });
+
+                match tokens.peek().unwrap() {
+                    Token { kind: TokenKind::Newline | TokenKind::Comment(_), .. } => {
+                        () // block starts as usual, on a new line; nothing to do
+                    },
+                    Token { kind: TokenKind::Blank(_), .. } => {
+                        // skipping blanket, as it
+                        // 1. isnt significant in this place
+                        // 2. blocks us from peeking farther
+                        tokens.next();
+
+                        match tokens.peek().unwrap() {
+                            Token { kind: TokenKind::Newline | TokenKind::Comment(_), .. } => {
+                                () // t'was just a trailing space, same case as the outer match
+                            },
+                            _ => {
+                                // blank-prefixed inline code, inserting indent
+                                stack.push(stack.last().unwrap() + 1);
+                                out.push(Token { kind: TokenKind::Indent, range: token.range.clone() });
+                            }
                         }
-                    }
-
-                    break;
+                    },
+                    _ => {
+                        // blank-prefixed inline code, inserting indent
+                        stack.push(stack.last().unwrap() + 1);
+                        out.push(Token { kind: TokenKind::Indent, range: token.range.clone() });
+                    },
                 }
-
-                out.push(token);
-
-                if treat_as_indent {
-                    out.push(Token)
-                }
-            }
+            },
             _ => {
                 out.push(token);
                 treat_as_indent = false;
