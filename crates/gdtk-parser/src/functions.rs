@@ -67,7 +67,6 @@ where
 
     ASTStatement::Func(ASTFunction {
         identifier,
-        annotations: vec![],
         parameters,
         body,
     })

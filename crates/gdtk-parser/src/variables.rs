@@ -50,14 +50,13 @@ where
         other => panic!("unexpected {other:?}, expected colon or assignment"),
     };
 
-    ASTStatement::Variable(ASTVariable {
+    ASTVariable {
         identifier,
-        annotations: vec![],
         infer_type,
         typehint,
         value: Some(value),
         kind: ASTVariableKind::Constant,
-    })
+    }
 }
 
 pub fn parse_var<'a, T>(iter: &mut Peekable<T>) -> ASTVariable<'a>
@@ -66,14 +65,13 @@ where
 {
     let (identifier, infer_type, typehint, value) = parse_idtydef!(iter, TokenKind::Newline => (),);
 
-    ASTStatement::Variable(ASTVariable {
+    ASTVariable {
         identifier,
-        annotations: vec![],
         infer_type,
         typehint,
         value,
         kind: ASTVariableKind::Regular,
-    })
+    }
 }
 
 // TODO: static vars

@@ -66,8 +66,8 @@ where
             let tuple = parse_iflike(iter);
             ASTStatement::While(tuple.0, tuple.1)
         },
-        TokenKind::Var => parse_var(iter),
-        TokenKind::Const => parse_const(iter),
+        TokenKind::Var => ASTStatement::Variable(parse_var(iter)),
+        TokenKind::Const => ASTStatement::Variable(parse_const(iter)),
         TokenKind::Static => todo!(),
         _ => ASTStatement::Value(parse_value(iter, Some(token))),
     }

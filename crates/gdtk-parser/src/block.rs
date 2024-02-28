@@ -1,6 +1,6 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTStatement, CodeBlock};
+use gdtk_ast::poor::CodeBlock;
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::statement::parse_statement;

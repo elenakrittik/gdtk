@@ -16,7 +16,7 @@ pub fn run(file: &String) -> anyhow::Result<()> {
         let parsed = parse_file(lexed.clone())?;
 
         #[cfg(debug_assertions)]
-        dbg!(&parsed);
+        dbg!(&parsed.body);
 
         if i >= 1 {
             break;

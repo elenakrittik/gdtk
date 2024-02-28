@@ -5,10 +5,14 @@ pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
 pub type DictValue<'a> = Vec<(ASTValue<'a>, ASTValue<'a>)>;
 
 #[derive(Debug, Clone)]
+pub struct ASTFile<'a> {
+    pub body: CodeBlock<'a>,
+}
+
+#[derive(Debug, Clone)]
 pub struct ASTClass<'a> {
     pub name: Option<&'a str>,
     pub extends: Option<&'a str>,
-    pub annotations: Vec<ASTAnnotation<'a>>,
     pub variables: Vec<ASTVariable<'a>>,
     pub enums: Vec<ASTEnum<'a>>,
     pub functions: Vec<ASTFunction<'a>>,
@@ -19,7 +23,6 @@ pub struct ASTClass<'a> {
 #[derive(Debug, Clone)]
 pub struct ASTVariable<'a> {
     pub identifier: &'a str,
-    pub annotations: Vec<ASTAnnotation<'a>>,
     pub infer_type: bool,
     pub typehint: Option<&'a str>,
     pub value: Option<ASTValue<'a>>,
@@ -53,7 +56,6 @@ pub struct ASTEnumVariant<'a> {
 #[derive(Debug, Clone)]
 pub struct ASTFunction<'a> {
     pub identifier: &'a str,
-    pub annotations: Vec<ASTAnnotation<'a>>,
     pub parameters: Vec<ASTFunctionParameter<'a>>,
     pub body: CodeBlock<'a>,
 }
@@ -200,5 +202,5 @@ pub struct ASTAnnotation<'a> {
 #[derive(Debug, Clone)]
 pub struct ASTSignal<'a> {
     pub name: &'a str,
-    pub parameters: Vec<ASTParameter<'a>>,
+    pub parameters: Vec<ASTFunctionParameter<'a>>,
 }
