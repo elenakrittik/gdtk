@@ -1,7 +1,5 @@
 // TODO: refactor some stuff to utilize new option to .peek()
 
-pub use gdtk_lexer::utils::peek_non_blank;
-
 pub macro any_assignment($enm:ident) {
     $enm::Assignment
         | $enm::PlusAssignment
@@ -36,6 +34,23 @@ pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {{
                 TokenKind::Blank(_) => (),
                 $variant => break $ret,
                 _ => panic!("expected {}, found {token:?}", stringify!($variant)),
+            }
+        } else {
+            panic!("unexpected EOF");
+        }
+    }
+}}
+
+pub macro peek_non_blank($iter:expr) {{
+    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
+
+    loop {
+        if let Some(token) = $iter.peek() {
+            match token.kind {
+                TokenKind::Blank(_) => {
+                    $iter.next();
+                }
+                _ => break token,
             }
         } else {
             panic!("unexpected EOF");

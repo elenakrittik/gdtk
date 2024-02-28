@@ -1,11 +1,8 @@
-#![feature(decl_macro)]
-
 pub mod callbacks;
 pub mod error;
 #[cfg(test)]
 mod tests;
 pub mod token;
-pub mod utils;
 
 use gdtk_diag::Diagnostic;
 use logos::Logos;
@@ -45,19 +42,19 @@ fn preprocess<'a>(lexer: logos::Lexer<'a, TokenKind<'a>>) -> LexOutput<'a> {
 fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
     let mut stack: Vec<u64> = vec![0];
     let mut out = vec![];
-    let mut treat_as_indent = false;
+    let mut new_line = false;
 
     let mut tokens = tokens.into_iter().peekable();
 
     while let Some(token) = tokens.next() {
         match token.kind {
             TokenKind::Blank(b) => {
-                if !treat_as_indent {
+                if !new_line {
                     out.push(token);
                     continue;
                 }
 
-                treat_as_indent = false;
+                new_line = false;
 
                 let len = &(b.len() as u64);
 
@@ -86,7 +83,7 @@ fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
                 }
             }
             TokenKind::Newline => {
-                eprintln!("found newline");
+                // eprintln!("found newline");
                 if !matches!(
                     tokens.peek(),
                     Some(Token {
@@ -94,7 +91,7 @@ fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
                         ..
                     })
                 ) {
-                    eprintln!("next token is not a blank or a newline (meaning we are now at the top-most level)");
+                    // eprintln!("next token is not a blank or a newline (meaning we are now at the top-most level)");
                     while stack.last().unwrap() != &0 {
                         stack.pop();
                         out.push(Token {
@@ -104,37 +101,13 @@ fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
                     }
                 }
 
-                eprintln!("next token is a blank or a newline, continue trying to match block");
-                treat_as_indent = true;
+                // eprintln!("next token is a blank or a newline, continue trying to match block");
+                new_line = true;
                 out.push(token);
-            },
-            TokenKind::Colon => {
-                loop {
-                    match tokens.peek() {
-                        Token { kind: TokenKind::Newline | TokenKind::Comment(_), .. } => {
-                            treat_as_indent = false;
-                        },
-                        Token { kind: TokenKind::Blank(_), .. } => {
-                            tokens.next();
-                            continue;
-                        },
-                        _ => {
-                            treat_as_indent = true;
-                        }
-                    }
-
-                    break;
-                }
-
-                out.push(token);
-
-                if treat_as_indent {
-                    out.push(Token)
-                }
             }
             _ => {
                 out.push(token);
-                treat_as_indent = false;
+                new_line = false;
             }
         }
     }
