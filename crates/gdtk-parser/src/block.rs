@@ -1,12 +1,12 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::ASTStatement;
+use gdtk_ast::poor::{ASTStatement, CodeBlock};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::statement::parse_statement;
 use crate::utils::expect;
 
-pub fn parse_block<'a, T>(iter: &mut Peekable<T>) -> Vec<ASTStatement<'a>>
+pub fn parse_block<'a, T>(iter: &mut Peekable<T>) -> CodeBlock<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {

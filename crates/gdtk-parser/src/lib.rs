@@ -24,7 +24,6 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
 
     let mut class_name = None;
     let mut extends = None;
-    let mut icon = None;
     let mut variables: Vec<ASTVariable<'_>> = vec![];
     let mut enums: Vec<ASTEnum<'_>> = vec![];
     let mut functions: Vec<ASTFunction<'_>> = vec![];
@@ -111,11 +110,12 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTClass, Error> {
     }
 
     Ok(ASTClass {
-        class_name,
+        name,
         extends,
-        icon,
         variables,
         enums,
         functions,
+        signals: vec![],
+        inner_classes: vec![],
     })
 }

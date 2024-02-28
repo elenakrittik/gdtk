@@ -6,10 +6,13 @@ use gdtk_ast::poor::{
 };
 use gdtk_lexer::{Token, TokenKind};
 
+use crate::functions::parse_func;
+use crate::classes::{parse_classname, parse_extends, parse_enum};
 use crate::block::parse_block;
 use crate::utils::{any_assignment, expect, expect_blank_prefixed, next_non_blank, peek_non_blank};
 use crate::values::parse_value;
 use crate::variables::{parse_const, parse_var};
+use crate::misc::parse_annotation;
 
 pub fn parse_statement<'a, T>(
     iter: &mut Peekable<T>,
@@ -25,6 +28,7 @@ where
     let token = token.unwrap();
 
     match token.kind {
+        TokenKind::Annotation => parse_annotation(iter),
         TokenKind::Assert => ASTStatement::Assert(parse_value(iter, None)),
         TokenKind::Identifier(s) => {
             if matches!(peek_non_blank!(iter).kind, any_assignment!(TokenKind)) {
@@ -32,9 +36,11 @@ where
             } else {
                 ASTStatement::Value(parse_value(iter, Some(token)))
             }
-        }
+        },
         TokenKind::Break => ASTStatement::Break,
         TokenKind::Breakpoint => ASTStatement::Breakpoint,
+        TokenKind::Class => todo!(),
+        TokenKind::ClassName => parse_classname(iter),
         TokenKind::Continue => ASTStatement::Continue,
         TokenKind::If => {
             let tuple = parse_iflike(iter);
@@ -48,13 +54,20 @@ where
             expect_blank_prefixed!(iter, TokenKind::Colon, ());
             ASTStatement::Else(parse_block(iter))
         }
+        TokenKind::Enum => parse_enum(iter),
+        TokenKind::Extends => parse_extends(iter),
         TokenKind::For => parse_for_loop(iter),
         TokenKind::Pass => ASTStatement::Pass,
+        TokenKind::Func => parse_func(iter),
         TokenKind::Return => ASTStatement::Return(parse_value(iter, None)),
+        TokenKind::Signal => todo!(),
         TokenKind::Match => parse_match(iter),
-        TokenKind::While => parse_while_loop(iter),
-        TokenKind::Var => ASTStatement::Variable(parse_var(iter)),
-        TokenKind::Const => ASTStatement::Variable(parse_const(iter)),
+        TokenKind::While => {
+            let tuple = parse_iflike(iter);
+            ASTStatement::While(tuple.0, tuple.1)
+        },
+        TokenKind::Var => parse_var(iter),
+        TokenKind::Const => parse_const(iter),
         TokenKind::Static => todo!(),
         _ => ASTStatement::Value(parse_value(iter, Some(token))),
     }

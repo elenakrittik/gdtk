@@ -6,17 +6,20 @@ pub type DictValue<'a> = Vec<(ASTValue<'a>, ASTValue<'a>)>;
 
 #[derive(Debug, Clone)]
 pub struct ASTClass<'a> {
-    pub class_name: Option<&'a str>,
+    pub name: Option<&'a str>,
     pub extends: Option<&'a str>,
-    pub icon: Option<ASTAnnotation<'a>>,
+    pub annotations: Vec<ASTAnnotation<'a>>,
     pub variables: Vec<ASTVariable<'a>>,
     pub enums: Vec<ASTEnum<'a>>,
     pub functions: Vec<ASTFunction<'a>>,
+    pub signals: Vec<ASTSignal<'a>>,
+    pub inner_classes: Vec<ASTClass<'a>>,
 }
 
 #[derive(Debug, Clone)]
 pub struct ASTVariable<'a> {
     pub identifier: &'a str,
+    pub annotations: Vec<ASTAnnotation<'a>>,
     pub infer_type: bool,
     pub typehint: Option<&'a str>,
     pub value: Option<ASTValue<'a>>,
@@ -50,6 +53,7 @@ pub struct ASTEnumVariant<'a> {
 #[derive(Debug, Clone)]
 pub struct ASTFunction<'a> {
     pub identifier: &'a str,
+    pub annotations: Vec<ASTAnnotation<'a>>,
     pub parameters: Vec<ASTFunctionParameter<'a>>,
     pub body: CodeBlock<'a>,
 }
@@ -121,24 +125,32 @@ pub enum ASTBinaryOp {
     TypeCheck,      // x is y
     Contains,       // x in y
     PropertyAccess, // x.y
-    Range,          // x..y
+    Range,          // x..y // TODO: rename to "Rest"?
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, enum_as_inner::EnumAsInner)]
 pub enum ASTStatement<'a> {
+    Annotation(ASTAnnotation<'a>),
     Assert(ASTValue<'a>),
     /// (identifier, kind, value)
     Assignment(&'a str, ASTAssignmentKind, ASTValue<'a>),
     Break,
     Breakpoint,
+    Class(ASTClass<'a>),
+    ClassName(&'a str),
     Continue,
     If(ASTValue<'a>, CodeBlock<'a>),
     Elif(ASTValue<'a>, CodeBlock<'a>),
     Else(CodeBlock<'a>),
+    Enum(ASTEnum<'a>),
+    Extends(&'a str),
     /// (identifier, type_hint, container, body)
     For(&'a str, Option<ASTValue<'a>>, ASTValue<'a>, CodeBlock<'a>),
+    Func(ASTFunction<'a>),
     Pass,
     Return(ASTValue<'a>),
+    /// (name, args)
+    Signal(ASTSignal<'a>),
     /// (expression_being_matched_on, vec_of_patterns)
     Match(ASTValue<'a>, Vec<ASTMatchPattern<'a>>),
     While(ASTValue<'a>, CodeBlock<'a>),
@@ -174,7 +186,7 @@ pub enum ASTMatchPatternKind<'a> {
     Value(ASTValue<'a>),
     Binding(ASTVariable<'a>),
     Array(Vec<ASTMatchPatternKind<'a>>),
-    // TODO: Dictionary(???)
+    // TODO: Dictionary(???),
     Alternative(Vec<ASTMatchPatternKind<'a>>),
     Rest,
 }
@@ -183,4 +195,10 @@ pub enum ASTMatchPatternKind<'a> {
 pub struct ASTAnnotation<'a> {
     pub identifier: &'a str,
     pub arguments: Vec<ASTValue<'a>>,
+}
+
+#[derive(Debug, Clone)]
+pub struct ASTSignal<'a> {
+    pub name: &'a str,
+    pub parameters: Vec<ASTParameter<'a>>,
 }

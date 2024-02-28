@@ -1,26 +1,26 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTEnum, ASTEnumVariant};
+use gdtk_ast::poor::{ASTStatement, ASTEnum, ASTEnumVariant};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::utils::{expect_blank_prefixed, next_non_blank};
 use crate::values::parse_value;
 
-pub fn parse_classname<'a, T>(iter: &mut Peekable<T>) -> &'a str
+pub fn parse_classname<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    expect_blank_prefixed!(iter, TokenKind::Identifier(i), i)
+    expect_blank_prefixed!(iter, TokenKind::Identifier(i), ASTStatement::ClassName(i))
 }
 
-pub fn parse_extends<'a, T>(iter: &mut Peekable<T>) -> &'a str
+pub fn parse_extends<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    expect_blank_prefixed!(iter, TokenKind::Identifier(s), s)
+    expect_blank_prefixed!(iter, TokenKind::Identifier(i), ASTStatement::Extends(i))
 }
 
-pub fn parse_enum<'a, T>(iter: &mut Peekable<T>) -> ASTEnum<'a>
+pub fn parse_enum<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -100,8 +100,8 @@ where
         }
     }
 
-    ASTEnum {
+    ASTStatement::Enum(ASTEnum {
         identifier,
         variants,
-    }
+    })
 }

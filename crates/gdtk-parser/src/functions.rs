@@ -1,12 +1,12 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTFunction, ASTFunctionParameter};
+use gdtk_ast::poor::{ASTStatement, ASTFunction, ASTFunctionParameter};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
 
-pub fn parse_func<'a, T>(iter: &mut Peekable<T>) -> ASTFunction<'a>
+pub fn parse_func<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -65,9 +65,10 @@ where
 
     let body = parse_block(iter);
 
-    ASTFunction {
+    ASTStatement::Func(ASTFunction {
         identifier,
+        annotations: vec![],
         parameters,
         body,
-    }
+    })
 }

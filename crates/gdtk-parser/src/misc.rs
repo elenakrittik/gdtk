@@ -1,11 +1,11 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::ASTAnnotation;
+use gdtk_ast::poor::{ASTAnnotation, ASTStatement};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::utils::{collect_args, expect_blank_prefixed};
 
-pub fn parse_annotation<'a, T>(iter: &mut Peekable<T>) -> ASTAnnotation<'a>
+pub fn parse_annotation<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -16,8 +16,8 @@ where
         TokenKind::ClosingParenthesis
     );
 
-    ASTAnnotation {
+    ASTStatement::Annotation(ASTAnnotation {
         identifier,
         arguments,
-    }
+    })
 }
