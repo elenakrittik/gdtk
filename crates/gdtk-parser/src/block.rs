@@ -12,11 +12,8 @@ where
 {
     let mut stmts = vec![];
 
-    match iter.next().unwrap().kind {
-        TokenKind::Newline => expect!(iter, TokenKind::Indent, ()),
-        TokenKind::Indent => (),
-        _ => panic!("expected TokenKind::Indent | TokenKind::Newline"),
-    }
+    expect!(iter, TokenKind::Newline, ());
+    expect!(iter, TokenKind::Indent, ());
 
     while let Some(token) = iter.next() {
         match token.kind {
