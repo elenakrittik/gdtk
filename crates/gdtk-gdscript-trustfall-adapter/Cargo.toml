@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 trustfall = "0.7.1"
+gdtk-ast = { path = "../gdtk-ast", version = "0.1.0" }
