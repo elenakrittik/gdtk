@@ -27,9 +27,6 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
             "File" => {
                 std::iter::once(Vertex::File(self.file.clone()))
             }
-            "Statements" => {
-                todo!()
-            }
             _ => unimplemented!("unexpected starting edge: {edge_name}"),
         })
     }
