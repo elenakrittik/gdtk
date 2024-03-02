@@ -1,7 +1,7 @@
 use std::rc::Rc;
 
 use gdtk_ast::poor::ASTFile;
-use trustfall::provider::BasicAdapter;
+use trustfall::provider::{field_property, resolve_property_with, BasicAdapter};
 
 use crate::vertex::Vertex;
 
@@ -23,15 +23,15 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
         edge_name: &str,
         parameters: &trustfall::provider::EdgeParameters,
     ) -> trustfall::provider::VertexIterator<'a, Self::Vertex> {
-        match edge_name {
+        Box::new(match edge_name {
             "File" => {
+                std::iter::once(Vertex::File(self.file.clone()))
+            }
+            "Statements" => {
                 todo!()
             }
-            "Statement" => {
-                todo!()
-            }
-            _ => todo!()
-        }
+            _ => unimplemented!("unexpected starting edge: {edge_name}"),
+        })
     }
 
     fn resolve_property<V: trustfall::provider::AsVertex<Self::Vertex> + 'a>(
@@ -40,7 +40,10 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
         type_name: &str,
         property_name: &str,
     ) -> trustfall::provider::ContextOutcomeIterator<'a, V, trustfall::FieldValue> {
-        todo!()
+        match (type_name, property_name) {
+            ("File", "body") => resolve_property_with(contexts, field_property!(as_file, body)),
+            _ => unreachable!(),
+        }
     }
 
     fn resolve_neighbors<V: trustfall::provider::AsVertex<Self::Vertex> + 'a>(
