@@ -151,7 +151,7 @@ pub async fn fetch_unstable_versions(ver: &str) -> Result<Vec<String>, Error> {
     Ok(versions)
 }
 
-pub fn get_version_download_url(version: String) -> Result<String, Error> {
+pub fn get_version_download_url(version: &String) -> Result<String, Error> {
     let url = GODOT_DOWNLOADS_ROOT.to_string();
     let url = url + &version.replace('-', "/");
 
@@ -167,7 +167,7 @@ pub fn get_version_download_url(version: String) -> Result<String, Error> {
 }
 
 pub async fn check_version_exists(version: String) -> Result<bool, Error> {
-    let url = get_version_download_url(version)?;
+    let url = get_version_download_url(&version)?;
     let client = reqwest::Client::new();
 
     let status = client.head(url).send().await?.status();

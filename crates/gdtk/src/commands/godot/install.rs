@@ -13,7 +13,13 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
 
     gdtk_gvm::ensure_godots()?;
 
-    let _data_dir = gdtk_utils::base_data_dir()?;
+    let _data_dir = gdtk_gvm::godots_path()?;
+
+    println!("{}", _data_dir.display());
+
+    let url = gdtk_gvm::online::get_version_download_url(version)?;
+
+    dbg!(url);
 
     Ok(())
 }
