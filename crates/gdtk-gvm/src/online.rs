@@ -174,3 +174,10 @@ pub async fn check_version_exists(version: String) -> Result<bool, Error> {
 
     Ok(status.is_success())
 }
+
+pub async fn download_version_zip(version: &String) -> Result<bytes::Bytes, Error> {
+    let resp = reqwest::get(get_version_download_url(version)?).await?;
+    let bytes = resp.bytes().await?;
+
+    Ok(bytes)
+}

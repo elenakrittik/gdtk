@@ -13,13 +13,12 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
 
     gdtk_gvm::ensure_godots()?;
 
-    let _data_dir = gdtk_gvm::godots_path()?;
+    let target_dir = gdtk_gvm::godots_path()?.join(version);
+    let source = std::io::Cursor::new(gdtk_gvm::online::download_version_zip(version).await?);
 
-    println!("{}", _data_dir.display());
+    zip_extract::extract(source, &target_dir, true)?;
 
-    let url = gdtk_gvm::online::get_version_download_url(version)?;
-
-    dbg!(url);
+    println!("Installed Godot {}!", version);
 
     Ok(())
 }
