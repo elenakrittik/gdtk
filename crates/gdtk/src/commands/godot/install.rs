@@ -5,9 +5,14 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
         anyhow::bail!("{version} is an unknown Godot version.");
     }
 
-    let local = gdtk_gvm::get_local_versions()?;
+    let mut local = gdtk_gvm::read_local_versions()?;
 
-    if local.contains_key(version) {
+    let old = local.insert(
+        version.clone(),
+        gdtk_gvm::toml::Value::String(target_dir.display().to_string()),
+    );
+
+    if old.is_some() {
         anyhow::bail!("{version} is already installed.");
     }
 
@@ -17,6 +22,11 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
     let source = std::io::Cursor::new(gdtk_gvm::online::download_version_zip(version).await?);
 
     zip_extract::extract(source, &target_dir, true)?;
+
+    // Enable self-contained mode.
+    std::fs::File::create(&target_dir.join("._sc_"))?;
+
+    gdtk_gvm::write_local_versions(local)?;
 
     println!("Installed Godot {}!", version);
 

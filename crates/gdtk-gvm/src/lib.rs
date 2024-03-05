@@ -2,9 +2,8 @@
 
 use std::{io::Error as IOError, path::PathBuf};
 
-use ahash::AHashMap;
-use gdtk_macros::unwrap_enum;
-use toml::{de::Error as TOMLDeError, Table, Value};
+pub use toml;
+use toml::{de::Error as TOMLDeError, map::Map, Table, Value};
 use versions::Version;
 
 #[derive(Debug, thiserror::Error)]
@@ -66,18 +65,20 @@ pub fn ensure_versions() -> Result<(), IOError> {
 }
 
 /// Returns versions.toml content as a hash map of version string to relative path.
-pub fn get_local_versions() -> Result<AHashMap<String, String>, Error> {
+pub fn read_local_versions() -> Result<Map<String, Value>, Error> {
     let versions_toml = versions_toml_path()?;
 
     let table = std::fs::read_to_string(versions_toml)?.parse::<Table>()?;
 
-    let tab = table
-        .into_iter()
-        .filter(|(_, v)| matches!(v, Value::String(_)))
-        .map(|(k, v)| (k, unwrap_enum!(v, Value::String(s), s)))
-        .collect::<AHashMap<_, _>>();
+    Ok(table)
+}
 
-    Ok(tab)
+pub fn write_local_versions(table: Map<String, Value>) -> Result<(), Error> {
+    let versions_toml = versions_toml_path()?;
+
+    std::fs::write(versions_toml, table.to_string())?;
+
+    Ok(())
 }
 
 pub fn versions_toml_path() -> Result<PathBuf, IOError> {
