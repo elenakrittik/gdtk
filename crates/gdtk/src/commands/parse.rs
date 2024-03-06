@@ -9,14 +9,9 @@ pub fn run(file: &String) -> anyhow::Result<()> {
         i += 1;
         let content = std::fs::read_to_string(file)?;
         let lexed = gdtk_lexer::lex(&content);
+        let parsed = parse_file(lexed)?;
 
-        #[cfg(debug_assertions)]
-        dbg!(&lexed);
-
-        let parsed = parse_file(lexed.clone())?;
-
-        #[cfg(debug_assertions)]
-        dbg!(&parsed.body);
+        gdtk_lint::run_lints(&parsed);
 
         if i >= 1 {
             break;

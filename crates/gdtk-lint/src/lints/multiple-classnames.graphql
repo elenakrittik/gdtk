@@ -1,0 +1,5 @@
+{
+    ClassName {
+        identifier @transform(op: "count") @filter(op: "=", value: [0])
+    }
+}

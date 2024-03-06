@@ -1,0 +1,5 @@
+{
+    ClassName {
+        identifier @filter(op: "regex", values: ["^[A-Z].*"])
+    }
+}

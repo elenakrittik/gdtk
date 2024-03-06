@@ -1,4 +1,2 @@
-func normal():
-	pass
-
-func inline():pass
+class_name Wow
+class_name Meh
