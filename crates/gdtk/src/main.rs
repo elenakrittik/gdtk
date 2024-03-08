@@ -1,8 +1,8 @@
 use gdtk::cli::{Commands, GodotCommands};
 use gdtk::commands::{
     godot::install::run as run_godot_install, godot::list::run as run_godot_list,
-    godot::run as run_godot, parse::run as run_parse, run as run_main,
-    godot::uninstall::run as run_godot_uninstall,
+    godot::run as run_godot, godot::uninstall::run as run_godot_uninstall, parse::run as run_parse,
+    run as run_main,
 };
 
 #[tokio::main]

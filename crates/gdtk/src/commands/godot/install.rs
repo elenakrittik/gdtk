@@ -6,6 +6,7 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
     }
 
     let mut local = gdtk_gvm::read_local_versions()?;
+    let target_dir = gdtk_gvm::godots_path()?.join(version);
 
     let old = local.insert(
         version.clone(),
@@ -18,13 +19,12 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
 
     gdtk_gvm::ensure_godots()?;
 
-    let target_dir = gdtk_gvm::godots_path()?.join(version);
     let source = std::io::Cursor::new(gdtk_gvm::online::download_version_zip(version).await?);
 
     zip_extract::extract(source, &target_dir, true)?;
 
     // Enable self-contained mode.
-    std::fs::File::create(&target_dir.join("._sc_"))?;
+    std::fs::File::create(target_dir.join("._sc_"))?;
 
     gdtk_gvm::write_local_versions(local)?;
 

@@ -15,4 +15,3 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
 
     Ok(())
 }
-
