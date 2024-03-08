@@ -12,6 +12,7 @@ gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm" }
 gdtk-lexer = { version = "0.1.0", path = "../gdtk-lexer" }
 gdtk-parser = { version = "0.1.0", path = "../gdtk-parser" }
 gdtk-utils = { version = "0.1.0", path = "../gdtk-utils" }
+gdtk-lint = { version = "0.1.0", path = "../gdtk-lint" }
 lazy_static = "1.4.0"
 owo-colors = "4.0.0"
 thiserror = "1.0.40"

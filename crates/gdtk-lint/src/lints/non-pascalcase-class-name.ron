@@ -1,0 +1,10 @@
+LintQuery {
+    query: r#"{
+        ClassName {
+            identifier @filter(op: "regex", values: ["$pascalsace_regex"]) @output
+        }
+    }"#,
+    args: {
+        "pascalsace_regex": "^[A-Z].*"
+    }
+}

@@ -1,5 +1,5 @@
 [package]
-name = "gdtk-ast"
+name = "gdtk-gdscript-trustfall-adapter"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,8 +7,5 @@ edition = "2021"
 
 [dependencies]
 enum-as-inner = "0.6.0"
-gdtk-diag = { path = "../gdtk-diag" }
-trustfall = { version = "0.7.1", optional = true }
-
-[features]
-trustfall = ["dep:trustfall"]
+trustfall = "0.7.1"
+gdtk-ast = { path = "../gdtk-ast", version = "0.1.0" }
