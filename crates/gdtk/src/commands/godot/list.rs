@@ -20,7 +20,7 @@ pub async fn run(
 fn show_local_versions() -> anyhow::Result<()> {
     gdtk_gvm::ensure_versions()?;
 
-    let versions = gdtk_gvm::get_local_versions()?;
+    let versions = gdtk_gvm::read_local_versions()?;
 
     if versions.is_empty() {
         println!("No versions installed.");
@@ -34,7 +34,11 @@ fn show_local_versions() -> anyhow::Result<()> {
         .apply_modifier(UTF8_ROUND_CORNERS)
         .set_content_arrangement(ContentArrangement::Dynamic)
         .set_header(["Version", "Path"])
-        .add_rows(versions.into_iter().map(|(v, p)| Row::from([v, p])));
+        .add_rows(
+            versions
+                .into_iter()
+                .map(|(v, p)| Row::from([v, p.as_str().unwrap().to_owned()])),
+        );
 
     println!("{table}");
 

@@ -1,6 +1,6 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTStatement, ASTEnum, ASTEnumVariant};
+use gdtk_ast::poor::{ASTEnum, ASTEnumVariant, ASTStatement};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::utils::{expect_blank_prefixed, next_non_blank};

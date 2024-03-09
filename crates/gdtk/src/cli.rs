@@ -9,7 +9,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// Parse GDScript source file. Currently mostly broken.
+    /// [DEV] Parse GDScript source file.
     Parse {
         #[arg(short, long)]
         file: String,
@@ -45,9 +45,21 @@ pub enum GodotCommands {
         unsupported_dev: bool,
     },
 
+    /// Run the specified Godot version.
+    Run {
+        /// The Godot version to run.
+        version: String,
+    },
+
     /// Install the specified Godot version.
     Install {
         /// The Godot version to install.
+        version: String,
+    },
+
+    /// Uninstall the specified Godot version.
+    Uninstall {
+        /// The Godot version to uninstall.
         version: String,
     },
 }

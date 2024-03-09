@@ -151,12 +151,12 @@ pub async fn fetch_unstable_versions(ver: &str) -> Result<Vec<String>, Error> {
     Ok(versions)
 }
 
-pub fn get_version_download_url(version: String) -> Result<String, Error> {
+pub fn get_version_download_url(version: &str) -> Result<String, Error> {
     let url = GODOT_DOWNLOADS_ROOT.to_string();
     let url = url + &version.replace('-', "/");
 
     let majorminor_ver = version.chars().take(3).collect();
-    let release = Version::new(&version)
+    let release = Version::new(version)
         .unwrap()
         .release
         .map(|v| v.to_string());
@@ -167,10 +167,17 @@ pub fn get_version_download_url(version: String) -> Result<String, Error> {
 }
 
 pub async fn check_version_exists(version: String) -> Result<bool, Error> {
-    let url = get_version_download_url(version)?;
+    let url = get_version_download_url(&version)?;
     let client = reqwest::Client::new();
 
     let status = client.head(url).send().await?.status();
 
     Ok(status.is_success())
+}
+
+pub async fn download_version_zip(version: &str) -> Result<bytes::Bytes, Error> {
+    let resp = reqwest::get(get_version_download_url(version)?).await?;
+    let bytes = resp.bytes().await?;
+
+    Ok(bytes)
 }
