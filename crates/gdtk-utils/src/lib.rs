@@ -10,6 +10,7 @@ pub fn ensure_path(path: std::path::PathBuf, dir: bool) -> Result<bool, Error> {
             std::fs::OpenOptions::new()
                 .create(true)
                 .write(true)
+                .truncate(true)
                 .open(path)?;
             existed = false;
         }
