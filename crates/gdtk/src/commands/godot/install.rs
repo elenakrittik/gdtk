@@ -19,7 +19,11 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
 
     gdtk_gvm::ensure_godots()?;
 
+    println!("Downloading..");
+
     let source = std::io::Cursor::new(gdtk_gvm::online::download_version_zip(version).await?);
+
+    println!("Extracting..");
 
     zip_extract::extract(source, &target_dir, true)?;
 

@@ -45,6 +45,12 @@ pub enum GodotCommands {
         unsupported_dev: bool,
     },
 
+    /// Run the specified Godot version.
+    Run {
+        /// The Godot version to run.
+        version: String,
+    },
+
     /// Install the specified Godot version.
     Install {
         /// The Godot version to install.
