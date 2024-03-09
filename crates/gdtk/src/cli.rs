@@ -1,23 +1,24 @@
+use std::path::PathBuf;
+
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Option<Commands>,
+    pub command: Commands,
 }
 
 #[derive(Subcommand)]
 pub enum Commands {
     /// [DEV] Parse GDScript source file.
     Parse {
-        #[arg(short, long)]
-        file: String,
+        file: PathBuf,
     },
     /// Manage your Godot installations.
     Godot {
         #[command(subcommand)]
-        command: Option<GodotCommands>,
+        command: GodotCommands,
     },
 }
 
