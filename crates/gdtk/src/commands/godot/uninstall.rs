@@ -1,7 +1,7 @@
-pub async fn run(version: &String) -> anyhow::Result<()> {
+pub async fn run(version: String) -> anyhow::Result<()> {
     let mut local = gdtk_gvm::read_local_versions()?;
 
-    let old = local.remove(version);
+    let old = local.remove(&version);
 
     if old.is_none() {
         anyhow::bail!("This version isn't installed.");

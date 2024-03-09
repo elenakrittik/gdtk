@@ -1,44 +1,17 @@
-use gdtk_parser::parse_file;
-// use owo_colors::OwoColorize;
+use std::path::PathBuf;
 
-// use crate::display::print_error;
+pub fn run(file: PathBuf) -> anyhow::Result<()> {
+    let content = std::fs::read_to_string(file)?;
 
-pub fn run(file: &String) -> anyhow::Result<()> {
-    let mut i = 0;
-    loop {
-        i += 1;
-        let content = std::fs::read_to_string(file)?;
-        let lexed = gdtk_lexer::lex(&content);
+    eprintln!("Source:\n```gdscript\n{}\n```", &content);
 
-        #[cfg(debug_assertions)]
-        dbg!(&lexed);
+    let lexed = gdtk_lexer::lex(&content);
 
-        let parsed = parse_file(lexed.clone())?;
+    eprintln!("Lexer output:\n```ron\n{:#?}\n```", &lexed.0);
 
-        #[cfg(debug_assertions)]
-        dbg!(&parsed.body);
+    let parsed = gdtk_parser::parse_file(lexed)?;
 
-        if i >= 1 {
-            break;
-        }
-    }
-
-    // dbg!(&lexed.0);
-    // dbg!(&lexed.1);
-
-    // for lexeme in lexed {
-    //     print_diag(file, &lexeme);
-    // }
+    eprintln!("Parser output:\n```ron\n{:#?}\n```", &parsed);
 
     Ok(())
 }
-
-// pub fn print_diag(file: &String, lexeme: &gdtk_lexer::Lexeme) {
-//     match lexeme {
-//         Ok((token, _)) => println!("{:?}", token),
-//         Err((err, span)) => {
-//             print_error(err.to_string());
-//             eprintln!("{} {}:{:?}", "-->".cyan(), file, span);
-//         },
-//     }
-// }

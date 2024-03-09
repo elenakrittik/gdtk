@@ -3,13 +3,13 @@ use comfy_table::{
 };
 
 pub async fn run(
-    online: &bool,
-    unsupported: &bool,
-    dev: &bool,
-    unsupported_dev: &bool,
+    online: bool,
+    unsupported: bool,
+    dev: bool,
+    unsupported_dev: bool,
 ) -> anyhow::Result<()> {
-    if *online {
-        show_online_versions(*unsupported, *dev, *unsupported_dev).await?;
+    if online {
+        show_online_versions(unsupported, dev, unsupported_dev).await?;
     } else {
         show_local_versions()?;
     }

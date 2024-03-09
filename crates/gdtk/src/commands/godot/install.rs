@@ -1,4 +1,4 @@
-pub async fn run(version: &String) -> anyhow::Result<()> {
+pub async fn run(version: String) -> anyhow::Result<()> {
     let exists = gdtk_gvm::online::check_version_exists(version.to_owned()).await?;
 
     if !exists {
@@ -6,7 +6,7 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
     }
 
     let mut local = gdtk_gvm::read_local_versions()?;
-    let target_dir = gdtk_gvm::godots_path()?.join(version);
+    let target_dir = gdtk_gvm::godots_path()?.join(&version);
 
     let old = local.insert(
         version.clone(),
@@ -21,7 +21,7 @@ pub async fn run(version: &String) -> anyhow::Result<()> {
 
     println!("Downloading..");
 
-    let source = std::io::Cursor::new(gdtk_gvm::online::download_version_zip(version).await?);
+    let source = std::io::Cursor::new(gdtk_gvm::online::download_version_zip(&version).await?);
 
     println!("Extracting..");
 

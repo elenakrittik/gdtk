@@ -1,6 +1,6 @@
-pub async fn run(version: &String) -> anyhow::Result<()> {
+pub async fn run(version: String) -> anyhow::Result<()> {
     let local = gdtk_gvm::read_local_versions()?;
-    let path = local.get(version);
+    let path = local.get(&version);
 
     match path {
         Some(path) => {

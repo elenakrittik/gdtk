@@ -12,9 +12,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// [DEV] Parse GDScript source file.
-    Parse {
-        file: PathBuf,
-    },
+    Parse { file: PathBuf },
     /// Manage your Godot installations.
     Godot {
         #[command(subcommand)]
