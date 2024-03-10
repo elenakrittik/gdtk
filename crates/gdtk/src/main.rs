@@ -12,10 +12,9 @@ async fn main() -> anyhow::Result<()> {
         Commands::Godot { command } => match command {
             GodotCommands::List {
                 online,
-                unsupported,
+                old,
                 dev,
-                unsupported_dev,
-            } => cmds::godot::list::run(online, unsupported, dev, unsupported_dev).await?,
+            } => cmds::godot::list::run(online, old, dev).await?,
             GodotCommands::Install { version } => cmds::godot::install::run(version).await?,
             GodotCommands::Uninstall { version } => cmds::godot::uninstall::run(version).await?,
             GodotCommands::Run { version } => cmds::godot::run::run(version).await?,

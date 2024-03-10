@@ -1,10 +1,14 @@
-#![feature(decl_macro)]
+#![feature(decl_macro, option_take_if)]
 
 use std::{io::Error as IOError, path::PathBuf};
 
+pub use versions;
 pub use toml;
 use toml::{de::Error as TOMLDeError, map::Map, Table, Value};
 use versions::Version;
+
+pub mod online;
+pub mod utils;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -104,5 +108,24 @@ pub fn ensure_godots() -> Result<(), IOError> {
     Ok(())
 }
 
-pub mod online;
-pub mod utils;
+pub fn is_stable(ver: &versions::Versioning) -> bool {
+    match ver {
+        versions::Versioning::Ideal(
+            versions::SemVer {
+                pre_rel: Some(
+                    versions::Release(vec)
+                ),
+                ..
+            }
+        ) |
+        versions::Versioning::General(
+            versions::Version {
+                release: Some(
+                    versions::Release(vec)
+                ),
+                ..
+            }
+        ) => vec.as_slice() == [versions::Chunk::Alphanum("stable".to_owned())],
+        _ => false,
+    }
+}

@@ -1,15 +1,15 @@
+use itertools::Itertools;
 use comfy_table::{
     modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL, ContentArrangement, Row, Table,
 };
 
 pub async fn run(
     online: bool,
-    unsupported: bool,
+    old: bool,
     dev: bool,
-    unsupported_dev: bool,
 ) -> anyhow::Result<()> {
     if online {
-        show_online_versions(unsupported, dev, unsupported_dev).await?;
+        show_online_versions(old, dev).await?;
     } else {
         show_local_versions()?;
     }
@@ -46,23 +46,49 @@ fn show_local_versions() -> anyhow::Result<()> {
 }
 
 async fn show_online_versions(
-    unsupported: bool,
+    old: bool,
     dev: bool,
-    unsupported_dev: bool,
 ) -> anyhow::Result<()> {
-    print!("Fetching versions..");
-    let versions = gdtk_gvm::online::fetch_versions(gdtk_gvm::online::FetchVersionsOptions {
-        unsupported,
-        dev,
-        unsupported_dev,
-    })
-    .await?;
+    println!("Available versions:");
 
-    println!("\rAvailable versions:");
+    let lim = gdtk_gvm::versions::Versioning::new("3.4").unwrap();
 
-    for ver in gdtk_gvm::utils::sort_versions(versions) {
-        println!("  {}", gdtk_gvm::utils::format_version(ver));
+    let versions_temp = gdtk_gvm::online::fetch_versions()
+        .await?
+        .into_iter()
+        .filter(|ver| dev || gdtk_gvm::is_stable(ver))
+        .filter(|ver| old || ver >= &lim )
+        .group_by(major_minor_of_ver);
+
+    let versions = versions_temp
+        .into_iter()
+        .map(|(k, vers)| (k, vers.map(|ver| ver.to_string().trim_end_matches("-stable").to_owned())));
+
+    if !(old || dev) {
+        for ((major, minor), vers) in versions.into_iter() {
+            eprintln!("  {}.{} ({})", major, minor, vers.last().unwrap())
+        }
+    } else {
+        for ((major, minor), mut vers) in versions.into_iter() {
+            eprintln!("  {}.{} ({})", major, minor, vers.join(", "))
+        }
     }
 
     Ok(())
+}
+
+fn major_minor_of_ver(ver: &gdtk_gvm::versions::Versioning) -> (u32, u32) {
+    match ver {
+        gdtk_gvm::versions::Versioning::Ideal(ver) => (ver.major, ver.minor),
+        gdtk_gvm::versions::Versioning::General(
+            gdtk_gvm::versions::Version {
+                chunks: gdtk_gvm::versions::Chunks(vec),
+                ..
+            }
+        ) => {
+            let chunk = vec.first_chunk::<2>().unwrap();
+            (chunk[0].single_digit().unwrap(), chunk[1].single_digit().unwrap())
+        },
+        _ => panic!("unexpected version {ver:?}"),
+    }
 }

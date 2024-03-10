@@ -28,20 +28,15 @@ pub enum GodotCommands {
         #[arg(long)]
         online: bool,
 
-        /// Include [unsupported](https://github.com/godotengine/godot-docs/blob/master/about/release_policy.rst)
-        /// Godot versions in results. Requires `--online`.
+        /// Include old (< 3.4) and non-latest versions in results.
+        /// Requires `--online`.
         #[arg(long, requires = "online")]
-        unsupported: bool,
+        old: bool,
 
         /// Include development snapshots (like dev, alpha, beta, and rc) in results.
         /// Requires `--online`.
         #[arg(long, requires = "online")]
         dev: bool,
-
-        /// Include development snapshots of unsupported versions.
-        /// Requires both `--unsupported` and `--dev`.
-        #[arg(long = "unsupported-dev", requires = "unsupported", requires = "dev")]
-        unsupported_dev: bool,
     },
 
     /// Run the specified Godot version.

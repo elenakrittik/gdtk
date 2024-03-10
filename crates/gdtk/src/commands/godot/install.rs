@@ -1,38 +1,38 @@
 pub async fn run(version: String) -> anyhow::Result<()> {
-    let exists = gdtk_gvm::online::check_version_exists(version.to_owned()).await?;
+    // let exists = gdtk_gvm::online::check_version_exists(version.to_owned()).await?;
 
-    if !exists {
-        anyhow::bail!("{version} is an unknown Godot version.");
-    }
+    // if !exists {
+    //     anyhow::bail!("{version} is an unknown Godot version.");
+    // }
 
-    let mut local = gdtk_gvm::read_local_versions()?;
-    let target_dir = gdtk_gvm::godots_path()?.join(&version);
+    // let mut local = gdtk_gvm::read_local_versions()?;
+    // let target_dir = gdtk_gvm::godots_path()?.join(&version);
 
-    let old = local.insert(
-        version.clone(),
-        gdtk_gvm::toml::Value::String(target_dir.display().to_string()),
-    );
+    // let old = local.insert(
+    //     version.clone(),
+    //     gdtk_gvm::toml::Value::String(target_dir.display().to_string()),
+    // );
 
-    if old.is_some() {
-        anyhow::bail!("{version} is already installed.");
-    }
+    // if old.is_some() {
+    //     anyhow::bail!("{version} is already installed.");
+    // }
 
-    gdtk_gvm::ensure_godots()?;
+    // gdtk_gvm::ensure_godots()?;
 
-    println!("Downloading..");
+    // println!("Downloading..");
 
-    let source = std::io::Cursor::new(gdtk_gvm::online::download_version_zip(&version).await?);
+    // let source = std::io::Cursor::new(gdtk_gvm::online::download_version_zip(&version).await?);
 
-    println!("Extracting..");
+    // println!("Extracting..");
 
-    zip_extract::extract(source, &target_dir, true)?;
+    // zip_extract::extract(source, &target_dir, true)?;
 
-    // Enable self-contained mode.
-    std::fs::File::create(target_dir.join("._sc_"))?;
+    // // Enable self-contained mode.
+    // std::fs::File::create(target_dir.join("._sc_"))?;
 
-    gdtk_gvm::write_local_versions(local)?;
+    // gdtk_gvm::write_local_versions(local)?;
 
-    println!("Installed Godot {}!", version);
+    // println!("Installed Godot {}!", version);
 
     Ok(())
 }
