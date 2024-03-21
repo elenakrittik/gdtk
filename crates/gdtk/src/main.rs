@@ -10,11 +10,7 @@ async fn main() -> anyhow::Result<()> {
     match cli.command {
         Commands::Parse { file } => cmds::parse::run(file)?,
         Commands::Godot { command } => match command {
-            GodotCommands::List {
-                online,
-                old,
-                dev,
-            } => cmds::godot::list::run(online, old, dev).await?,
+            GodotCommands::List => cmds::godot::list::run()?,
             GodotCommands::Install { version } => cmds::godot::install::run(version).await?,
             GodotCommands::Uninstall { version } => cmds::godot::uninstall::run(version).await?,
             GodotCommands::Run { version } => cmds::godot::run::run(version).await?,
