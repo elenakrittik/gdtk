@@ -49,17 +49,11 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
 
 async fn prompt_version() -> anyhow::Result<String> {
     let variant_dev = "Development versions..";
-    let theme = dialoguer::theme::ColorfulTheme::default();
+    let theme = gdtk_dialoguer::theme::ColorfulTheme::default();
 
-    let vers = vec!["4.2-stable", "4.1-stable", "3.6-dev0", "4.3-dev1"]
-        .into_iter()
-        .map(gdtk_gvm::versions::Versioning::new)
-        .map(Option::unwrap)
-        .collect::<Vec<_>>();
+    let vers = gdtk_gvm::online::fetch_versions().await?;
 
-    let mut versions = (|| async { Ok::<_, anyhow::Error>(vers) })() // gdtk_gvm::online::fetch_versions()
-        .await?
-        .into_iter()
+    let mut versions = vers.into_iter()
         .map(|ver| {
             if is_stable(&ver) {
                 ("stable", ver.to_string())
@@ -74,11 +68,12 @@ async fn prompt_version() -> anyhow::Result<String> {
 
     let mut version = stables
         .get_mut(
-            dialoguer::FuzzySelect::with_theme(&theme)
+            gdtk_dialoguer::FuzzySelect::new()
+                .with_theme(&theme)
                 .with_prompt("Select version to install")
-                .max_length(7)
-                .default(0)
-                .items(stables)
+                .with_max_length(7)
+                .with_default(0)
+                .add_items(stables)
                 .interact()?,
         )
         .unwrap();
@@ -88,11 +83,12 @@ async fn prompt_version() -> anyhow::Result<String> {
 
         version = devs
             .get_mut(
-                dialoguer::FuzzySelect::with_theme(&theme)
+                gdtk_dialoguer::FuzzySelect::new()
+                    .with_theme(&theme)
                     .with_prompt("Select version to install")
-                    .max_length(7)
-                    .default(0)
-                    .items(devs)
+                    .with_max_length(7)
+                    .with_default(0)
+                    .add_items(devs)
                     .interact()?,
             )
             .unwrap();

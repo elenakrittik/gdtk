@@ -55,15 +55,26 @@ impl Default for FuzzySelect<'static> {
 impl FuzzySelect<'static> {
     /// Creates a fuzzy select prompt with default theme.
     pub fn new() -> Self {
-        Self::with_theme(&SimpleTheme)
+        Self {
+            default: None,
+            items: vec![],
+            prompt: "".into(),
+            report: true,
+            clear: true,
+            highlight_matches: true,
+            enable_vim_mode: false,
+            max_length: None,
+            theme: &SimpleTheme,
+            initial_text: "".into(),
+        }
     }
 }
 
-impl FuzzySelect<'_> {
+impl<'a> FuzzySelect<'a> {
     /// Sets the clear behavior of the menu.
     ///
     /// The default is to clear the menu.
-    pub fn with_clear_behaviour(self, val: bool) -> Self {
+    pub fn clear_menu(self, val: bool) -> Self {
         Self { clear: val, ..self }
     }
 
@@ -88,53 +99,56 @@ impl FuzzySelect<'_> {
     }
 
     /// Sets the search text that a fuzzy search starts with.
-    pub fn with_initial_text<S: Into<String>>(mut self, initial_text: S) -> Self {
-        self.initial_text = initial_text.into();
-        self
+    pub fn with_initial_text<S: Into<String>>(self, initial_text: S) -> Self {
+        Self {
+            initial_text: initial_text.into(),
+            ..self
+        }
     }
 
     /// Prefaces the menu with a prompt.
     ///
     /// When a prompt is set the system also prints out a confirmation after
     /// the fuzzy selection.
-    pub fn with_prompt<S: Into<String>>(mut self, prompt: S) -> Self {
-        self.prompt = prompt.into();
-        self
+    pub fn with_prompt<S: Into<String>>(self, prompt: S) -> Self {
+        Self {
+            prompt: prompt.into(),
+            ..self
+        }
     }
 
     /// Indicates whether to report the selected value after interaction.
     ///
     /// The default is to report the selection.
-    pub fn report(mut self, val: bool) -> Self {
-        self.report = val;
-        self
+    pub fn report(self, val: bool) -> Self {
+        Self {
+            report: val,
+            ..self
+        }
+    }
+
+    pub fn with_theme(self, theme: &'a dyn Theme) -> Self {
+        Self { theme, ..self }
     }
 
     /// Indicates whether to highlight matched indices
     ///
     /// The default is to highlight the indices
-    pub fn highlight_matches(mut self, val: bool) -> Self {
-        self.highlight_matches = val;
-        self
-    }
-
-    /// Indicated whether to allow the use of vim mode
-    ///
-    /// Vim mode can be entered by pressing Escape.
-    /// This then allows the user to navigate using hjkl.
-    ///
-    /// The default is to disable vim mode.
-    pub fn vim_mode(mut self, val: bool) -> Self {
-        self.enable_vim_mode = val;
-        self
+    pub fn highlight_matches(self, val: bool) -> Self {
+        Self {
+            highlight_matches: val,
+            ..self
+        }
     }
 
     /// Sets the maximum number of visible options.
     ///
     /// The default is the height of the terminal minus 2.
-    pub fn max_length(mut self, rows: usize) -> Self {
-        self.max_length = Some(rows);
-        self
+    pub fn with_max_length(self, rows: usize) -> Self {
+        Self {
+            max_length: Some(rows),
+            ..self
+        }
     }
 
     /// Enables user interaction and returns the result.
@@ -358,37 +372,6 @@ impl FuzzySelect<'_> {
             }
 
             render.clear_preserve_prompt(&size_vec)?;
-        }
-    }
-}
-
-impl<'a> FuzzySelect<'a> {
-    /// Creates a fuzzy select prompt with a specific theme.
-    ///
-    /// ## Example
-    ///
-    /// ```rust,no_run
-    /// use dialoguer::{theme::ColorfulTheme, FuzzySelect};
-    ///
-    /// fn main() {
-    ///     let selection = FuzzySelect::with_theme(&ColorfulTheme::default())
-    ///         .items(&["foo", "bar", "baz"])
-    ///         .interact()
-    ///         .unwrap();
-    /// }
-    /// ```
-    pub fn with_theme(theme: &'a dyn Theme) -> Self {
-        Self {
-            default: None,
-            items: vec![],
-            prompt: "".into(),
-            report: true,
-            clear: true,
-            highlight_matches: true,
-            enable_vim_mode: false,
-            max_length: None,
-            theme,
-            initial_text: "".into(),
         }
     }
 }
