@@ -16,14 +16,14 @@ use crate::{
 /// ## Example
 ///
 /// ```rust,no_run
-/// use dialoguer::FuzzySelect;
+/// use gdtk_dialoguer::FuzzySelect;
 ///
 /// fn main() {
 ///     let items = vec!["foo", "bar", "baz"];
 ///
 ///     let selection = FuzzySelect::new()
 ///         .with_prompt("What do you choose?")
-///         .items(&items)
+///         .add_items(&items)
 ///         .interact()
 ///         .unwrap();
 ///
@@ -171,13 +171,13 @@ impl<'a> FuzzySelect<'a> {
     /// ## Example
     ///
     /// ```rust,no_run
-    /// use dialoguer::FuzzySelect;
+    /// use gdtk_dialoguer::FuzzySelect;
     ///
     /// fn main() {
     ///     let items = vec!["foo", "bar", "baz"];
     ///
     ///     let selection = FuzzySelect::new()
-    ///         .items(&items)
+    ///         .add_items(&items)
     ///         .interact_opt()
     ///         .unwrap();
     ///

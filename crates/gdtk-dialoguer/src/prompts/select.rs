@@ -15,7 +15,7 @@ use crate::{
 /// ## Example
 ///
 /// ```rust,no_run
-/// use dialoguer::Select;
+/// use gdtk_dialoguer::Select;
 ///
 /// fn main() {
 ///     let items = vec!["foo", "bar", "baz"];
@@ -87,7 +87,7 @@ impl Select<'_> {
     /// ## Example
     ///
     /// ```rust,no_run
-    /// use dialoguer::Select;
+    /// use gdtk_dialoguer::Select;
     ///
     /// fn main() {
     ///     let selection = Select::new()
@@ -148,7 +148,7 @@ impl Select<'_> {
     /// ## Example
     ///
     ///```rust,no_run
-    /// use dialoguer::Select;
+    /// use gdtk_dialoguer::Select;
     ///
     /// fn main() {
     ///     let items = vec!["foo", "bar", "baz"];
@@ -310,7 +310,7 @@ impl<'a> Select<'a> {
     /// ## Example
     ///
     /// ```rust,no_run
-    /// use dialoguer::{theme::ColorfulTheme, Select};
+    /// use gdtk_dialoguer::{theme::ColorfulTheme, Select};
     ///
     /// fn main() {
     ///     let selection = Select::with_theme(&ColorfulTheme::default())

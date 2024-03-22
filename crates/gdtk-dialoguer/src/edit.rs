@@ -13,7 +13,7 @@ use crate::Result;
 /// ## Example
 ///
 /// ```rust,no_run
-/// use dialoguer::Editor;
+/// use gdtk_dialoguer::Editor;
 ///
 /// if let Some(rv) = Editor::new().edit("Enter a commit message").unwrap() {
 ///     println!("Your message:");

@@ -10,7 +10,7 @@ pub async fn fetch_versions() -> Result<Vec<versions::Versioning>, crate::Error>
     let versions = html
         .select(&selector)
         .filter_map(|elem| elem.attr("id"))
-        .filter_map(|ver| versions::Versioning::new(ver))
+        .filter_map(versions::Versioning::new)
         .collect();
 
     Ok(versions)

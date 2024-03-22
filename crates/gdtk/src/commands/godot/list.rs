@@ -1,27 +1,16 @@
-use comfy_table::{
-    modifiers::UTF8_ROUND_CORNERS, presets::UTF8_FULL, ContentArrangement, Row, Table,
-};
+use tabled::settings::{format::Format, object::Cell, Style};
 
 pub fn run() -> anyhow::Result<()> {
-    let versions = gdtk_gvm::read_local_versions()?;
+    let version_manager = gdtk_gvm::VersionManager::load()?;
 
-    if versions.is_empty() {
+    if version_manager.is_empty() {
         eprintln!("No versions installed.");
         return Ok(());
     }
 
-    let mut table = Table::new();
-
-    table
-        .load_preset(UTF8_FULL)
-        .apply_modifier(UTF8_ROUND_CORNERS)
-        .set_content_arrangement(ContentArrangement::Dynamic)
-        .set_header(["Version", "Path"])
-        .add_rows(
-            versions
-                .into_iter()
-                .map(|(v, p)| Row::from([v, p.as_str().unwrap().to_owned()])),
-        );
+    let mut table = tabled::Table::new(version_manager.versions.versions);
+    table.with(Style::modern_rounded());
+    table.modify(Cell::new(0, 0), Format::content(|_| "Version".to_owned()));
 
     eprintln!("{table}");
 

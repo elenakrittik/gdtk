@@ -17,19 +17,19 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
         None => prompt_version().await?,
     };
 
-    let mut local = gdtk_gvm::read_local_versions()?;
-    let target_dir = gdtk_gvm::godots_path()?.join(&version);
+    let mut version_manager = gdtk_gvm::VersionManager::load()?;
+    let target_dir = gdtk_gvm::utils::godots_path()?.join(&version);
 
-    let old = local.insert(
+    let already_installed = version_manager.add_version(
         version.clone(),
-        gdtk_gvm::toml::Value::String(target_dir.display().to_string()),
+        gdtk_gvm::types::Version {
+            path: target_dir.clone(),
+        },
     );
 
-    if old.is_some() {
+    if already_installed {
         anyhow::bail!("{version} is already installed.");
     }
-
-    eprintln!("Downloading..");
 
     let arch = (std::env::consts::ARCH, std::env::consts::OS);
 
@@ -38,6 +38,9 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
         Some(url) => url,
         None => anyhow::bail!("Couldn't find download URL for current arch/os pair."),
     };
+
+    eprintln!("Downloading (this may take a while)..");
+
     let content = reqwest::get(url.to_owned()).await?.bytes().await?;
     let source = std::io::Cursor::new(content);
 
@@ -48,7 +51,7 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     // Enable self-contained mode.
     std::fs::File::create(target_dir.join("._sc_"))?;
 
-    gdtk_gvm::write_local_versions(local)?;
+    version_manager.save()?;
 
     eprintln!("Installed Godot {}!", version);
 

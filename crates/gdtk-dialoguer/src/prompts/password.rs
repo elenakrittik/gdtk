@@ -16,7 +16,7 @@ type PasswordValidatorCallback<'a> = Arc<dyn Fn(&String) -> Option<String> + 'a>
 /// ## Example
 ///
 /// ```rust,no_run
-/// use dialoguer::Password;
+/// use gdtk_dialoguer::Password;
 ///
 /// fn main() {
 ///     let password = Password::new()
@@ -153,7 +153,7 @@ impl<'a> Password<'a> {
     /// # Example
     ///
     /// ```rust,no_run
-    /// use dialoguer::Password;
+    /// use gdtk_dialoguer::Password;
     ///
     /// fn main() {
     ///     let password: String = Password::new()
@@ -197,7 +197,7 @@ impl<'a> Password<'a> {
     /// ## Example
     ///
     /// ```rust,no_run
-    /// use dialoguer::{theme::ColorfulTheme, Password};
+    /// use gdtk_dialoguer::{theme::ColorfulTheme, Password};
     ///
     /// fn main() {
     ///     let password = Password::with_theme(&ColorfulTheme::default())

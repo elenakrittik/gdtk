@@ -1,17 +1,16 @@
 pub async fn run(version: String) -> anyhow::Result<()> {
-    let mut local = gdtk_gvm::read_local_versions()?;
+    let mut version_manager = gdtk_gvm::VersionManager::load()?;
 
-    let old = local.remove(&version);
+    let previous = match version_manager.remove_version(&version) {
+        Some(previous) => previous,
+        None => anyhow::bail!("Godot {version} isn't installed."),
+    };
 
-    if old.is_none() {
-        anyhow::bail!("This version isn't installed.");
-    }
+    std::fs::remove_dir_all(previous.path)?;
 
-    std::fs::remove_dir_all(old.unwrap().as_str().unwrap())?;
+    version_manager.save()?;
 
-    gdtk_gvm::write_local_versions(local)?;
-
-    println!("Godot {} uninstalled!", version);
+    println!("Godot {version} uninstalled!");
 
     Ok(())
 }

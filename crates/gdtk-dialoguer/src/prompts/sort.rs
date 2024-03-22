@@ -14,7 +14,7 @@ use crate::{
 /// ## Example
 ///
 /// ```rust,no_run
-/// use dialoguer::Sort;
+/// use gdtk_dialoguer::Sort;
 ///
 /// fn main() {
 ///     let items = vec!["foo", "bar", "baz"];
@@ -127,7 +127,7 @@ impl Sort<'_> {
     /// ## Example
     ///
     /// ```rust,no_run
-    /// use dialoguer::Sort;
+    /// use gdtk_dialoguer::Sort;
     ///
     /// fn main() {
     ///     let items = vec!["foo", "bar", "baz"];
@@ -342,7 +342,7 @@ impl<'a> Sort<'a> {
     /// ## Example
     ///
     /// ```rust,no_run
-    /// use dialoguer::{theme::ColorfulTheme, Sort};
+    /// use gdtk_dialoguer::{theme::ColorfulTheme, Sort};
     ///
     /// fn main() {
     ///     let ordered = Sort::with_theme(&ColorfulTheme::default())

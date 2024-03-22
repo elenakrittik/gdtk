@@ -2,6 +2,7 @@ use std::io::Error as IOError;
 
 use reqwest::Error as ReqError;
 use toml::de::Error as TOMLDeError;
+use toml::ser::Error as TOMLSerError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -14,6 +15,9 @@ pub enum Error {
     #[error("I/O error: {0:?}")]
     IOError(IOError),
 
+    #[error("TOML serialization error: {0:?}")]
+    TOMLSerializationError(TOMLSerError),
+
     #[error("TOML deserialization error: {0:?}")]
     TOMLDeserializationError(TOMLDeError),
 
@@ -24,6 +28,12 @@ pub enum Error {
 impl From<IOError> for Error {
     fn from(value: IOError) -> Self {
         Self::IOError(value)
+    }
+}
+
+impl From<TOMLSerError> for Error {
+    fn from(value: TOMLSerError) -> Self {
+        Self::TOMLSerializationError(value)
     }
 }
 
