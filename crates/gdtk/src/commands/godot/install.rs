@@ -3,46 +3,54 @@ use itertools::Itertools;
 
 pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     let version = match version {
-        Some(v) => v,
+        Some(v) => {
+            let versioning = gdtk_gvm::versions::Versioning::new(&v)
+                .ok_or(anyhow::anyhow!("Invalid Godot version: {v}"))?;
+            let versions = gdtk_gvm::online::fetch_versions().await?;
+
+            if !versions.contains(&versioning) {
+                anyhow::bail!("{versioning} is an unknown Godot version.");
+            }
+
+            v
+        }
         None => prompt_version().await?,
     };
 
-    eprintln!("selected: {version}");
+    let mut local = gdtk_gvm::read_local_versions()?;
+    let target_dir = gdtk_gvm::godots_path()?.join(&version);
 
-    // let version = gdtk_gvm::versions::Versioning::new(&version)
-    //     .ok_or(anyhow::anyhow!("Invalid Godot version: {version}"))?;
-    // let versions = gdtk_gvm::online::fetch_versions().await?;
+    let old = local.insert(
+        version.clone(),
+        gdtk_gvm::toml::Value::String(target_dir.display().to_string()),
+    );
 
-    // if !versions.contains(&version) {
-    //     anyhow::bail!("{version} is an unknown Godot version.");
-    // }
+    if old.is_some() {
+        anyhow::bail!("{version} is already installed.");
+    }
 
-    // let mut local = gdtk_gvm::read_local_versions()?;
-    // let target_dir = gdtk_gvm::godots_path()?.join(&version);
+    eprintln!("Downloading..");
 
-    // let old = local.insert(
-    //     version.clone(),
-    //     gdtk_gvm::toml::Value::String(target_dir.display().to_string()),
-    // );
+    let arch = (std::env::consts::ARCH, std::env::consts::OS);
 
-    // if old.is_some() {
-    //     anyhow::bail!("{version} is already installed.");
-    // }
+    let version_download_urls = gdtk_gvm::online::version_download_urls(&version).await?;
+    let url = match version_download_urls.get(&arch) {
+        Some(url) => url,
+        None => anyhow::bail!("Couldn't find download URL for current arch/os pair."),
+    };
+    let content = reqwest::get(url.to_owned()).await?.bytes().await?;
+    let source = std::io::Cursor::new(content);
 
-    // println!("Downloading..");
+    eprintln!("Extracting..");
 
-    // let source = std::io::Cursor::new(gdtk_gvm::online::download_version_zip(&version).await?);
+    zip_extract::extract(source, &target_dir, true)?;
 
-    // println!("Extracting..");
+    // Enable self-contained mode.
+    std::fs::File::create(target_dir.join("._sc_"))?;
 
-    // zip_extract::extract(source, &target_dir, true)?;
+    gdtk_gvm::write_local_versions(local)?;
 
-    // // Enable self-contained mode.
-    // std::fs::File::create(target_dir.join("._sc_"))?;
-
-    // gdtk_gvm::write_local_versions(local)?;
-
-    // println!("Installed Godot {}!", version);
+    eprintln!("Installed Godot {}!", version);
 
     Ok(())
 }
@@ -53,7 +61,8 @@ async fn prompt_version() -> anyhow::Result<String> {
 
     let vers = gdtk_gvm::online::fetch_versions().await?;
 
-    let mut versions = vers.into_iter()
+    let mut versions = vers
+        .into_iter()
         .map(|ver| {
             if is_stable(&ver) {
                 ("stable", ver.to_string())

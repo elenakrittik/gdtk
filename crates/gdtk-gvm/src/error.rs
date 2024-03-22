@@ -5,6 +5,12 @@ use toml::de::Error as TOMLDeError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("Mono versions of Godot are not supported yet.")]
+    MonoUnsupported,
+
+    #[error("Unknown download URL: {0}.")]
+    UnknownDownloadUrl(String),
+
     #[error("I/O error: {0:?}")]
     IOError(IOError),
 
