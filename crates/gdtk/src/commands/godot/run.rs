@@ -1,11 +1,10 @@
-pub async fn run(version: &String) -> anyhow::Result<()> {
-    let local = gdtk_gvm::read_local_versions()?;
-    let path = local.get(version);
+pub async fn run(version: String) -> anyhow::Result<()> {
+    let version_manager = gdtk_gvm::VersionManager::load()?;
+    let path = version_manager.get_version(&version);
 
     match path {
-        Some(path) => {
-            let path = std::path::PathBuf::from(path.as_str().unwrap());
-            let path = path.read_dir()?
+        Some(version) => {
+            let path = version.path.read_dir()?
                 .filter_map(|p| p.ok())
                 .filter(|p| p.file_name().to_str().unwrap().contains("Godot"))
                 .map(|p| p.path()).next()

@@ -1,85 +1,44 @@
-use rayon::prelude::*;
-use versions::{Version, Versioning};
+use std::{io::Error as IOError, path::PathBuf};
 
-pub fn sort_versions(vers: Vec<String>) -> Vec<String> {
-    let mut itermediate = vers
-        .into_iter()
-        .map(|ver| Versioning::new(ver.as_str()).unwrap())
-        .collect::<Vec<_>>();
-
-    itermediate.par_sort_unstable();
-
-    itermediate.into_iter().map(|ver| ver.to_string()).collect()
-}
-
-pub fn format_version(ver: String) -> String {
-    let ver = Versioning::new(ver.as_str()).unwrap();
-
-    #[inline]
-    fn num(version: &Version, idx: usize) -> u32 {
-        version.chunks.0[idx].single_digit().unwrap()
-    }
-
+/// Returns whether a given Godot version is stable.
+pub fn is_stable(ver: &versions::Versioning) -> bool {
     match ver {
-        Versioning::Ideal(semver) => format!(
-            "{}.{} ({}.{}.{})",
-            semver.major, semver.minor, semver.major, semver.minor, semver.patch
-        ),
-        Versioning::General(version) => {
-            if version.chunks.0.len() >= 3 {
-                format!("{}.{} ({})", num(&version, 0), num(&version, 1), version)
-            } else {
-                version.to_string()
-            }
-        }
-        Versioning::Complex(mess) => mess.to_string(),
+        versions::Versioning::Ideal(versions::SemVer {
+            pre_rel: Some(versions::Release(vec)),
+            ..
+        })
+        | versions::Versioning::General(versions::Version {
+            release: Some(versions::Release(vec)),
+            ..
+        }) => vec.as_slice() == [versions::Chunk::Alphanum("stable".to_owned())],
+        _ => false,
     }
 }
 
-#[inline]
-fn platform() -> String {
-    format!("{} on {}", std::env::consts::ARCH, std::env::consts::OS)
+pub fn write_local_versions(data: &crate::types::Versions) -> Result<(), crate::Error> {
+    let versions_toml = versions_toml_path()?;
+
+    std::fs::write(versions_toml, toml::to_string_pretty(&data)?)?;
+
+    Ok(())
 }
 
-pub fn get_version_archive_name(
-    version: String,
-    release: Option<String>,
-) -> Result<String, crate::Error> {
-    // versions are of form "Godot_v{version}-{release}_{platform}.zip"
-    // {release} is "stable" if the version is not unstable
+pub fn versions_toml_path() -> Result<PathBuf, IOError> {
+    let mut conf_dir = gdtk_utils::base_conf_dir()?;
 
-    let release = release.unwrap_or("stable".to_string());
-    let platform = match &version.chars().next() {
-        Some(major) => match major {
-            '4' => get_godot4_platform(),
-            _ => Err(crate::Error::GDTKUnsupportedVersionForInstall(
-                version.clone(),
-            )),
-        },
-        None => unreachable!(),
-    }?;
+    conf_dir.push("versions.toml");
 
-    Ok(format!("Godot_v{version}-{release}_{platform}.zip"))
+    gdtk_utils::ensure_path(&conf_dir, false)?;
+
+    Ok(conf_dir)
 }
 
-fn get_godot4_platform() -> Result<String, crate::Error> {
-    match std::env::consts::OS {
-        "windows" => match std::env::consts::ARCH {
-            "x86" => Ok("win32.exe"),
-            "x86_64" => Ok("win64.exe"),
-            _ => Err(crate::Error::GodotUnsupportedPlatform(platform())),
-        },
-        "linux" => match std::env::consts::ARCH {
-            "x86" => Ok("linux.x86_32"),
-            "x86_64" => Ok("linux.x86_64"),
-            "aarch64" => Ok("linux.x86_64"), // TODO: remove once done testing
-            _ => Err(crate::Error::GodotUnsupportedPlatform(platform())),
-        },
-        "macos" => match std::env::consts::ARCH {
-            "x86_64" | "aarch64" => Ok("macos.universal"),
-            _ => Err(crate::Error::GodotUnsupportedPlatform(platform())),
-        },
-        _ => Err(crate::Error::GDTKUnsupportedPlatform(platform())),
-    }
-    .map(|v| v.into())
+pub fn godots_path() -> Result<PathBuf, IOError> {
+    let mut data_dir = gdtk_utils::base_data_dir()?;
+
+    data_dir.push("godots");
+
+    gdtk_utils::ensure_path(&data_dir, true)?;
+
+    Ok(data_dir)
 }
