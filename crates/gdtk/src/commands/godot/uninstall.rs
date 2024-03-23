@@ -1,19 +1,20 @@
 pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     let mut version_manager = gdtk_gvm::VersionManager::load()?;
-    
+
     let version = match version {
         Some(v) => {
             let versioning = gdtk_gvm::versions::Versioning::new(&v)
                 .ok_or(anyhow::anyhow!("Invalid version: {v}"))?;
 
-            let versions = gdtk_gvm::utils::coerce_version(versioning, version_manager.versionings())?;
-            let idx = crate::commands::godot::select_version(&versions, "Select version to uninstall")?;
+            let versions =
+                gdtk_gvm::utils::coerce_version(versioning, version_manager.versionings())?;
+            let idx =
+                crate::commands::godot::select_version(&versions, "Select version to uninstall")?;
 
             versions[idx].to_string()
-        },
+        }
         None => prompt_version(version_manager.versionings())?,
     };
-    
 
     let previous = match version_manager.remove_version(&version) {
         Some(previous) => previous,

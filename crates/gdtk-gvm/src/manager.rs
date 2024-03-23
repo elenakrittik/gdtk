@@ -22,7 +22,11 @@ impl VersionManager {
     }
 
     pub fn versionings(&self) -> Vec<versions::Versioning> {
-        self.versions.versions.keys().filter_map(|v| versions::Versioning::new(v)).collect()
+        self.versions
+            .versions
+            .keys()
+            .filter_map(|v| versions::Versioning::new(v))
+            .collect()
     }
 
     pub fn add_version(&mut self, version: String, data: crate::types::Version) -> bool {

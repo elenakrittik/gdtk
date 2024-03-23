@@ -43,11 +43,14 @@ pub fn godots_path() -> Result<PathBuf, IOError> {
     Ok(data_dir)
 }
 
-pub fn coerce_version(version: Versioning, vers: Vec<Versioning>) -> Result<Vec<Versioning>, crate::Error> {
+pub fn coerce_version(
+    version: Versioning,
+    vers: Vec<Versioning>,
+) -> Result<Vec<Versioning>, crate::Error> {
     let matches_ = vers
         .into_iter()
         .filter(|ver| ver.to_string().starts_with(&version.to_string()))
-        .filter(|ver| ver >= &&version)
+        .filter(|ver| ver >= &version)
         .collect::<Vec<_>>();
 
     Ok(matches_)
@@ -62,13 +65,24 @@ pub(crate) fn strip_stable_postfix(ver: Versioning) -> Versioning {
                 patch,
                 pre_rel: _,
                 meta,
-            }) => Versioning::Ideal(SemVer { major, minor, patch, pre_rel: None, meta }),
+            }) => Versioning::Ideal(SemVer {
+                major,
+                minor,
+                patch,
+                pre_rel: None,
+                meta,
+            }),
             Versioning::General(Version {
                 epoch,
                 chunks,
                 release: _,
                 meta,
-            }) => Versioning::General(Version { epoch, chunks, release: None, meta }),
+            }) => Versioning::General(Version {
+                epoch,
+                chunks,
+                release: None,
+                meta,
+            }),
             _ => unreachable!(), // godot's versions are never Versioning::Complex
         }
     } else {

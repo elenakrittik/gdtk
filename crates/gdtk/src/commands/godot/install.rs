@@ -6,13 +6,20 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     let version = match version {
         Some(v) => {
             if v == "latest" {
-                online_versions.into_iter().filter(gdtk_gvm::utils::is_stable).nth(0).unwrap().to_string()
+                online_versions
+                    .into_iter()
+                    .find(gdtk_gvm::utils::is_stable)
+                    .unwrap()
+                    .to_string()
             } else {
                 let versioning = gdtk_gvm::versions::Versioning::new(&v)
                     .ok_or(anyhow::anyhow!("Invalid Godot version: {v}"))?;
                 let versions = gdtk_gvm::utils::coerce_version(versioning, online_versions)?;
 
-                let idx = crate::commands::godot::select_version(versions.as_slice(), "Select version to install")?;
+                let idx = crate::commands::godot::select_version(
+                    versions.as_slice(),
+                    "Select version to install",
+                )?;
 
                 versions[idx].to_string()
             }

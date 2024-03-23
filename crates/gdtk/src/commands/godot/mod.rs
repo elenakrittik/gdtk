@@ -3,7 +3,10 @@ pub mod list;
 pub mod run;
 pub mod uninstall;
 
-pub(crate) fn select_version(versions: &[gdtk_gvm::versions::Versioning], prompt: &str) -> anyhow::Result<usize> {
+pub(crate) fn select_version(
+    versions: &[gdtk_gvm::versions::Versioning],
+    prompt: &str,
+) -> anyhow::Result<usize> {
     if versions.is_empty() {
         anyhow::bail!("No matching versions found.")
     } else if versions.len() == 1 {
