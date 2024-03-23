@@ -1,4 +1,3 @@
-use gdtk_gvm::utils::is_stable;
 use itertools::Itertools;
 
 pub async fn run(version: Option<String>) -> anyhow::Result<()> {
@@ -6,13 +5,12 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
         Some(v) => {
             let versioning = gdtk_gvm::versions::Versioning::new(&v)
                 .ok_or(anyhow::anyhow!("Invalid Godot version: {v}"))?;
-            let versions = gdtk_gvm::online::fetch_versions().await?;
+            let online_versions = gdtk_gvm::online::fetch_versions().await?;
+            let versions = gdtk_gvm::utils::coerce_version(versioning, online_versions)?;
 
-            if !versions.contains(&versioning) {
-                anyhow::bail!("{versioning} is an unknown Godot version.");
-            }
+            let idx = crate::commands::godot::select_version(versions.as_slice(), "Select version to install")?;
 
-            v
+            versions[idx].to_string()
         }
         None => prompt_version().await?,
     };
@@ -67,7 +65,7 @@ async fn prompt_version() -> anyhow::Result<String> {
     let mut versions = vers
         .into_iter()
         .map(|ver| {
-            if is_stable(&ver) {
+            if gdtk_gvm::utils::is_stable(&ver) {
                 ("stable", ver.to_string())
             } else {
                 ("dev", ver.to_string())
@@ -77,6 +75,8 @@ async fn prompt_version() -> anyhow::Result<String> {
         .into_group_map();
 
     let stables = versions.get_mut("stable").unwrap().as_mut_slice();
+
+    dbg!(&stables);
 
     let mut version = stables
         .get_mut(
