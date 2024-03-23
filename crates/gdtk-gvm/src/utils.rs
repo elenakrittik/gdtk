@@ -91,3 +91,11 @@ pub(crate) fn strip_stable_postfix(ver: Versioning) -> Versioning {
         ver
     }
 }
+
+pub fn normalize_arch(arch: &'static str) -> &'static str {
+    if arch == "aarch64" {
+        "arm64"
+    } else {
+        arch
+    }
+}
