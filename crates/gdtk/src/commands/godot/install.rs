@@ -1,18 +1,23 @@
 use itertools::Itertools;
 
 pub async fn run(version: Option<String>) -> anyhow::Result<()> {
+    let online_versions = gdtk_gvm::online::fetch_versions().await?;
+
     let version = match version {
         Some(v) => {
-            let versioning = gdtk_gvm::versions::Versioning::new(&v)
-                .ok_or(anyhow::anyhow!("Invalid Godot version: {v}"))?;
-            let online_versions = gdtk_gvm::online::fetch_versions().await?;
-            let versions = gdtk_gvm::utils::coerce_version(versioning, online_versions)?;
+            if v == "latest" {
+                online_versions.into_iter().filter(gdtk_gvm::utils::is_stable).nth(0).unwrap().to_string()
+            } else {
+                let versioning = gdtk_gvm::versions::Versioning::new(&v)
+                    .ok_or(anyhow::anyhow!("Invalid Godot version: {v}"))?;
+                let versions = gdtk_gvm::utils::coerce_version(versioning, online_versions)?;
 
-            let idx = crate::commands::godot::select_version(versions.as_slice(), "Select version to install")?;
+                let idx = crate::commands::godot::select_version(versions.as_slice(), "Select version to install")?;
 
-            versions[idx].to_string()
+                versions[idx].to_string()
+            }
         }
-        None => prompt_version().await?,
+        None => prompt_version(online_versions).await?,
     };
 
     let mut version_manager = gdtk_gvm::VersionManager::load()?;
@@ -26,7 +31,7 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     );
 
     if already_installed {
-        anyhow::bail!("{version} is already installed.");
+        anyhow::bail!("Godot {version} is already installed.");
     }
 
     let arch = (std::env::consts::ARCH, std::env::consts::OS);
@@ -56,11 +61,9 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     Ok(())
 }
 
-async fn prompt_version() -> anyhow::Result<String> {
+async fn prompt_version(vers: Vec<gdtk_gvm::versions::Versioning>) -> anyhow::Result<String> {
     let variant_dev = "Development versions..";
     let theme = gdtk_dialoguer::theme::ColorfulTheme::default();
-
-    let vers = gdtk_gvm::online::fetch_versions().await?;
 
     let mut versions = vers
         .into_iter()
