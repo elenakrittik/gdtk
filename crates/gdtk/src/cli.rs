@@ -11,12 +11,30 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Commands {
-    /// [DEV] Parse GDScript source file.
-    Parse { file: PathBuf },
+    /// Namespace for arbitrary commands useful when working on gdtk.
+    #[cfg(debug_assertions)]
+    Dev {
+        #[command(subcommand)]
+        command: DevCommands,
+    },
     /// Manage your Godot installations.
     Godot {
         #[command(subcommand)]
         command: GodotCommands,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum DevCommands {
+    /// Print the result of lexing the specified GDScript file.
+    Lex {
+        /// The GDScript file to lex.
+        file: PathBuf,
+    },
+    /// Print the result of parsing the specified GDScript file.
+    Parse {
+        /// The GDScript file to parse.
+        file: PathBuf,
     },
 }
 
