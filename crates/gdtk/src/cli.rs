@@ -40,7 +40,7 @@ pub enum GodotCommands {
     /// Uninstall the specified Godot version.
     Uninstall {
         /// The Godot version to uninstall.
-        version: String,
+        version: Option<String>,
     },
 }
 
