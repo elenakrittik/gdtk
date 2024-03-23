@@ -1,26 +1,26 @@
 use std::{io::Error as IOError, path::PathBuf};
 
-/// Returns whether a given Godot version is stable.
-pub fn is_stable(ver: &versions::Versioning) -> bool {
-    match ver {
-        versions::Versioning::Ideal(versions::SemVer {
-            pre_rel: Some(versions::Release(vec)),
-            ..
-        })
-        | versions::Versioning::General(versions::Version {
-            release: Some(versions::Release(vec)),
-            ..
-        }) => vec.as_slice() == [versions::Chunk::Alphanum("stable".to_owned())],
-        _ => false,
-    }
+use versions::{Release, SemVer, Version, Versioning};
+
+fn get_stable_chunk() -> versions::Chunk {
+    versions::Chunk::Alphanum("stable".to_owned())
 }
 
-pub fn write_local_versions(data: &crate::types::Versions) -> Result<(), crate::Error> {
-    let versions_toml = versions_toml_path()?;
-
-    std::fs::write(versions_toml, toml::to_string_pretty(&data)?)?;
-
-    Ok(())
+/// Returns whether a given Godot version is stable.
+pub fn is_stable(ver: &Versioning) -> bool {
+    match ver {
+        Versioning::Ideal(SemVer {
+            pre_rel: Some(Release(vec)),
+            ..
+        })
+        | Versioning::General(Version {
+            release: Some(Release(vec)),
+            ..
+        }) => vec.as_slice() == [get_stable_chunk()],
+        Versioning::Ideal(SemVer { pre_rel: None, .. })
+        | Versioning::General(Version { release: None, .. }) => true,
+        _ => false,
+    }
 }
 
 pub fn versions_toml_path() -> Result<PathBuf, IOError> {
@@ -41,4 +41,51 @@ pub fn godots_path() -> Result<PathBuf, IOError> {
     gdtk_utils::ensure_path(&data_dir, true)?;
 
     Ok(data_dir)
+}
+
+pub fn coerce_version(
+    version: Versioning,
+    vers: Vec<Versioning>,
+) -> Result<Vec<Versioning>, crate::Error> {
+    let matches_ = vers
+        .into_iter()
+        .filter(|ver| ver.to_string().starts_with(&version.to_string()))
+        .filter(|ver| ver >= &version)
+        .collect::<Vec<_>>();
+
+    Ok(matches_)
+}
+
+pub(crate) fn strip_stable_postfix(ver: Versioning) -> Versioning {
+    if is_stable(&ver) {
+        match ver {
+            Versioning::Ideal(SemVer {
+                major,
+                minor,
+                patch,
+                pre_rel: _,
+                meta,
+            }) => Versioning::Ideal(SemVer {
+                major,
+                minor,
+                patch,
+                pre_rel: None,
+                meta,
+            }),
+            Versioning::General(Version {
+                epoch,
+                chunks,
+                release: _,
+                meta,
+            }) => Versioning::General(Version {
+                epoch,
+                chunks,
+                release: None,
+                meta,
+            }),
+            _ => unreachable!(), // godot's versions are never Versioning::Complex
+        }
+    } else {
+        ver
+    }
 }

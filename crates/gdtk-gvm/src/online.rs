@@ -11,6 +11,7 @@ pub async fn fetch_versions() -> Result<Vec<versions::Versioning>, crate::Error>
         .select(&selector)
         .filter_map(|elem| elem.attr("id"))
         .filter_map(versions::Versioning::new)
+        .map(crate::utils::strip_stable_postfix)
         .collect();
 
     Ok(versions)
@@ -19,7 +20,12 @@ pub async fn fetch_versions() -> Result<Vec<versions::Versioning>, crate::Error>
 pub async fn version_download_urls(
     version: &str,
 ) -> Result<AHashMap<(&'static str, &'static str), url::Url>, crate::Error> {
-    let url = GODOT_DOWNLOADS_ROOT.to_owned() + version;
+    let mut url = GODOT_DOWNLOADS_ROOT.to_owned() + version;
+
+    if crate::utils::is_stable(&versions::Versioning::new(version).unwrap()) {
+        url += "-stable";
+    }
+
     let text = reqwest::get(url).await?.text().await?;
     let html = scraper::Html::parse_document(&text);
     let selector = scraper::Selector::parse(".download > span > a").unwrap();

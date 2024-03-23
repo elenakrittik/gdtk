@@ -13,9 +13,20 @@ impl VersionManager {
     }
 
     pub fn save(&self) -> Result<(), crate::Error> {
-        crate::utils::write_local_versions(&self.versions)?;
+        let contents = toml::to_string_pretty(&self.versions)?;
+        let path = crate::utils::versions_toml_path()?;
+
+        std::fs::write(path, contents)?;
 
         Ok(())
+    }
+
+    pub fn versionings(&self) -> Vec<versions::Versioning> {
+        self.versions
+            .versions
+            .keys()
+            .filter_map(|v| versions::Versioning::new(v))
+            .collect()
     }
 
     pub fn add_version(&mut self, version: String, data: crate::types::Version) -> bool {

@@ -310,8 +310,7 @@ impl Sort<'_> {
                         if self.report {
                             let list: Vec<_> = order
                                 .iter()
-                                .enumerate()
-                                .map(|(_, item)| self.items[*item].as_str())
+                                .map(|item| self.items[*item].as_str())
                                 .collect();
                             render.sort_prompt_selection(prompt, &list[..])?;
                         }
