@@ -14,4 +14,4 @@ jobs:
           toolchain: nightly
           components: clippy
 
-      - run: cargo clippy --no-deps
+      - run: cargo clippy
