@@ -49,21 +49,27 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
         None => anyhow::bail!("Couldn't find download URL for current arch/os pair."),
     };
 
-    eprintln!("Downloading (this may take a while)..");
+    let mut spinner = spinoff::Spinner::new(
+        spinoff::spinners::Dots2,
+        "Downloading (this may take a while)..",
+        spinoff::Color::Cyan,
+    );
 
     let content = reqwest::get(url.to_owned()).await?.bytes().await?;
     let source = std::io::Cursor::new(content);
 
-    eprintln!("Extracting..");
+    spinner.update_text("Extracting..");
 
     zip_extract::extract(source, &target_dir, true)?;
+
+    spinner.update_text("Setting up..");
 
     // Enable self-contained mode.
     std::fs::File::create(target_dir.join("._sc_"))?;
 
     version_manager.save()?;
 
-    eprintln!("Installed Godot {}!", version);
+    spinner.success(&format!("Installed Godot {version}!"));
 
     Ok(())
 }

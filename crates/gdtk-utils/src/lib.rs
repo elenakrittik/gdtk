@@ -1,8 +1,8 @@
 use std::io::{Error, ErrorKind};
 
-pub fn ensure_path(path: &std::path::PathBuf, dir: bool) -> Result<(), Error> {
+pub fn ensure_path(path: &std::path::PathBuf, dir: bool) -> Result<bool, Error> {
     if path.exists() {
-        return Ok(());
+        return Ok(false);
     }
 
     if dir {
@@ -15,7 +15,7 @@ pub fn ensure_path(path: &std::path::PathBuf, dir: bool) -> Result<(), Error> {
             .open(path)?;
     }
 
-    Ok(())
+    Ok(true)
 }
 
 pub fn base_conf_dir() -> Result<std::path::PathBuf, Error> {

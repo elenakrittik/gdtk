@@ -28,7 +28,9 @@ pub fn versions_toml_path() -> Result<PathBuf, IOError> {
 
     conf_dir.push("versions.toml");
 
-    gdtk_utils::ensure_path(&conf_dir, false)?;
+    if gdtk_utils::ensure_path(&conf_dir, false)? {
+        std::fs::write(&conf_dir, "[versions]")?;
+    }
 
     Ok(conf_dir)
 }

@@ -21,6 +21,7 @@ itertools = "0.12.1"
 gdtk-dialoguer = { path = "../gdtk-dialoguer", version = "0.11.0", features = ["fuzzy-select"], default-features = false }
 reqwest = "0.11.23"
 tabled = { version = "0.15.0", features = ["std"] }
+spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
 
 [lib]
 name = "gdtk"
