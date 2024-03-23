@@ -12,7 +12,7 @@ async fn main() -> anyhow::Result<()> {
         Commands::Dev { command } => match command {
             DevCommands::Lex { file } => cmds::dev::lex::run(file)?,
             DevCommands::Parse { file } => cmds::dev::parse::run(file)?,
-        }
+        },
         Commands::Godot { command } => match command {
             GodotCommands::List => cmds::godot::list::run()?,
             GodotCommands::Install { version } => cmds::godot::install::run(version).await?,

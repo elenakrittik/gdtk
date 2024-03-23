@@ -15,7 +15,7 @@ pub enum Commands {
     #[cfg(debug_assertions)]
     Dev {
         #[command(subcommand)]
-        command: DevCommands
+        command: DevCommands,
     },
     /// Manage your Godot installations.
     Godot {
