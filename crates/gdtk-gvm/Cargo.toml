@@ -11,7 +11,7 @@ anyhow = "1.0.75"
 dirs = "5.0.1"
 gdtk-macros = { version = "0.1.0", path = "../gdtk-macros" }
 gdtk-utils = { version = "0.1.0", path = "../gdtk-utils" }
-reqwest = { version = "0.11.22", features = ["json"] }
+reqwest = { version = "0.12.1", features = ["json"] }
 thiserror = "1.0.50"
 bytes = "1.5.0"
 toml = "0.8.6"
