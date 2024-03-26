@@ -18,31 +18,35 @@ where
 
     expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
 
-    loop {
-        if !matches!(peek_non_blank!(iter).kind, TokenKind::Identifier(_)) {
-            panic!("unexpected {:?}, expected function parameter", iter.next());
-        }
-
-        let param = parse_variable(iter, gdtk_ast::poor::ASTVariableKind::FunctionParameter);
-        parameters.push(param);
-
-        match peek_non_blank!(iter) {
-            Token {
-                kind: TokenKind::Comma,
-                ..
-            } => {
-                iter.next();
-                continue;
+    if !matches!(peek_non_blank!(iter).kind, TokenKind::ClosingParenthesis) {
+        loop {
+            if !matches!(peek_non_blank!(iter).kind, TokenKind::Identifier(_)) {
+                panic!("unexpected {:?}, expected function parameter", iter.next());
             }
-            Token {
-                kind: TokenKind::ClosingParenthesis,
-                ..
-            } => {
-                iter.next();
-                break;
+
+            let param = parse_variable(iter, gdtk_ast::poor::ASTVariableKind::FunctionParameter);
+            parameters.push(param);
+
+            match peek_non_blank!(iter) {
+                Token {
+                    kind: TokenKind::Comma,
+                    ..
+                } => {
+                    iter.next();
+                    continue;
+                }
+                Token {
+                    kind: TokenKind::ClosingParenthesis,
+                    ..
+                } => {
+                    iter.next();
+                    break;
+                }
+                other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
             }
-            other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
         }
+    } else {
+        iter.next();
     }
 
     if matches!(peek_non_blank!(iter).kind, TokenKind::Arrow) {

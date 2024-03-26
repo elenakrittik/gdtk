@@ -1,2 +1,2 @@
-func function(param: int):
+func function() -> void:
 	pass
