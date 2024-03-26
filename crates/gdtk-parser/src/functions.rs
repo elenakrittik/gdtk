@@ -1,63 +1,44 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTFunction, ASTFunctionParameter, ASTStatement};
+use gdtk_ast::poor::{ASTFunction, ASTStatement};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
-use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
+use crate::utils::{expect_blank_prefixed, peek_non_blank};
+use crate::variables::parse_variable;
 
 pub fn parse_func<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
-    expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
     let mut parameters = vec![];
+    expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
 
     loop {
-        if matches!(
-            iter.peek(),
-            Some(Token {
+        if !matches!(peek_non_blank!(iter).kind, TokenKind::Identifier(_)) {
+            panic!("unexpected {:?}, expected function parameter", iter.next());
+        }
+
+        let param = parse_variable(iter, gdtk_ast::poor::ASTVariableKind::FunctionParameter);
+        parameters.push(param);
+
+        match peek_non_blank!(iter) {
+            Token {
+                kind: TokenKind::Comma,
+                ..
+            } => {
+                iter.next();
+                continue;
+            }
+            Token {
                 kind: TokenKind::ClosingParenthesis,
                 ..
-            })
-        ) {
-            iter.next();
-            break;
-        }
-
-        let mut expect_comma = true;
-        let mut break_ = false;
-
-        let (identifier, infer_type, typehint, default) = parse_idtydef!(
-            iter,
-            TokenKind::Comma => { dbg!("got comma"); expect_comma = false; },
-            TokenKind::ClosingParenthesis => { break_ = true; dbg!("got end paren"); },
-        );
-
-        parameters.push(ASTFunctionParameter {
-            identifier,
-            infer_type,
-            typehint,
-            default,
-        });
-
-        if break_ {
-            break;
-        }
-
-        if expect_comma {
-            match next_non_blank!(iter) {
-                Token {
-                    kind: TokenKind::Comma,
-                    ..
-                } => (),
-                Token {
-                    kind: TokenKind::ClosingParenthesis,
-                    ..
-                } => break,
-                other => panic!("expected comma or closing parenthesis, found {other:?}"),
+            } => {
+                iter.next();
+                break;
             }
+            other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
         }
     }
 

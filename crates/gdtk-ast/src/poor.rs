@@ -24,7 +24,7 @@ pub struct ASTClass<'a> {
 pub struct ASTVariable<'a> {
     pub identifier: &'a str,
     pub infer_type: bool,
-    pub typehint: Option<&'a str>,
+    pub typehint: Option<ASTValue<'a>>,
     pub value: Option<ASTValue<'a>>,
     pub kind: ASTVariableKind,
 }
@@ -39,6 +39,9 @@ pub enum ASTVariableKind {
 
     /// Static (`static var`) variable.
     Static,
+
+    /// A variable that represents a function parameter.
+    FunctionParameter,
 }
 
 #[derive(Debug, Clone)]
@@ -56,16 +59,8 @@ pub struct ASTEnumVariant<'a> {
 #[derive(Debug, Clone)]
 pub struct ASTFunction<'a> {
     pub identifier: &'a str,
-    pub parameters: Vec<ASTFunctionParameter<'a>>,
+    pub parameters: Vec<ASTVariable<'a>>,
     pub body: CodeBlock<'a>,
-}
-
-#[derive(Debug, Clone)]
-pub struct ASTFunctionParameter<'a> {
-    pub identifier: &'a str,
-    pub infer_type: bool,
-    pub typehint: Option<&'a str>,
-    pub default: Option<ASTValue<'a>>,
 }
 
 #[derive(Debug, Clone, enum_as_inner::EnumAsInner)]
@@ -202,5 +197,5 @@ pub struct ASTAnnotation<'a> {
 #[derive(Debug, Clone)]
 pub struct ASTSignal<'a> {
     pub name: &'a str,
-    pub parameters: Vec<ASTFunctionParameter<'a>>,
+    pub parameters: Vec<ASTVariable<'a>>,
 }
