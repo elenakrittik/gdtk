@@ -197,6 +197,6 @@ pub struct ASTAnnotation<'a> {
 
 #[derive(Debug, Clone)]
 pub struct ASTSignal<'a> {
-    pub name: &'a str,
+    pub identifier: &'a str,
     pub parameters: Vec<ASTVariable<'a>>,
 }

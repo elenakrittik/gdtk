@@ -1,5 +1,54 @@
 // TODO: refactor some stuff to utilize new option to .peek()
 
+use std::iter::Peekable;
+
+use gdtk_ast::poor::ASTVariable;
+use gdtk_lexer::{Token, TokenKind};
+
+use crate::variables::parse_variable;
+
+pub fn collect_params<'a, T>(iter: &mut Peekable<T>) -> Vec<ASTVariable<'a>>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    let mut parameters = vec![];
+
+    expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
+
+    if !matches!(peek_non_blank!(iter).kind, TokenKind::ClosingParenthesis) {
+        loop {
+            if !matches!(peek_non_blank!(iter).kind, TokenKind::Identifier(_)) {
+                panic!("unexpected {:?}, expected function parameter", iter.next());
+            }
+
+            let param = parse_variable(iter, gdtk_ast::poor::ASTVariableKind::FunctionParameter);
+            parameters.push(param);
+
+            match peek_non_blank!(iter) {
+                Token {
+                    kind: TokenKind::Comma,
+                    ..
+                } => {
+                    iter.next();
+                    continue;
+                }
+                Token {
+                    kind: TokenKind::ClosingParenthesis,
+                    ..
+                } => {
+                    iter.next();
+                    break;
+                }
+                other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
+            }
+        }
+    } else {
+        iter.next();
+    }
+
+    parameters
+}
+
 pub macro any_assignment($enm:ident) {
     $enm::Assignment
         | $enm::PlusAssignment

@@ -9,7 +9,7 @@ use gdtk_lexer::{Token, TokenKind};
 use crate::block::parse_block;
 use crate::classes::{parse_classname, parse_enum, parse_extends};
 use crate::functions::parse_func;
-use crate::misc::parse_annotation;
+use crate::misc::{parse_annotation, parse_signal};
 use crate::utils::{any_assignment, expect, expect_blank_prefixed, next_non_blank, peek_non_blank};
 use crate::values::parse_value;
 use crate::variables::parse_variable;
@@ -60,7 +60,7 @@ where
         TokenKind::Pass => ASTStatement::Pass,
         TokenKind::Func => parse_func(iter),
         TokenKind::Return => ASTStatement::Return(parse_value(iter, None)),
-        TokenKind::Signal => todo!(),
+        TokenKind::Signal => ASTStatement::Signal(parse_signal(iter)),
         TokenKind::Match => parse_match(iter),
         TokenKind::While => {
             let tuple = parse_iflike(iter);
