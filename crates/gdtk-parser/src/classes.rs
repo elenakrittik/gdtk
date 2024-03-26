@@ -1,9 +1,10 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTEnum, ASTEnumVariant, ASTStatement};
+use gdtk_ast::poor::{ASTClass, ASTEnum, ASTEnumVariant, ASTStatement};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::utils::{expect_blank_prefixed, next_non_blank};
+use crate::block::parse_block;
+use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
 use crate::values::parse_value;
 
 pub fn parse_classname<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
@@ -104,4 +105,33 @@ where
         identifier,
         variants,
     })
+}
+
+pub fn parse_class<'a, T>(iter: &mut Peekable<T>) -> ASTClass<'a>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
+    let mut extends = None;
+
+    match peek_non_blank!(iter) {
+        Token {
+            kind: TokenKind::Extends,
+            ..
+        } => {
+            iter.next();
+            extends = Some(expect_blank_prefixed!(iter, TokenKind::Identifier(s), s));
+        }
+        _ => (),
+    }
+
+    expect_blank_prefixed!(iter, TokenKind::Colon, ());
+
+    let body = parse_block(iter);
+
+    ASTClass {
+        identifier,
+        extends,
+        body,
+    }
 }

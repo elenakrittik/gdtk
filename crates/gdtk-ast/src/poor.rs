@@ -11,13 +11,9 @@ pub struct ASTFile<'a> {
 
 #[derive(Debug, Clone)]
 pub struct ASTClass<'a> {
-    pub name: Option<&'a str>,
+    pub identifier: &'a str,
     pub extends: Option<&'a str>,
-    pub variables: Vec<ASTVariable<'a>>,
-    pub enums: Vec<ASTEnum<'a>>,
-    pub functions: Vec<ASTFunction<'a>>,
-    pub signals: Vec<ASTSignal<'a>>,
-    pub inner_classes: Vec<ASTClass<'a>>,
+    pub body: CodeBlock<'a>,
 }
 
 #[derive(Debug, Clone)]

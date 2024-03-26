@@ -7,7 +7,7 @@ use gdtk_ast::poor::{
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
-use crate::classes::{parse_classname, parse_enum, parse_extends};
+use crate::classes::{parse_class, parse_classname, parse_enum, parse_extends};
 use crate::functions::parse_func;
 use crate::misc::{parse_annotation, parse_signal};
 use crate::utils::{any_assignment, expect, expect_blank_prefixed, next_non_blank, peek_non_blank};
@@ -39,7 +39,7 @@ where
         }
         TokenKind::Break => ASTStatement::Break,
         TokenKind::Breakpoint => ASTStatement::Breakpoint,
-        TokenKind::Class => todo!(),
+        TokenKind::Class => ASTStatement::Class(parse_class(iter)),
         TokenKind::ClassName => parse_classname(iter),
         TokenKind::Continue => ASTStatement::Continue,
         TokenKind::If => {

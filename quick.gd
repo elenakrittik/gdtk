@@ -1,2 +1,5 @@
-print(func():
-	pass)
+class Hello:
+	pass
+
+class World extends Hello:
+	pass
