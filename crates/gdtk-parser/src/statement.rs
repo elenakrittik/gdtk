@@ -58,7 +58,7 @@ where
         TokenKind::Extends => parse_extends(iter),
         TokenKind::For => parse_for_loop(iter),
         TokenKind::Pass => ASTStatement::Pass,
-        TokenKind::Func => parse_func(iter),
+        TokenKind::Func => ASTStatement::Func(parse_func(iter)),
         TokenKind::Return => ASTStatement::Return(parse_value(iter, None)),
         TokenKind::Signal => ASTStatement::Signal(parse_signal(iter)),
         TokenKind::Match => parse_match(iter),
