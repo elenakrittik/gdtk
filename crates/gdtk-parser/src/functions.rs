@@ -5,6 +5,7 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::utils::{expect_blank_prefixed, peek_non_blank};
+use crate::values::parse_value;
 use crate::variables::parse_variable;
 
 pub fn parse_func<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
@@ -13,6 +14,8 @@ where
 {
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
     let mut parameters = vec![];
+    let mut return_type = None;
+
     expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
 
     loop {
@@ -42,6 +45,11 @@ where
         }
     }
 
+    if matches!(peek_non_blank!(iter).kind, TokenKind::Arrow) {
+        iter.next();
+        return_type = Some(parse_value(iter, None));
+    }
+
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
 
     let body = parse_block(iter);
@@ -49,6 +57,7 @@ where
     ASTStatement::Func(ASTFunction {
         identifier,
         parameters,
+        return_type: return_type.map(Box::new),
         body,
     })
 }

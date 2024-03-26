@@ -60,6 +60,7 @@ pub struct ASTEnumVariant<'a> {
 pub struct ASTFunction<'a> {
     pub identifier: &'a str,
     pub parameters: Vec<ASTVariable<'a>>,
+    pub return_type: Option<Box<ASTValue<'a>>>,
     pub body: CodeBlock<'a>,
 }
 
