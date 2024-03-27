@@ -7,12 +7,12 @@ use gdtk_ast::poor::{
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
-use crate::classes::{parse_classname, parse_enum, parse_extends};
+use crate::classes::{parse_class, parse_classname, parse_enum, parse_extends};
 use crate::functions::parse_func;
-use crate::misc::parse_annotation;
+use crate::misc::{parse_annotation, parse_signal};
 use crate::utils::{any_assignment, expect, expect_blank_prefixed, next_non_blank, peek_non_blank};
 use crate::values::parse_value;
-use crate::variables::{parse_const, parse_var};
+use crate::variables::parse_variable;
 
 pub fn parse_statement<'a, T>(
     iter: &mut Peekable<T>,
@@ -39,7 +39,7 @@ where
         }
         TokenKind::Break => ASTStatement::Break,
         TokenKind::Breakpoint => ASTStatement::Breakpoint,
-        TokenKind::Class => todo!(),
+        TokenKind::Class => ASTStatement::Class(parse_class(iter)),
         TokenKind::ClassName => parse_classname(iter),
         TokenKind::Continue => ASTStatement::Continue,
         TokenKind::If => {
@@ -52,23 +52,26 @@ where
         }
         TokenKind::Else => {
             expect_blank_prefixed!(iter, TokenKind::Colon, ());
-            ASTStatement::Else(parse_block(iter))
+            ASTStatement::Else(parse_block(iter, false))
         }
         TokenKind::Enum => parse_enum(iter),
         TokenKind::Extends => parse_extends(iter),
         TokenKind::For => parse_for_loop(iter),
         TokenKind::Pass => ASTStatement::Pass,
-        TokenKind::Func => parse_func(iter),
+        TokenKind::Func => ASTStatement::Func(parse_func(iter, false)),
         TokenKind::Return => ASTStatement::Return(parse_value(iter, None)),
-        TokenKind::Signal => todo!(),
+        TokenKind::Signal => ASTStatement::Signal(parse_signal(iter)),
         TokenKind::Match => parse_match(iter),
         TokenKind::While => {
             let tuple = parse_iflike(iter);
             ASTStatement::While(tuple.0, tuple.1)
         }
-        TokenKind::Var => ASTStatement::Variable(parse_var(iter)),
-        TokenKind::Const => ASTStatement::Variable(parse_const(iter)),
-        TokenKind::Static => todo!(),
+        TokenKind::Var => ASTStatement::Variable(parse_variable(iter, ASTVariableKind::Regular)),
+        TokenKind::Const => ASTStatement::Variable(parse_variable(iter, ASTVariableKind::Constant)),
+        TokenKind::Static => {
+            expect_blank_prefixed!(iter, TokenKind::Var, ());
+            ASTStatement::Variable(parse_variable(iter, ASTVariableKind::Static))
+        }
         _ => ASTStatement::Value(parse_value(iter, Some(token))),
     }
 }
@@ -79,7 +82,7 @@ where
 {
     let cond = parse_value(iter, None);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
-    let code = parse_block(iter);
+    let code = parse_block(iter, false);
 
     (cond, code)
 }
@@ -99,7 +102,7 @@ where
     expect_blank_prefixed!(iter, TokenKind::In, ());
     let container = parse_value(iter, None);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
-    let block = parse_block(iter);
+    let block = parse_block(iter, false);
 
     ASTStatement::For(identifier, type_hint, container, block)
 }
@@ -110,7 +113,7 @@ where
 {
     let expr = parse_value(iter, None);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
-    let block = parse_block(iter);
+    let block = parse_block(iter, false);
 
     ASTStatement::While(expr, block)
 }
@@ -170,7 +173,7 @@ where
 
         let pat = parse_pat(iter);
         expect_blank_prefixed!(iter, TokenKind::Colon, ());
-        let block = parse_block(iter);
+        let block = parse_block(iter, false);
 
         pats.push(ASTMatchPattern {
             body: block,

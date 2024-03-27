@@ -1,5 +1,54 @@
 // TODO: refactor some stuff to utilize new option to .peek()
 
+use std::iter::Peekable;
+
+use gdtk_ast::poor::ASTVariable;
+use gdtk_lexer::{Token, TokenKind};
+
+use crate::variables::parse_variable;
+
+pub fn collect_params<'a, T>(iter: &mut Peekable<T>) -> Vec<ASTVariable<'a>>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    let mut parameters = vec![];
+
+    expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
+
+    if !matches!(peek_non_blank!(iter).kind, TokenKind::ClosingParenthesis) {
+        loop {
+            if !matches!(peek_non_blank!(iter).kind, TokenKind::Identifier(_)) {
+                panic!("unexpected {:?}, expected function parameter", iter.next());
+            }
+
+            let param = parse_variable(iter, gdtk_ast::poor::ASTVariableKind::FunctionParameter);
+            parameters.push(param);
+
+            match peek_non_blank!(iter) {
+                Token {
+                    kind: TokenKind::Comma,
+                    ..
+                } => {
+                    iter.next();
+                    continue;
+                }
+                Token {
+                    kind: TokenKind::ClosingParenthesis,
+                    ..
+                } => {
+                    iter.next();
+                    break;
+                }
+                other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
+            }
+        }
+    } else {
+        iter.next();
+    }
+
+    parameters
+}
+
 pub macro any_assignment($enm:ident) {
     $enm::Assignment
         | $enm::PlusAssignment
@@ -105,48 +154,4 @@ pub macro collect_args_raw($iter:expr, $closing:pat) {{
     }
 
     args
-}}
-
-/// Parse identifier: type = default
-pub macro parse_idtydef($iter:expr, $($endpat:pat => $endcode:expr,)*) {{
-    type Token<'a> = ::gdtk_lexer::Token<'a>;
-    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
-
-    let identifier = $crate::utils::expect_blank_prefixed!($iter, TokenKind::Identifier(s), s);
-
-    let mut infer_type = false;
-    let mut typehint = None;
-    let mut value = None;
-
-    // a colon, an assignment or a newline
-    match $crate::utils::next_non_blank!($iter) {
-        Token { kind: TokenKind::Colon, .. } => {
-            // colon can be followed by an identifier (typehint) or an assignment (means the type should be inferred)
-            match $crate::utils::next_non_blank!($iter) {
-                Token { kind: TokenKind::Identifier(s), .. } => {
-                    // we got the typehint
-                    typehint = Some(s);
-
-                    // typehint can be followed by an assignment or a newline
-                    match $crate::utils::next_non_blank!($iter) {
-                        // found assignment, then there must be a value
-                        Token { kind: TokenKind::Assignment, .. } => value = Some($crate::values::parse_value($iter, None)),
-                        // no value
-                        $(Token { kind: $endpat, .. } => $endcode,)*
-                        other => panic!("unexpected {other:?}, expected assignment or newline"),
-                    }
-                },
-                Token { kind: TokenKind::Assignment, .. } => {
-                    infer_type = true;
-                    value = Some($crate::values::parse_value($iter, None));
-                },
-                other => panic!("unexpected {other:?}, expected assignment or newline"),
-            }
-        },
-        Token { kind: TokenKind::Assignment, .. } => value = Some($crate::values::parse_value($iter, None)),
-        $(Token { kind: $endpat, .. } => $endcode,)*
-        other => panic!("unexpected {other:?}, expected colon, assignment or newline"),
-    }
-
-    (identifier, infer_type, typehint, value)
 }}

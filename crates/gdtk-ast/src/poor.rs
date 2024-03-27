@@ -11,20 +11,16 @@ pub struct ASTFile<'a> {
 
 #[derive(Debug, Clone)]
 pub struct ASTClass<'a> {
-    pub name: Option<&'a str>,
+    pub identifier: &'a str,
     pub extends: Option<&'a str>,
-    pub variables: Vec<ASTVariable<'a>>,
-    pub enums: Vec<ASTEnum<'a>>,
-    pub functions: Vec<ASTFunction<'a>>,
-    pub signals: Vec<ASTSignal<'a>>,
-    pub inner_classes: Vec<ASTClass<'a>>,
+    pub body: CodeBlock<'a>,
 }
 
 #[derive(Debug, Clone)]
 pub struct ASTVariable<'a> {
     pub identifier: &'a str,
     pub infer_type: bool,
-    pub typehint: Option<&'a str>,
+    pub typehint: Option<ASTValue<'a>>,
     pub value: Option<ASTValue<'a>>,
     pub kind: ASTVariableKind,
 }
@@ -39,6 +35,9 @@ pub enum ASTVariableKind {
 
     /// Static (`static var`) variable.
     Static,
+
+    /// A variable that represents a function parameter.
+    FunctionParameter,
 }
 
 #[derive(Debug, Clone)]
@@ -55,17 +54,10 @@ pub struct ASTEnumVariant<'a> {
 
 #[derive(Debug, Clone)]
 pub struct ASTFunction<'a> {
-    pub identifier: &'a str,
-    pub parameters: Vec<ASTFunctionParameter<'a>>,
+    pub identifier: Option<&'a str>,
+    pub parameters: Vec<ASTVariable<'a>>,
+    pub return_type: Option<Box<ASTValue<'a>>>,
     pub body: CodeBlock<'a>,
-}
-
-#[derive(Debug, Clone)]
-pub struct ASTFunctionParameter<'a> {
-    pub identifier: &'a str,
-    pub infer_type: bool,
-    pub typehint: Option<&'a str>,
-    pub default: Option<ASTValue<'a>>,
 }
 
 #[derive(Debug, Clone, enum_as_inner::EnumAsInner)]
@@ -201,6 +193,6 @@ pub struct ASTAnnotation<'a> {
 
 #[derive(Debug, Clone)]
 pub struct ASTSignal<'a> {
-    pub name: &'a str,
-    pub parameters: Vec<ASTFunctionParameter<'a>>,
+    pub identifier: &'a str,
+    pub parameters: Vec<ASTVariable<'a>>,
 }

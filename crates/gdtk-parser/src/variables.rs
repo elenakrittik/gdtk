@@ -3,75 +3,68 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::utils::{expect_blank_prefixed, next_non_blank, parse_idtydef};
+use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
 use crate::values::parse_value;
 
-pub fn parse_const<'a, T>(iter: &mut Peekable<T>) -> ASTVariable<'a>
+pub fn parse_variable<'a, T>(iter: &mut Peekable<T>, kind: ASTVariableKind) -> ASTVariable<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
-
     let mut typehint = None;
     let mut infer_type = false;
+    let mut value = None;
 
-    // either colon or an assignment
-    let value = match next_non_blank!(iter) {
-        // got a colon, has to be followed by an identifier (type hint) or an assignment
-        Token {
-            kind: TokenKind::Colon,
-            ..
-        } => {
-            match next_non_blank!(iter) {
-                Token {
-                    kind: TokenKind::Identifier(s),
-                    ..
-                } => {
-                    typehint = Some(s);
+    // Possible cases:
+    // [var] ident
+    // [var] ident = val
+    // [var] ident := val
+    // [var] ident: type = val
+    // [var] ident: type
 
-                    expect_blank_prefixed!(iter, TokenKind::Assignment, ());
-                    parse_value(iter, None)
-                }
-                // infer type
+    if matches!(
+        peek_non_blank!(iter).kind,
+        TokenKind::Colon | TokenKind::Assignment
+    ) {
+        match next_non_blank!(iter) {
+            Token {
+                kind: TokenKind::Colon,
+                ..
+            } => match next_non_blank!(iter) {
                 Token {
                     kind: TokenKind::Assignment,
                     ..
                 } => {
                     infer_type = true;
-                    parse_value(iter, None)
+                    value = Some(parse_value(iter, None));
                 }
-                other => panic!("unexpected {other:?}, expected identifier or assignment"),
-            }
+                other => {
+                    typehint = Some(parse_value(iter, Some(other)));
+
+                    if matches!(peek_non_blank!(iter).kind, TokenKind::Assignment) {
+                        match next_non_blank!(iter) {
+                            Token {
+                                kind: TokenKind::Assignment,
+                                ..
+                            } => value = Some(parse_value(iter, None)),
+                            _ => unreachable!(),
+                        }
+                    }
+                }
+            },
+            Token {
+                kind: TokenKind::Assignment,
+                ..
+            } => value = Some(parse_value(iter, None)),
+            _ => unreachable!(),
         }
-        Token {
-            kind: TokenKind::Assignment,
-            ..
-        } => parse_value(iter, None),
-        other => panic!("unexpected {other:?}, expected colon or assignment"),
-    };
-
-    ASTVariable {
-        identifier,
-        infer_type,
-        typehint,
-        value: Some(value),
-        kind: ASTVariableKind::Constant,
     }
-}
-
-pub fn parse_var<'a, T>(iter: &mut Peekable<T>) -> ASTVariable<'a>
-where
-    T: Iterator<Item = Token<'a>>,
-{
-    let (identifier, infer_type, typehint, value) = parse_idtydef!(iter, TokenKind::Newline => (),);
 
     ASTVariable {
         identifier,
         infer_type,
         typehint,
         value,
-        kind: ASTVariableKind::Regular,
+        kind,
     }
 }
-
-// TODO: static vars

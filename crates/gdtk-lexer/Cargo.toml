@@ -10,6 +10,7 @@ gdtk-diag = { version = "0.1.0", path = "../gdtk-diag" }
 logos = "0.14.0"
 thiserror = "1.0.43"
 once_cell = "1.18.0"
+enum-as-inner = "0.6.0"
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"

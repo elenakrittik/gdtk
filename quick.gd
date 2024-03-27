@@ -1,8 +1,5 @@
-func _hello():
-    if true:
-      print("yay")
-    else:
-        pass
-func _d(): pass
-
-
+func _ready() -> void:
+	print(func():
+		print("hi from lambda")
+		return 0
+	)

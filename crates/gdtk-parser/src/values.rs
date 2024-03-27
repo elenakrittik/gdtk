@@ -3,8 +3,11 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTBinaryOp, ASTUnaryOp, ASTValue, DictValue};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::utils::{
-    collect_args, collect_args_raw, expect_blank_prefixed, next_non_blank, peek_non_blank,
+use crate::{
+    functions::parse_func,
+    utils::{
+        collect_args, collect_args_raw, expect_blank_prefixed, next_non_blank, peek_non_blank,
+    },
 };
 
 pub fn parse_value<'a, T>(iter: &mut Peekable<T>, mut token: Option<Token<'a>>) -> ASTValue<'a>
@@ -37,6 +40,7 @@ where
             ASTValue::UnaryExpr(ASTUnaryOp::Minus, Box::new(value))
         }
         TokenKind::Comment(c) => ASTValue::Comment(c),
+        TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),
         other => panic!("unknown or unsupported expression: {other:?}"),
     };
 
