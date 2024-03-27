@@ -41,12 +41,15 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
         anyhow::bail!("Godot {version} is already installed.");
     }
 
-    let arch = (std::env::consts::ARCH, std::env::consts::OS);
+    let arch = (
+        gdtk_gvm::utils::normalize_arch(std::env::consts::ARCH),
+        std::env::consts::OS,
+    );
 
     let version_download_urls = gdtk_gvm::online::version_download_urls(&version).await?;
     let url = match version_download_urls.get(&arch) {
         Some(url) => url,
-        None => anyhow::bail!("Couldn't find download URL for current arch/os pair."),
+        None => anyhow::bail!("Couldn't find download URL for current arch/os pair {arch:?}."),
     };
 
     let mut spinner = spinoff::Spinner::new(
@@ -91,8 +94,6 @@ async fn prompt_version(vers: Vec<gdtk_gvm::versions::Versioning>) -> anyhow::Re
         .into_group_map();
 
     let stables = versions.get_mut("stable").unwrap().as_mut_slice();
-
-    dbg!(&stables);
 
     let mut version = stables
         .get_mut(

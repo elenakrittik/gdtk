@@ -47,7 +47,7 @@ fn map_href_to_arch(href: &str) -> Result<(&'static str, &'static str), crate::E
     // TODO: use a regex instead
     // hardcoding :(
     match href {
-        href if href.ends_with("android_editor.apk") => Ok(("aarch64", "android")),
+        href if href.ends_with("android_editor.apk") => Ok(("arm64", "android")),
         href if href.ends_with("linux.x86_64.zip") => Ok(("x86_64", "linux")),
         href if href.ends_with("linux.x86_32.zip") => Ok(("x86", "linux")),
         href if href.ends_with("linux.arm64.zip") => Ok(("arm64", "linux")),
