@@ -8,7 +8,7 @@ use crate::statement::parse_statement;
 use crate::utils::{collect_params, expect_blank_prefixed, peek_non_blank};
 use crate::values::parse_value;
 
-pub fn parse_func<'a, T>(iter: &mut Peekable<T>) -> ASTFunction<'a>
+pub fn parse_func<'a, T>(iter: &mut Peekable<T>, lambda: bool) -> ASTFunction<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -31,7 +31,7 @@ where
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
 
     if matches!(peek_non_blank!(iter).kind, TokenKind::Newline) {
-        body = Some(parse_block(iter));
+        body = Some(parse_block(iter, lambda));
     } else {
         body = Some(vec![parse_statement(iter, None)]);
     }

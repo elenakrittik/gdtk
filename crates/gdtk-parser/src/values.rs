@@ -40,7 +40,7 @@ where
             ASTValue::UnaryExpr(ASTUnaryOp::Minus, Box::new(value))
         }
         TokenKind::Comment(c) => ASTValue::Comment(c),
-        TokenKind::Func => ASTValue::Lambda(parse_func(iter)),
+        TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),
         other => panic!("unknown or unsupported expression: {other:?}"),
     };
 

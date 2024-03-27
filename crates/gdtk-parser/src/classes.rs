@@ -127,7 +127,7 @@ where
 
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
 
-    let body = parse_block(iter);
+    let body = parse_block(iter, false);
 
     ASTClass {
         identifier,

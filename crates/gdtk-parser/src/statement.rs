@@ -52,13 +52,13 @@ where
         }
         TokenKind::Else => {
             expect_blank_prefixed!(iter, TokenKind::Colon, ());
-            ASTStatement::Else(parse_block(iter))
+            ASTStatement::Else(parse_block(iter, false))
         }
         TokenKind::Enum => parse_enum(iter),
         TokenKind::Extends => parse_extends(iter),
         TokenKind::For => parse_for_loop(iter),
         TokenKind::Pass => ASTStatement::Pass,
-        TokenKind::Func => ASTStatement::Func(parse_func(iter)),
+        TokenKind::Func => ASTStatement::Func(parse_func(iter, false)),
         TokenKind::Return => ASTStatement::Return(parse_value(iter, None)),
         TokenKind::Signal => ASTStatement::Signal(parse_signal(iter)),
         TokenKind::Match => parse_match(iter),
@@ -82,7 +82,7 @@ where
 {
     let cond = parse_value(iter, None);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
-    let code = parse_block(iter);
+    let code = parse_block(iter, false);
 
     (cond, code)
 }
@@ -102,7 +102,7 @@ where
     expect_blank_prefixed!(iter, TokenKind::In, ());
     let container = parse_value(iter, None);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
-    let block = parse_block(iter);
+    let block = parse_block(iter, false);
 
     ASTStatement::For(identifier, type_hint, container, block)
 }
@@ -113,7 +113,7 @@ where
 {
     let expr = parse_value(iter, None);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
-    let block = parse_block(iter);
+    let block = parse_block(iter, false);
 
     ASTStatement::While(expr, block)
 }
@@ -173,7 +173,7 @@ where
 
         let pat = parse_pat(iter);
         expect_blank_prefixed!(iter, TokenKind::Colon, ());
-        let block = parse_block(iter);
+        let block = parse_block(iter, false);
 
         pats.push(ASTMatchPattern {
             body: block,

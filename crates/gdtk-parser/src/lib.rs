@@ -24,7 +24,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTFile, Error> {
 
     while let Some(token) = iter.next() {
         match token.kind {
-            TokenKind::Newline => (),
+            TokenKind::Newline | TokenKind::Dedent => (),
             _ => body.push(parse_statement(&mut iter, Some(token))),
         }
     }
