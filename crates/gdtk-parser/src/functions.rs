@@ -14,6 +14,7 @@ where
 {
     let mut identifier = None;
     let mut return_type = None;
+    #[allow(unused_assignments)] // false positive
     let mut body = None;
 
     if matches!(peek_non_blank!(iter).kind, TokenKind::Identifier(_)) {
