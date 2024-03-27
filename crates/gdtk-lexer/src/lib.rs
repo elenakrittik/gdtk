@@ -42,33 +42,33 @@ fn preprocess<'a>(lexer: logos::Lexer<'a, TokenKind<'a>>) -> LexOutput<'a> {
 fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
     let mut stack: Vec<usize> = vec![0];
     let mut out = vec![];
-    let mut new_line = false;
-
     let mut tokens = tokens.into_iter().peekable();
 
     while let Some(token) = tokens.next() {
-        eprintln!("next token: {:?}", &token);
-        eprintln!("current stack: {:?}", &stack);
-        eprintln!("was previous token a newline: {:?}", &new_line);
-
         match token.kind {
             TokenKind::Newline => {
-                let (token, indent_len) = if let Token { kind: TokenKind::Blank(b), .. } = tokens.peek() {
-                    (iter.next(), b.len())
+                let (range, indent_len) = if tokens.peek().is_some_and(|t| t.kind.is_blank()) {
+                    let token = tokens.next().unwrap();
+                    let len = token.kind.as_blank().unwrap().len();
+
+                    (token.range, len)
                 } else {
-                    (token, 0)
+                    (token.range.start..token.range.end, 0)
                 };
 
                 match indent_len.cmp(stack.last().unwrap()) {
                     std::cmp::Ordering::Greater => {
                         stack.push(indent_len);
-                        out.push(token.transmute(TokenKind::Indent));
+                        out.push(token);
+                        out.push(Token { range, kind: TokenKind::Indent });
                     },
                     std::cmp::Ordering::Equal => out.push(token),
                     std::cmp::Ordering::Less => {
-                        while stack.last().unwrap() > indent_len {
-                            stach.pop();
-                            out.push()
+                        let token = Token { range, kind: TokenKind::Dedent };
+
+                        while stack.last().unwrap() > &indent_len {
+                            stack.pop();
+                            out.push(token.clone());
                         }
                     }
                 }

@@ -30,7 +30,7 @@ impl<'a> Token<'a> {
 // Note that we do not and will not (unless deemed necessary) 1/1 match Godot's token set and/or naming.
 
 #[rustfmt::skip]
-#[derive(Logos, Debug, PartialEq, Clone)]
+#[derive(Logos, Debug, PartialEq, Clone, enum_as_inner::EnumAsInner)]
 #[logos(error = Error)]
 #[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
 #[logos(subpattern float = r"(?&int)\.(?&int)")]
