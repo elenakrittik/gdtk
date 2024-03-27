@@ -6,15 +6,16 @@
 
 this is essentially a public roadmap
 
-- [ ] Parser
+- [x] Parser
 - - [x] Lexer
-- - [ ] Actual parser
+- - [x] Actual parser
 - [ ] Formatter
 - [ ] Linter
 - [ ] Project and dependency manager
 - - [ ] Addon dependencies
 - - [ ] Native dependencies
 - - [ ] GPM dependencies
+- [x] Godot version manager
 - [ ] Interpreter
 - - [ ] REPL
 - [ ] Testing framework
