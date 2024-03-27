@@ -60,11 +60,17 @@ fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
                     std::cmp::Ordering::Greater => {
                         stack.push(indent_len);
                         out.push(token);
-                        out.push(Token { range, kind: TokenKind::Indent });
-                    },
+                        out.push(Token {
+                            range,
+                            kind: TokenKind::Indent,
+                        });
+                    }
                     std::cmp::Ordering::Equal => out.push(token),
                     std::cmp::Ordering::Less => {
-                        let token = Token { range, kind: TokenKind::Dedent };
+                        let token = Token {
+                            range,
+                            kind: TokenKind::Dedent,
+                        };
 
                         while stack.last().unwrap() > &indent_len {
                             stack.pop();

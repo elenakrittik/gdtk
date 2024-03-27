@@ -114,15 +114,13 @@ where
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
     let mut extends = None;
 
-    match peek_non_blank!(iter) {
-        Token {
-            kind: TokenKind::Extends,
-            ..
-        } => {
-            iter.next();
-            extends = Some(expect_blank_prefixed!(iter, TokenKind::Identifier(s), s));
-        }
-        _ => (),
+    if let Token {
+        kind: TokenKind::Extends,
+        ..
+    } = peek_non_blank!(iter)
+    {
+        iter.next();
+        extends = Some(expect_blank_prefixed!(iter, TokenKind::Identifier(s), s));
     }
 
     expect_blank_prefixed!(iter, TokenKind::Colon, ());

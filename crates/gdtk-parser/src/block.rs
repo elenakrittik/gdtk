@@ -20,10 +20,10 @@ where
             &TokenKind::Dedent => {
                 iter.next();
                 break;
-            },
+            }
             &TokenKind::Newline => {
                 iter.next();
-            },
+            }
             &TokenKind::ClosingParenthesis
             | &TokenKind::ClosingBracket
             | &TokenKind::ClosingBrace => {
@@ -37,7 +37,7 @@ where
             _ => {
                 let token = iter.next();
                 stmts.push(parse_statement(iter, token));
-            },
+            }
         }
     }
 
