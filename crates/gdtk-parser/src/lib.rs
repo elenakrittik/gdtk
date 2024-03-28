@@ -15,6 +15,8 @@ pub mod statement;
 pub mod utils;
 pub mod values;
 pub mod variables;
+#[cfg(test)]
+pub mod test_utils;
 
 pub fn parse_file(lexed: LexOutput) -> Result<ASTFile, Error> {
     let (tokens, _diags) = lexed;

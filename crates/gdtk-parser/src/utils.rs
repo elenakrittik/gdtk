@@ -15,16 +15,16 @@ where
 
     expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
 
-    if !matches!(peek_non_blank!(iter).kind, TokenKind::ClosingParenthesis) {
+    if !peek_non_blank(iter).is_some_and(|t| t.kind.is_closing_parenthesis()) {
         loop {
-            if !matches!(peek_non_blank!(iter).kind, TokenKind::Identifier(_)) {
+            if !peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_))) {
                 panic!("unexpected {:?}, expected function parameter", iter.next());
             }
 
             let param = parse_variable(iter, gdtk_ast::poor::ASTVariableKind::FunctionParameter);
             parameters.push(param);
 
-            match peek_non_blank!(iter) {
+            match peek_non_blank(iter).expect("unexpected EOF") {
                 Token {
                     kind: TokenKind::Comma,
                     ..
@@ -47,22 +47,6 @@ where
     }
 
     parameters
-}
-
-pub macro any_assignment($enm:ident) {
-    $enm::Assignment
-        | $enm::PlusAssignment
-        | $enm::MinusAssignment
-        | $enm::MultiplyAssignment
-        | $enm::PowerAssignment
-        | $enm::DivideAssignment
-        | $enm::RemainderAssignment
-        | $enm::BitwiseAndAssignment
-        | $enm::BitwiseOrAssignment
-        | $enm::BitwiseNotAssignment
-        | $enm::BitwiseXorAssignment
-        | $enm::BitwiseShiftLeftAssignment
-        | $enm::BitwiseShiftRightAssignment
 }
 
 pub macro expect($iter:expr, $variant:pat, $ret:expr) {{
@@ -90,22 +74,34 @@ pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {{
     }
 }}
 
-pub macro peek_non_blank($iter:expr) {{
-    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
+// pub macro peek_non_blank($iter:expr) {{
+//     type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
 
+//     loop {
+//         if let Some(token) = $iter.peek() {
+//             match token.kind {
+//                 TokenKind::Blank(_) => {
+//                     $iter.next();
+//                 }
+//                 _ => break token,
+//             }
+//         } else {
+//             panic!("unexpected EOF");
+//         }
+//     }
+// }}
+
+pub fn peek_non_blank<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> Option<&Token<'a>> {
     loop {
-        if let Some(token) = $iter.peek() {
-            match token.kind {
-                TokenKind::Blank(_) => {
-                    $iter.next();
-                }
-                _ => break token,
-            }
+        if iter.peek().is_some_and(|t| matches!(t.kind, TokenKind::Blank(_))) {
+            iter.next();
+        } else if iter.peek().is_some() {
+            break Some(iter.peek().unwrap());
         } else {
-            panic!("unexpected EOF");
+            break None;
         }
     }
-}}
+}
 
 pub macro next_non_blank($iter:expr) {{
     type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;

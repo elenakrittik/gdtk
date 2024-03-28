@@ -18,7 +18,9 @@ where
         token = Some(next_non_blank!(iter));
     }
 
-    let val = match token.unwrap().kind {
+    let token = token.unwrap();
+
+    let val = match token.kind {
         TokenKind::Identifier(s) => ASTValue::Identifier(s),
         TokenKind::Integer(i) => ASTValue::Number(i),
         TokenKind::BinaryInteger(i) => ASTValue::Number(i as i64),
@@ -41,7 +43,7 @@ where
         }
         TokenKind::Comment(c) => ASTValue::Comment(c),
         TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),
-        other => panic!("unknown or unsupported expression: {other:?}"),
+        _ => panic!("unknown or unsupported expression: {token:?}"),
     };
 
     maybe_op(iter, val)
@@ -154,34 +156,34 @@ pub fn maybe_op<'a, T>(iter: &mut Peekable<T>, left: ASTValue<'a>) -> ASTValue<'
 where
     T: Iterator<Item = Token<'a>>,
 {
-    let op = match &peek_non_blank!(iter).kind {
-        &TokenKind::Plus => Some(ASTBinaryOp::Plus),
-        &TokenKind::Minus => Some(ASTBinaryOp::Minus),
-        &TokenKind::Greater => Some(ASTBinaryOp::Greater),
-        &TokenKind::GreaterOrEqual => Some(ASTBinaryOp::GreaterOrEqual),
-        &TokenKind::Less => Some(ASTBinaryOp::Less),
-        &TokenKind::LessOrEqual => Some(ASTBinaryOp::LessOrEqual),
-        &TokenKind::Period => Some(ASTBinaryOp::PropertyAccess),
-        &TokenKind::Multiply => Some(ASTBinaryOp::Multiply),
-        &TokenKind::Divide => Some(ASTBinaryOp::Divide),
-        &TokenKind::Equal => Some(ASTBinaryOp::Equal),
-        &TokenKind::NotEqual => Some(ASTBinaryOp::NotEqual),
-        &TokenKind::And | &TokenKind::SymbolizedAnd => Some(ASTBinaryOp::And),
-        &TokenKind::Or | &TokenKind::SymbolizedOr => Some(ASTBinaryOp::Or),
-        &TokenKind::Not | &TokenKind::SymbolizedNot => Some(ASTBinaryOp::Not),
-        &TokenKind::BitwiseAnd => Some(ASTBinaryOp::BitwiseAnd),
-        &TokenKind::BitwiseOr => Some(ASTBinaryOp::BitwiseOr),
-        &TokenKind::BitwiseNot => Some(ASTBinaryOp::BitwiseNot),
-        &TokenKind::BitwiseXor => Some(ASTBinaryOp::BitwiseXor),
-        &TokenKind::BitwiseShiftLeft => Some(ASTBinaryOp::BitwiseShiftLeft),
-        &TokenKind::BitwiseShiftRight => Some(ASTBinaryOp::BitwiseShiftRight),
-        &TokenKind::Power => Some(ASTBinaryOp::Power),
-        &TokenKind::Remainder => Some(ASTBinaryOp::Remainder),
-        &TokenKind::As => Some(ASTBinaryOp::TypeCast),
-        &TokenKind::Is => Some(ASTBinaryOp::TypeCheck),
-        &TokenKind::In => Some(ASTBinaryOp::Contains),
-        &TokenKind::Range => Some(ASTBinaryOp::Range),
-        &TokenKind::OpeningParenthesis => {
+    let op = match peek_non_blank(iter) {
+        Some(Token { kind: TokenKind::Plus, .. }) => Some(ASTBinaryOp::Plus),
+        Some(Token { kind: TokenKind::Minus, .. }) => Some(ASTBinaryOp::Minus),
+        Some(Token { kind: TokenKind::Greater, .. }) => Some(ASTBinaryOp::Greater),
+        Some(Token { kind: TokenKind::GreaterOrEqual, .. }) => Some(ASTBinaryOp::GreaterOrEqual),
+        Some(Token { kind: TokenKind::Less, .. }) => Some(ASTBinaryOp::Less),
+        Some(Token { kind: TokenKind::LessOrEqual, .. }) => Some(ASTBinaryOp::LessOrEqual),
+        Some(Token { kind: TokenKind::Period, .. }) => Some(ASTBinaryOp::PropertyAccess),
+        Some(Token { kind: TokenKind::Multiply, .. }) => Some(ASTBinaryOp::Multiply),
+        Some(Token { kind: TokenKind::Divide, .. }) => Some(ASTBinaryOp::Divide),
+        Some(Token { kind: TokenKind::Equal, .. }) => Some(ASTBinaryOp::Equal),
+        Some(Token { kind: TokenKind::NotEqual, .. }) => Some(ASTBinaryOp::NotEqual),
+        Some(Token { kind: TokenKind::And | TokenKind::SymbolizedAnd, .. }) => Some(ASTBinaryOp::And),
+        Some(Token { kind: TokenKind::Or | TokenKind::SymbolizedOr, .. }) => Some(ASTBinaryOp::Or),
+        Some(Token { kind: TokenKind::Not | TokenKind::SymbolizedNot, .. }) => Some(ASTBinaryOp::Not),
+        Some(Token { kind: TokenKind::BitwiseAnd, .. }) => Some(ASTBinaryOp::BitwiseAnd),
+        Some(Token { kind: TokenKind::BitwiseOr, .. }) => Some(ASTBinaryOp::BitwiseOr),
+        Some(Token { kind: TokenKind::BitwiseNot, .. }) => Some(ASTBinaryOp::BitwiseNot),
+        Some(Token { kind: TokenKind::BitwiseXor, .. }) => Some(ASTBinaryOp::BitwiseXor),
+        Some(Token { kind: TokenKind::BitwiseShiftLeft, .. }) => Some(ASTBinaryOp::BitwiseShiftLeft),
+        Some(Token { kind: TokenKind::BitwiseShiftRight, .. }) => Some(ASTBinaryOp::BitwiseShiftRight),
+        Some(Token { kind: TokenKind::Power, .. }) => Some(ASTBinaryOp::Power),
+        Some(Token { kind: TokenKind::Remainder, .. }) => Some(ASTBinaryOp::Remainder),
+        Some(Token { kind: TokenKind::As, .. }) => Some(ASTBinaryOp::TypeCast),
+        Some(Token { kind: TokenKind::Is, .. }) => Some(ASTBinaryOp::TypeCheck),
+        Some(Token { kind: TokenKind::In, .. }) => Some(ASTBinaryOp::Contains),
+        Some(Token { kind: TokenKind::Range, .. }) => Some(ASTBinaryOp::Range),
+        Some(Token { kind: TokenKind::OpeningParenthesis, .. }) => {
             return ASTValue::Call(
                 Box::new(left),
                 collect_args!(
@@ -191,7 +193,7 @@ where
                 ),
             );
         }
-        &TokenKind::OpeningBrace => {
+        Some(Token { kind: TokenKind::OpeningBrace, .. }) => {
             return ASTValue::Subscript(Box::new(left), Box::new(parse_value(iter, None)))
         }
         _ => None,
@@ -215,10 +217,10 @@ pub fn maybe_uop<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    let op = match peek_non_blank!(iter).kind {
-        TokenKind::Plus => Some(ASTUnaryOp::Plus),
-        TokenKind::Minus => Some(ASTUnaryOp::Minus),
-        TokenKind::Await => Some(ASTUnaryOp::Await),
+    let op = match peek_non_blank(iter) {
+        Some(Token { kind: TokenKind::Plus, .. }) => Some(ASTUnaryOp::Plus),
+        Some(Token { kind: TokenKind::Minus, .. }) => Some(ASTUnaryOp::Minus),
+        Some(Token { kind: TokenKind::Await, .. }) => Some(ASTUnaryOp::Await),
         _ => None,
     };
 

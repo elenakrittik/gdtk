@@ -22,10 +22,7 @@ where
     // [var] ident: type = val
     // [var] ident: type
 
-    if matches!(
-        peek_non_blank!(iter).kind,
-        TokenKind::Colon | TokenKind::Assignment
-    ) {
+    if peek_non_blank(iter).is_some_and(|t| t.kind.is_colon() || t.kind.is_assignment()) {
         match next_non_blank!(iter) {
             Token {
                 kind: TokenKind::Colon,
@@ -41,7 +38,7 @@ where
                 other => {
                     typehint = Some(parse_value(iter, Some(other)));
 
-                    if matches!(peek_non_blank!(iter).kind, TokenKind::Assignment) {
+                    if peek_non_blank(iter).is_some_and(|t| t.kind.is_assignment()) {
                         match next_non_blank!(iter) {
                             Token {
                                 kind: TokenKind::Assignment,
@@ -66,5 +63,86 @@ where
         typehint,
         value,
         kind,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::test_utils::create_parser;
+    use gdtk_ast::poor::*;
+
+    #[test]
+    fn test_variable_empty() {
+        let mut parser = create_parser("ident");
+        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: false,
+            typehint: None,
+            value: None,
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_variable_with_type() {
+        let mut parser = create_parser("ident: type");
+        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: false,
+            typehint: Some(ASTValue::Identifier("type")),
+            value: None,
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_variable_with_value() {
+        let mut parser = create_parser("ident = 0");
+        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: false,
+            typehint: None,
+            value: Some(ASTValue::Number(0)),
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
+    }
+    
+    #[test]
+    fn test_variable_with_type_inference_and_value() {
+        let mut parser = create_parser("ident := 0");
+        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: true,
+            typehint: None,
+            value: Some(ASTValue::Number(0)),
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
+    }
+    
+    #[test]
+    fn test_variable_with_type_and_value() {
+        let mut parser = create_parser("ident: type = 0");
+        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: false,
+            typehint: Some(ASTValue::Identifier("type")),
+            value: Some(ASTValue::Number(0)),
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
     }
 }

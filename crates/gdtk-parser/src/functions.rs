@@ -17,20 +17,20 @@ where
     #[allow(unused_assignments)] // false positive
     let mut body = None;
 
-    if matches!(peek_non_blank!(iter).kind, TokenKind::Identifier(_)) {
+    if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_))) {
         identifier = Some(expect_blank_prefixed!(iter, TokenKind::Identifier(s), s));
     }
 
     let parameters = collect_params(iter);
 
-    if matches!(peek_non_blank!(iter).kind, TokenKind::Arrow) {
+    if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Arrow)) {
         iter.next();
         return_type = Some(parse_value(iter, None));
     }
 
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
 
-    if matches!(peek_non_blank!(iter).kind, TokenKind::Newline) {
+    if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Newline)) {
         body = Some(parse_block(iter, lambda));
     } else {
         body = Some(vec![parse_statement(iter, None)]);

@@ -4,19 +4,19 @@
 pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
 pub type DictValue<'a> = Vec<(ASTValue<'a>, ASTValue<'a>)>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASTFile<'a> {
     pub body: CodeBlock<'a>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASTClass<'a> {
     pub identifier: &'a str,
     pub extends: Option<&'a str>,
     pub body: CodeBlock<'a>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASTVariable<'a> {
     pub identifier: &'a str,
     pub infer_type: bool,
@@ -25,7 +25,7 @@ pub struct ASTVariable<'a> {
     pub kind: ASTVariableKind,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ASTVariableKind {
     /// Regular (`var`) variable.
     Regular,
@@ -40,19 +40,19 @@ pub enum ASTVariableKind {
     FunctionParameter,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASTEnum<'a> {
     pub identifier: Option<&'a str>,
     pub variants: Vec<ASTEnumVariant<'a>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASTEnumVariant<'a> {
     pub identifier: &'a str,
     pub value: Option<ASTValue<'a>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASTFunction<'a> {
     pub identifier: Option<&'a str>,
     pub parameters: Vec<ASTVariable<'a>>,
@@ -60,7 +60,7 @@ pub struct ASTFunction<'a> {
     pub body: CodeBlock<'a>,
 }
 
-#[derive(Debug, Clone, enum_as_inner::EnumAsInner)]
+#[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTValue<'a> {
     Identifier(&'a str),
     Number(i64),
@@ -85,14 +85,14 @@ pub enum ASTValue<'a> {
     Comment(&'a str),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ASTUnaryOp {
     Await,
     Plus,
     Minus,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ASTBinaryOp {
     Less,
     LessOrEqual,
@@ -122,7 +122,7 @@ pub enum ASTBinaryOp {
     Range,          // x..y // TODO: rename to "Rest"?
 }
 
-#[derive(Debug, Clone, enum_as_inner::EnumAsInner)]
+#[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTStatement<'a> {
     Annotation(ASTAnnotation<'a>),
     Assert(ASTValue<'a>),
@@ -152,7 +152,7 @@ pub enum ASTStatement<'a> {
     Value(ASTValue<'a>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ASTAssignmentKind {
     Regular,
     Plus,
@@ -169,13 +169,13 @@ pub enum ASTAssignmentKind {
     BitwiseShiftRight,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASTMatchPattern<'a> {
     pub body: CodeBlock<'a>,
     pub kind: ASTMatchPatternKind<'a>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ASTMatchPatternKind<'a> {
     Value(ASTValue<'a>),
     Binding(ASTVariable<'a>),
@@ -185,13 +185,13 @@ pub enum ASTMatchPatternKind<'a> {
     Rest,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASTAnnotation<'a> {
     pub identifier: &'a str,
     pub arguments: Vec<ASTValue<'a>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ASTSignal<'a> {
     pub identifier: &'a str,
     pub parameters: Vec<ASTVariable<'a>>,

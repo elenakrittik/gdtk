@@ -367,3 +367,23 @@ pub enum TokenKind<'a> {
     // #[token("void")]
     // Void,
 }
+
+impl TokenKind<'_> {
+    pub fn is_any_assignment(&self) -> bool {
+        matches!(
+            self,
+            TokenKind::PlusAssignment
+                | TokenKind::MinusAssignment
+                | TokenKind::MultiplyAssignment
+                | TokenKind::PowerAssignment
+                | TokenKind::DivideAssignment
+                | TokenKind::RemainderAssignment
+                | TokenKind::BitwiseAndAssignment
+                | TokenKind::BitwiseOrAssignment
+                | TokenKind::BitwiseNotAssignment
+                | TokenKind::BitwiseXorAssignment
+                | TokenKind::BitwiseShiftLeftAssignment
+                | TokenKind::BitwiseShiftRightAssignment
+        )
+    }
+}
