@@ -7,7 +7,6 @@ edition = "2021"
 anyhow = "1.0.71"
 ariadne = "0.4.0"
 clap = { version = "4.3.11", features = ["derive"] }
-comfy-table = "7.1.0"
 gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm" }
 gdtk-lexer = { version = "0.1.0", path = "../gdtk-lexer" }
 gdtk-parser = { version = "0.1.0", path = "../gdtk-parser" }
