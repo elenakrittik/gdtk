@@ -79,6 +79,7 @@ fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
                     }
                 }
             }
+            TokenKind::Blank(_) => (),
             _ => {
                 out.push(token);
             }
