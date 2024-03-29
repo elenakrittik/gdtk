@@ -2,10 +2,10 @@
 
 use std::iter::Peekable;
 
-use gdtk_ast::poor::ASTVariable;
+use gdtk_ast::poor::{ASTValue, ASTVariable};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::variables::parse_variable;
+use crate::{expressions::parse_expr, variables::parse_variable};
 
 pub fn collect_params<'a, T>(iter: &mut Peekable<T>) -> Vec<ASTVariable<'a>>
 where
@@ -24,22 +24,16 @@ where
             let param = parse_variable(iter, gdtk_ast::poor::ASTVariableKind::FunctionParameter);
             parameters.push(param);
 
-            match peek_non_blank(iter).expect("unexpected EOF") {
-                Token {
-                    kind: TokenKind::Comma,
-                    ..
-                } => {
+            match peek_non_blank(iter).expect("unexpected EOF").kind {
+                TokenKind::Comma => {
                     iter.next();
                     continue;
                 }
-                Token {
-                    kind: TokenKind::ClosingParenthesis,
-                    ..
-                } => {
+                TokenKind::ClosingParenthesis => {
                     iter.next();
                     break;
                 }
-                other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
+                ref other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
             }
         }
     } else {
@@ -118,36 +112,37 @@ pub macro next_non_blank($iter:expr) {{
     }
 }}
 
-pub macro collect_args($iter:expr, $opening:pat, $closing:pat) {{
-    $crate::utils::expect!($iter, $opening, ());
-    $crate::utils::collect_args_raw!($iter, $closing)
-}}
+/// Collects values surrounded by parentheses or brackets
+pub fn collect_values<'a, T>(iter: &mut Peekable<T>, skip_first: bool) -> Vec<ASTValue<'a>>
+where
+    T: Iterator<Item = Token<'a>>,
+{
+    let mut values = vec![];
 
-pub macro collect_args_raw($iter:expr, $closing:pat) {{
-    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
-
-    let mut args = vec![];
-    let mut expect_comma = false;
-
-    while let Some(token) = $iter.next() {
-        match &token.kind {
-            &TokenKind::Comma => {
-                if !expect_comma {
-                    panic!("unexpected comma, expected a value");
-                }
-                expect_comma = false;
-            }
-            &TokenKind::Blank(_) => (),
-            &$closing => break,
-            other => {
-                if expect_comma {
-                    panic!("expected comma, got {other:?}");
-                }
-                args.push($crate::values::parse_value($iter, Some(token)));
-                expect_comma = true;
-            }
-        }
+    if !skip_first {
+        expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis | TokenKind::OpeningBracket, ());
     }
 
-    args
-}}
+    if !peek_non_blank(iter).is_some_and(|t| t.kind.is_closing_parenthesis() || t.kind.is_opening_bracket()) {
+        loop {
+            let value = parse_expr(iter);
+            values.push(value);
+
+            match peek_non_blank(iter).expect("unexpected EOF").kind {
+                TokenKind::Comma => {
+                    iter.next();
+                    continue;
+                }
+                TokenKind::ClosingParenthesis | TokenKind::ClosingBracket => {
+                    iter.next();
+                    break;
+                }
+                ref other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
+            }
+        }
+    } else {
+        iter.next();
+    }
+
+    values
+}

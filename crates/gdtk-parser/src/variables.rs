@@ -3,8 +3,8 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
+use crate::expressions::parse_expr;
 use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
-use crate::expressions::parse_expression;
 
 pub fn parse_variable<'a, T>(iter: &mut Peekable<T>, kind: ASTVariableKind) -> ASTVariable<'a>
 where
@@ -23,36 +23,35 @@ where
     // [var] ident: type
 
     if peek_non_blank(iter).is_some_and(|t| t.kind.is_colon() || t.kind.is_assignment()) {
-        match next_non_blank!(iter) {
-            Token {
-                kind: TokenKind::Colon,
-                ..
-            } => match next_non_blank!(iter) {
-                Token {
-                    kind: TokenKind::Assignment,
-                    ..
-                } => {
-                    infer_type = true;
-                    value = Some(parse_expression(iter));
-                }
-                other => {
-                    typehint = Some(parse_value(iter, Some(other)));
+        match peek_non_blank(iter).expect("unexpected EOF").kind {
+            TokenKind::Colon => {
+                iter.next();
 
-                    if peek_non_blank(iter).is_some_and(|t| t.kind.is_assignment()) {
-                        match next_non_blank!(iter) {
-                            Token {
-                                kind: TokenKind::Assignment,
-                                ..
-                            } => value = Some(parse_expression(iter)),
-                            _ => unreachable!(),
+                match peek_non_blank(iter).expect("unexpected EOF").kind {
+                    TokenKind::Assignment => {
+                        iter.next();
+                        infer_type = true;
+                        value = Some(parse_expr(iter));
+                    }
+                    _ => {
+                        typehint = Some(parse_expr(iter));
+
+                        if peek_non_blank(iter).is_some_and(|t| t.kind.is_assignment()) {
+                            match next_non_blank!(iter) {
+                                Token {
+                                    kind: TokenKind::Assignment,
+                                    ..
+                                } => value = Some(parse_expr(iter)),
+                                _ => unreachable!(),
+                            }
                         }
                     }
-                }
+                };
+            }
+            TokenKind::Assignment => {
+                iter.next();
+                value = Some(parse_expr(iter))
             },
-            Token {
-                kind: TokenKind::Assignment,
-                ..
-            } => value = Some(parse_expression(iter)),
             _ => unreachable!(),
         }
     }
@@ -68,8 +67,9 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::test_utils::create_parser;
     use gdtk_ast::poor::*;
+
+    use crate::test_utils::create_parser;
 
     #[test]
     fn test_variable_empty() {
@@ -115,7 +115,7 @@ mod tests {
 
         assert_eq!(result, expected);
     }
-    
+
     #[test]
     fn test_variable_with_type_inference_and_value() {
         let mut parser = create_parser("ident := 0");
@@ -130,7 +130,7 @@ mod tests {
 
         assert_eq!(result, expected);
     }
-    
+
     #[test]
     fn test_variable_with_type_and_value() {
         let mut parser = create_parser("ident: type = 0");

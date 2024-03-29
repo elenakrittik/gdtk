@@ -3,9 +3,9 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTValue, ASTBinaryOp, ASTUnaryOp};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::{functions::parse_func, utils::{collect_args, collect_args_raw, next_non_blank, peek_non_blank}, values::parse_dictionary};
+use crate::{functions::parse_func, utils::{collect_values, next_non_blank, peek_non_blank}, values::parse_dictionary};
 
-pub fn parse_expression<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
+pub fn parse_expr<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -79,7 +79,7 @@ where
 
     // Calls have higher precedence, i.e. `-get_num()` should be parsed as `-(get_num())`
     if let Some(Token { kind: TokenKind::OpeningParenthesis, .. }) = peek_non_blank(iter) {
-        value = ASTValue::Call(Box::new(value), collect_args!(iter, TokenKind::OpeningParenthesis, TokenKind::ClosingParenthesis));
+        value = ASTValue::Call(Box::new(value), collect_values(iter, false));
     }
 
     for op in prefix_ops {
@@ -109,7 +109,7 @@ where
         TokenKind::UniqueNode(s) => ASTValue::UniqueNode(s),
         TokenKind::NodePath(s) => ASTValue::NodePath(s),
         TokenKind::Boolean(b) => ASTValue::Boolean(b),
-        TokenKind::OpeningBracket => ASTValue::Array(collect_args_raw!(iter, TokenKind::ClosingBracket)),
+        TokenKind::OpeningBracket => ASTValue::Array(collect_values(iter, true)),
         TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
         TokenKind::Comment(c) => ASTValue::Comment(c),
         TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),

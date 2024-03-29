@@ -5,12 +5,13 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
-use crate::expressions::parse_expression;
+use crate::expressions::parse_expr;
 
 pub fn parse_classname<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
+    expect_blank_prefixed!(iter, TokenKind::ClassName, ());
     expect_blank_prefixed!(iter, TokenKind::Identifier(i), ASTStatement::ClassName(i))
 }
 
@@ -18,6 +19,7 @@ pub fn parse_extends<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
+    expect_blank_prefixed!(iter, TokenKind::Extends, ());
     expect_blank_prefixed!(iter, TokenKind::Identifier(i), ASTStatement::Extends(i))
 }
 
@@ -25,6 +27,7 @@ pub fn parse_enum<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
+    expect_blank_prefixed!(iter, TokenKind::Enum, ());
     let identifier = match next_non_blank!(iter) {
         Token {
             kind: TokenKind::Identifier(s),
@@ -74,7 +77,7 @@ where
                         kind: TokenKind::Assignment,
                         ..
                     } => {
-                        let value = Some(parse_expression(iter));
+                        let value = Some(parse_expr(iter));
                         variants.push(ASTEnumVariant { identifier, value });
                         expect_comma = true;
                     }
@@ -111,6 +114,7 @@ pub fn parse_class<'a, T>(iter: &mut Peekable<T>) -> ASTClass<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
+    expect_blank_prefixed!(iter, TokenKind::Class, ());
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
     let mut extends = None;
 

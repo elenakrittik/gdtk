@@ -24,10 +24,12 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTFile, Error> {
     let mut body: CodeBlock<'_> = vec![];
     let mut iter = tokens.into_iter().peekable();
 
-    while let Some(token) = iter.next() {
+    while let Some(token) = iter.peek() {
         match token.kind {
-            TokenKind::Newline | TokenKind::Dedent => (),
-            _ => body.push(parse_statement(&mut iter, Some(token))),
+            TokenKind::Newline | TokenKind::Dedent => {
+                iter.next();
+            },
+            _ => body.push(parse_statement(&mut iter)),
         }
     }
 

@@ -30,14 +30,10 @@ where
                 if value {
                     break;
                 } else {
-                    let token = iter.next();
-                    stmts.push(parse_statement(iter, token));
+                    stmts.push(parse_statement(iter));
                 }
             }
-            _ => {
-                let token = iter.next();
-                stmts.push(parse_statement(iter, token));
-            }
+            _ => stmts.push(parse_statement(iter)),
         }
     }
 

@@ -11,37 +11,36 @@ use crate::classes::{parse_class, parse_classname, parse_enum, parse_extends};
 use crate::functions::parse_func;
 use crate::misc::{parse_annotation, parse_signal};
 use crate::utils::{expect, expect_blank_prefixed, next_non_blank, peek_non_blank};
-use crate::expressions::parse_expression;
+use crate::expressions::parse_expr;
 use crate::variables::parse_variable;
 
 pub fn parse_statement<'a, T>(
     iter: &mut Peekable<T>,
-    mut token: Option<Token<'a>>,
 ) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    if token.is_none() {
-        token.replace(next_non_blank!(iter));
-    }
-
-    let token = token.unwrap();
-
-    match token.kind {
+    match peek_non_blank(iter).expect("expected a statement, found EOF").kind {
         TokenKind::Annotation => parse_annotation(iter),
-        TokenKind::Assert => ASTStatement::Assert(parse_expression(iter)),
-        TokenKind::Identifier(s) => {
-            if peek_non_blank(iter).is_some_and(|t| t.kind.is_any_assignment()) {
-                parse_assignment(iter, s)
-            } else {
-                ASTStatement::Value(parse_value(iter, Some(token)))
-            }
-        }
-        TokenKind::Break => ASTStatement::Break,
-        TokenKind::Breakpoint => ASTStatement::Breakpoint,
+        TokenKind::Assert => {
+            iter.next();
+            ASTStatement::Assert(parse_expr(iter))
+        },
+        // TODO: figure out how to treat assignments as statements
+        TokenKind::Break => {
+            iter.next();
+            ASTStatement::Break
+        },
+        TokenKind::Breakpoint => {
+            iter.next();
+            ASTStatement::Breakpoint
+        },
         TokenKind::Class => ASTStatement::Class(parse_class(iter)),
         TokenKind::ClassName => parse_classname(iter),
-        TokenKind::Continue => ASTStatement::Continue,
+        TokenKind::Continue => {
+            iter.next();
+            ASTStatement::Continue
+        },
         TokenKind::If => {
             let tuple = parse_iflike(iter);
             ASTStatement::If(tuple.0, tuple.1)
@@ -51,15 +50,22 @@ where
             ASTStatement::Elif(tuple.0, tuple.1)
         }
         TokenKind::Else => {
+            iter.next();
             expect_blank_prefixed!(iter, TokenKind::Colon, ());
             ASTStatement::Else(parse_block(iter, false))
         }
         TokenKind::Enum => parse_enum(iter),
         TokenKind::Extends => parse_extends(iter),
         TokenKind::For => parse_for_loop(iter),
-        TokenKind::Pass => ASTStatement::Pass,
+        TokenKind::Pass => {
+            iter.next();
+            ASTStatement::Pass
+        },
         TokenKind::Func => ASTStatement::Func(parse_func(iter, false)),
-        TokenKind::Return => ASTStatement::Return(parse_expression(iter)),
+        TokenKind::Return => {
+            iter.next();
+            ASTStatement::Return(parse_expr(iter))
+        },
         TokenKind::Signal => ASTStatement::Signal(parse_signal(iter)),
         TokenKind::Match => parse_match(iter),
         TokenKind::While => {
@@ -72,7 +78,7 @@ where
             expect_blank_prefixed!(iter, TokenKind::Var, ());
             ASTStatement::Variable(parse_variable(iter, ASTVariableKind::Static))
         }
-        _ => ASTStatement::Value(parse_value(iter, Some(token))),
+        _ => ASTStatement::Value(parse_expr(iter)),
     }
 }
 
@@ -80,7 +86,8 @@ pub fn parse_iflike<'a, T>(iter: &mut Peekable<T>) -> (ASTValue<'a>, CodeBlock<'
 where
     T: Iterator<Item = Token<'a>>,
 {
-    let cond = parse_expression(iter);
+    expect_blank_prefixed!(iter, TokenKind::If | TokenKind::Elif | TokenKind::While, ());
+    let cond = parse_expr(iter);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
     let code = parse_block(iter, false);
 
@@ -91,16 +98,17 @@ pub fn parse_for_loop<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
+    expect_blank_prefixed!(iter, TokenKind::For, ());
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
     let mut type_hint = None;
 
     if peek_non_blank(iter).is_some_and(|t| t.kind.is_colon()) {
         iter.next();
-        type_hint = Some(parse_expression(iter));
+        type_hint = Some(parse_expr(iter));
     }
 
     expect_blank_prefixed!(iter, TokenKind::In, ());
-    let container = parse_expression(iter);
+    let container = parse_expr(iter);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
     let block = parse_block(iter, false);
 
@@ -111,7 +119,7 @@ pub fn parse_while_loop<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    let expr = parse_expression(iter);
+    let expr = parse_expr(iter);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
     let block = parse_block(iter, false);
 
@@ -139,7 +147,7 @@ where
         other => panic!("impossible {other:?}"),
     };
 
-    let value = parse_expression(iter);
+    let value = parse_expr(iter);
 
     ASTStatement::Assignment(identifier, kind, value)
 }
@@ -148,7 +156,8 @@ pub fn parse_match<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    let expr = parse_expression(iter);
+    expect_blank_prefixed!(iter, TokenKind::Match, ());
+    let expr = parse_expr(iter);
     let mut pats = vec![];
 
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
@@ -240,7 +249,7 @@ where
             ASTMatchPatternKind::Rest
         }
         _ => {
-            ASTMatchPatternKind::Value(parse_expression(iter))
+            ASTMatchPatternKind::Value(parse_expr(iter))
         }
     };
 
