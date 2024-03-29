@@ -9,7 +9,7 @@ pub fn parse_expression<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    let initial_value = parse_value_with_ops(iter);
+    let initial_value = parse_expr_with_ops(iter);
     
     let mut values_and_ops= vec![];
 
@@ -45,7 +45,7 @@ where
         } {
             iter.next();
 
-            let value = parse_value_with_ops(iter);
+            let value = parse_expr_with_ops(iter);
             values_and_ops.push((op, value));
         } else {
             break;
@@ -58,7 +58,7 @@ where
 }
 
 /// Parses a value taking into account possible prefix and postfix OPs
-pub fn parse_value_with_ops<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
+pub fn parse_expr_with_ops<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
@@ -75,7 +75,7 @@ where
         prefix_ops.push(op);
     }
 
-    let mut value = parse_value_without_ops(iter);
+    let mut value = parse_expr_without_ops(iter);
 
     // Calls have higher precedence, i.e. `-get_num()` should be parsed as `-(get_num())`
     if let Some(Token { kind: TokenKind::OpeningParenthesis, .. }) = peek_non_blank(iter) {
@@ -90,7 +90,7 @@ where
 }
 
 /// Parses a "clean" value, without checking for possible prefix or postfix OPs
-pub fn parse_value_without_ops<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
+pub fn parse_expr_without_ops<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {

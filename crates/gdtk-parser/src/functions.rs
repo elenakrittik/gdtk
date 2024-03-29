@@ -6,7 +6,7 @@ use gdtk_lexer::{Token, TokenKind};
 use crate::block::parse_block;
 use crate::statement::parse_statement;
 use crate::utils::{collect_params, expect_blank_prefixed, peek_non_blank};
-use crate::values::parse_value;
+use crate::expressions::parse_expression;
 
 pub fn parse_func<'a, T>(iter: &mut Peekable<T>, lambda: bool) -> ASTFunction<'a>
 where
@@ -25,7 +25,7 @@ where
 
     if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Arrow)) {
         iter.next();
-        return_type = Some(parse_value(iter, None));
+        return_type = Some(parse_expression(iter));
     }
 
     expect_blank_prefixed!(iter, TokenKind::Colon, ());

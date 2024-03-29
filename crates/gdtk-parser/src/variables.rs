@@ -4,7 +4,7 @@ use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
-use crate::values::parse_value;
+use crate::expressions::parse_expression;
 
 pub fn parse_variable<'a, T>(iter: &mut Peekable<T>, kind: ASTVariableKind) -> ASTVariable<'a>
 where
@@ -33,7 +33,7 @@ where
                     ..
                 } => {
                     infer_type = true;
-                    value = Some(parse_value(iter, None));
+                    value = Some(parse_expression(iter));
                 }
                 other => {
                     typehint = Some(parse_value(iter, Some(other)));
@@ -43,7 +43,7 @@ where
                             Token {
                                 kind: TokenKind::Assignment,
                                 ..
-                            } => value = Some(parse_value(iter, None)),
+                            } => value = Some(parse_expression(iter)),
                             _ => unreachable!(),
                         }
                     }
@@ -52,7 +52,7 @@ where
             Token {
                 kind: TokenKind::Assignment,
                 ..
-            } => value = Some(parse_value(iter, None)),
+            } => value = Some(parse_expression(iter)),
             _ => unreachable!(),
         }
     }

@@ -5,7 +5,7 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
-use crate::values::parse_value;
+use crate::expressions::parse_expression;
 
 pub fn parse_classname<'a, T>(iter: &mut Peekable<T>) -> ASTStatement<'a>
 where
@@ -74,7 +74,7 @@ where
                         kind: TokenKind::Assignment,
                         ..
                     } => {
-                        let value = Some(parse_value(iter, None));
+                        let value = Some(parse_expression(iter));
                         variants.push(ASTEnumVariant { identifier, value });
                         expect_comma = true;
                     }
