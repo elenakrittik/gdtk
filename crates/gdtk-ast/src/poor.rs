@@ -85,6 +85,12 @@ pub enum ASTValue<'a> {
     Comment(&'a str),
 }
 
+impl<'a> prec::Token<ASTValue<'a>, ()> for ASTValue<'a> {
+    fn convert(self, _ctx: &()) -> Result<ASTValue<'a>, ()> {
+        Ok(self)
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ASTUnaryOp {
     Await,
@@ -92,7 +98,7 @@ pub enum ASTUnaryOp {
     Minus,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
 pub enum ASTBinaryOp {
     Less,
     LessOrEqual,

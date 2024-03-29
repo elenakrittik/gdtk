@@ -9,6 +9,7 @@ use crate::statement::parse_statement;
 pub mod block;
 pub mod classes;
 pub mod error;
+pub mod expressions;
 pub mod functions;
 pub mod misc;
 pub mod statement;
