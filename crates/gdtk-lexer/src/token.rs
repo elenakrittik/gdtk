@@ -330,7 +330,7 @@ pub enum TokenKind<'a> {
     #[regex("(\r\n)|(\n)")]
     Newline,
 
-    // these two are generated manually from Blank
+    // these two are generated manually
     Indent,
     Dedent,
 

@@ -3,7 +3,7 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTValue, ASTBinaryOp, ASTUnaryOp};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::{functions::parse_func, utils::{collect_values, next_non_blank, peek_non_blank}, values::parse_dictionary};
+use crate::{functions::parse_func, utils::{collect_values, peek_non_blank}, values::parse_dictionary};
 
 pub fn parse_expr<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
 where

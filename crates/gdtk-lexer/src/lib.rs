@@ -47,6 +47,10 @@ fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
     while let Some(token) = tokens.next() {
         match token.kind {
             TokenKind::Newline => {
+                if tokens.peek().is_some_and(|t| t.kind.is_newline()) {
+                    continue;
+                }
+
                 let (range, indent_len) = if tokens.peek().is_some_and(|t| t.kind.is_blank()) {
                     let token = tokens.next().unwrap();
                     let len = token.kind.as_blank().unwrap().len();
