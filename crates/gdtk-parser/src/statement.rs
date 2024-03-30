@@ -20,6 +20,8 @@ pub fn parse_statement<'a, T>(
 where
     T: Iterator<Item = Token<'a>>,
 {
+    dbg!(&peek_non_blank(iter).unwrap().range);
+
     match peek_non_blank(iter).expect("expected a statement, found EOF").kind {
         TokenKind::Annotation => parse_annotation(iter),
         TokenKind::Assert => {
@@ -72,9 +74,16 @@ where
             let tuple = parse_iflike(iter);
             ASTStatement::While(tuple.0, tuple.1)
         }
-        TokenKind::Var => ASTStatement::Variable(parse_variable(iter, ASTVariableKind::Regular)),
-        TokenKind::Const => ASTStatement::Variable(parse_variable(iter, ASTVariableKind::Constant)),
+        TokenKind::Var => {
+            iter.next();
+            ASTStatement::Variable(parse_variable(iter, ASTVariableKind::Regular))
+        },
+        TokenKind::Const => {
+            iter.next();
+            ASTStatement::Variable(parse_variable(iter, ASTVariableKind::Constant))
+        },
         TokenKind::Static => {
+            iter.next();
             expect_blank_prefixed!(iter, TokenKind::Var, ());
             ASTStatement::Variable(parse_variable(iter, ASTVariableKind::Static))
         }

@@ -11,6 +11,8 @@ where
 {
     let mut vec: DictValue<'a> = vec![];
 
+    expect_blank_prefixed!(iter, TokenKind::OpeningBrace, ());
+
     match peek_non_blank(iter).expect("unexpected EOF").kind {
         TokenKind::ClosingBrace => { iter.next(); }, // empty dict
         TokenKind::Identifier(_) => {
@@ -18,6 +20,8 @@ where
             parse_lua_dict(iter, &mut vec, ASTValue::String(first_key));
         },
         _ => {
+            eprintln!("parsing dict, looking for pythonish key");
+            eprintln!("next tkn: {:?}", peek_non_blank(iter));
             let first_key = parse_expr(iter);
             parse_python_dict(iter, &mut vec, first_key);
         },

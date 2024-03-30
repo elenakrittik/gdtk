@@ -94,26 +94,24 @@ pub fn parse_expr_without_ops<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
 where
     T: Iterator<Item = Token<'a>>,
 {
-    let token = next_non_blank!(iter);
-
-    match token.kind {
-        TokenKind::Identifier(s) => ASTValue::Identifier(s),
-        TokenKind::Integer(i) => ASTValue::Number(i),
-        TokenKind::BinaryInteger(i) => ASTValue::Number(i as i64),
-        TokenKind::HexInteger(i) => ASTValue::Number(i as i64),
-        TokenKind::ScientificFloat(f) => ASTValue::Float(f),
-        TokenKind::Float(f) => ASTValue::Float(f),
-        TokenKind::String(s) => ASTValue::String(s),
-        TokenKind::StringName(s) => ASTValue::StringName(s),
-        TokenKind::Node(s) => ASTValue::Node(s),
-        TokenKind::UniqueNode(s) => ASTValue::UniqueNode(s),
-        TokenKind::NodePath(s) => ASTValue::NodePath(s),
-        TokenKind::Boolean(b) => ASTValue::Boolean(b),
-        TokenKind::OpeningBracket => ASTValue::Array(collect_values(iter, true)),
-        TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
-        TokenKind::Comment(c) => ASTValue::Comment(c),
+    match &peek_non_blank(iter).expect("unexpected EOF").kind {
+        TokenKind::Identifier(_) => ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap()),
+        TokenKind::Integer(_) =>        ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap()),
+        TokenKind::BinaryInteger(_) =>  ASTValue::Number(iter.next().unwrap().kind.into_binary_integer().unwrap() as i64),
+        TokenKind::HexInteger(_) =>     ASTValue::Number(iter.next().unwrap().kind.into_hex_integer().unwrap() as i64),
+        TokenKind::Float(_) =>           ASTValue::Float(iter.next().unwrap().kind.into_float().unwrap()),
+        TokenKind::ScientificFloat(_) => ASTValue::Float(iter.next().unwrap().kind.into_scientific_float().unwrap()),
+        TokenKind::String(_) =>         ASTValue::String(iter.next().unwrap().kind.into_string().unwrap()),
+        TokenKind::StringName(_) => ASTValue::StringName(iter.next().unwrap().kind.into_string_name().unwrap()),
+        TokenKind::Node(_) =>             ASTValue::Node(iter.next().unwrap().kind.into_node().unwrap()),
+        TokenKind::UniqueNode(_) => ASTValue::UniqueNode(iter.next().unwrap().kind.into_unique_node().unwrap()),
+        TokenKind::NodePath(_) =>     ASTValue::NodePath(iter.next().unwrap().kind.into_node_path().unwrap()),
+        TokenKind::Boolean(_) =>       ASTValue::Boolean(iter.next().unwrap().kind.into_boolean().unwrap()),
+        TokenKind::Comment(_) =>       ASTValue::Comment(iter.next().unwrap().kind.into_comment().unwrap()),
         TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),
-        _ => panic!("unknown or unsupported expression: {token:?}"),
+        TokenKind::OpeningBracket => ASTValue::Array(collect_values(iter, false)),
+        TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
+        other => panic!("unknown or unsupported expression: {other:?}"),
     }
 }
 
