@@ -3,7 +3,10 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTValue, DictValue};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::{expressions::parse_expr, utils::{expect_blank_prefixed, next_non_blank, peek_non_blank}};
+use crate::{
+    expressions::parse_expr,
+    utils::{expect_blank_prefixed, next_non_blank, peek_non_blank},
+};
 
 pub fn parse_dictionary<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     let mut vec: DictValue<'a> = vec![];
@@ -11,17 +14,19 @@ pub fn parse_dictionary<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>
     expect_blank_prefixed!(iter, TokenKind::OpeningBrace, ());
 
     match peek_non_blank(iter).expect("unexpected EOF").kind {
-        TokenKind::ClosingBrace => { iter.next(); }, // empty dict
+        TokenKind::ClosingBrace => {
+            iter.next();
+        } // empty dict
         TokenKind::Identifier(_) => {
             let first_key = iter.next().unwrap().kind.into_identifier().unwrap();
             parse_lua_dict(iter, &mut vec, ASTValue::String(first_key));
-        },
+        }
         _ => {
             eprintln!("parsing dict, looking for pythonish key");
             eprintln!("next tkn: {:?}", peek_non_blank(iter));
             let first_key = parse_expr(iter);
             parse_python_dict(iter, &mut vec, first_key);
-        },
+        }
     }
 
     vec
@@ -94,7 +99,7 @@ pub fn parse_python_dict<'a, T>(
             TokenKind::ClosingBrace => {
                 iter.next();
                 break;
-            },
+            }
             _ => {
                 let key = parse_expr(iter);
                 expect_blank_prefixed!(iter, TokenKind::Colon, ());

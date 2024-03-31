@@ -13,10 +13,10 @@ pub mod expressions;
 pub mod functions;
 pub mod misc;
 pub mod statement;
+pub mod test_utils;
 pub mod utils;
 pub mod values;
 pub mod variables;
-pub mod test_utils;
 
 pub fn parse_file(lexed: LexOutput) -> Result<ASTFile, Error> {
     let (tokens, _diags) = lexed;
@@ -28,7 +28,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTFile, Error> {
         match token.kind {
             TokenKind::Newline | TokenKind::Dedent => {
                 iter.next();
-            },
+            }
             _ => body.push(parse_statement(&mut iter)),
         }
     }

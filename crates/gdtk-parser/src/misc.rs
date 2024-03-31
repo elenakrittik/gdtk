@@ -3,9 +3,15 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTAnnotation, ASTSignal, ASTStatement, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::{expressions::parse_expr, utils::{delemited_by, expect_blank_prefixed}, variables::parse_variable_body};
+use crate::{
+    expressions::parse_expr,
+    utils::{delemited_by, expect_blank_prefixed},
+    variables::parse_variable_body,
+};
 
-pub fn parse_annotation<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTStatement<'a> {
+pub fn parse_annotation<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
     expect_blank_prefixed!(iter, TokenKind::Annotation, ());
 
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(i), i);

@@ -46,9 +46,14 @@ pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {{
 //     }
 // }}
 
-pub fn peek_non_blank<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> Option<&Token<'a>> {
+pub fn peek_non_blank<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> Option<&Token<'a>> {
     loop {
-        if iter.peek().is_some_and(|t| matches!(t.kind, TokenKind::Blank(_))) {
+        if iter
+            .peek()
+            .is_some_and(|t| matches!(t.kind, TokenKind::Blank(_)))
+        {
             iter.next();
         } else if iter.peek().is_some() {
             break Some(iter.peek().unwrap());
@@ -84,7 +89,10 @@ where
 {
     let mut values = vec![];
 
-    while iter.peek().is_some_and(|t| !(stop_at.iter().any(|k| k.same_as(&t.kind)))) {
+    while iter
+        .peek()
+        .is_some_and(|t| !(stop_at.iter().any(|k| k.same_as(&t.kind))))
+    {
         values.push(callback(iter));
 
         if iter.peek().is_some_and(|t| t.kind.same_as(&delimiter)) {
@@ -98,7 +106,7 @@ where
 /// Calls ``iter.next()``, then ``callback(iter)``.
 pub fn advance_and_parse<'a, I, V>(
     iter: &mut Peekable<I>,
-    mut callback: impl FnMut(&mut Peekable<I>) -> V
+    mut callback: impl FnMut(&mut Peekable<I>) -> V,
 ) -> V
 where
     I: Iterator<Item = Token<'a>>,

@@ -6,7 +6,10 @@ use gdtk_lexer::{Token, TokenKind};
 use crate::statement::parse_statement;
 use crate::utils::expect;
 
-pub fn parse_block<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>, value: bool) -> CodeBlock<'a> {
+pub fn parse_block<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    value: bool,
+) -> CodeBlock<'a> {
     let mut stmts = vec![];
 
     expect!(iter, TokenKind::Newline, ());
@@ -21,9 +24,7 @@ pub fn parse_block<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>, val
             TokenKind::Newline => {
                 iter.next();
             }
-            TokenKind::ClosingParenthesis
-            | TokenKind::ClosingBracket
-            | TokenKind::ClosingBrace => {
+            TokenKind::ClosingParenthesis | TokenKind::ClosingBracket | TokenKind::ClosingBrace => {
                 if value {
                     break;
                 } else {

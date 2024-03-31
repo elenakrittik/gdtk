@@ -1,21 +1,26 @@
 use std::iter::Peekable;
 
 use gdtk_ast::poor::{
-    ASTMatchPattern, ASTMatchPatternKind, ASTStatement, ASTValue, ASTVariable,
-    ASTVariableKind, CodeBlock,
+    ASTMatchPattern, ASTMatchPatternKind, ASTStatement, ASTValue, ASTVariable, ASTVariableKind,
+    CodeBlock,
 };
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::classes::{parse_class, parse_classname, parse_enum, parse_extends};
+use crate::expressions::parse_expr;
 use crate::functions::parse_func;
 use crate::misc::{parse_annotation, parse_signal};
 use crate::utils::{advance_and_parse, expect, expect_blank_prefixed, peek_non_blank};
-use crate::expressions::parse_expr;
 use crate::variables::parse_variable_body;
 
-pub fn parse_statement<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTStatement<'a> {
-    match peek_non_blank(iter).expect("expected a statement, found EOF").kind {
+pub fn parse_statement<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
+    match peek_non_blank(iter)
+        .expect("expected a statement, found EOF")
+        .kind
+    {
         TokenKind::Annotation => parse_annotation(iter),
         TokenKind::Assert => ASTStatement::Assert(advance_and_parse(iter, parse_expr)),
         // TODO: figure out how to treat assignments as statements
@@ -49,8 +54,12 @@ pub fn parse_statement<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>)
             let tuple = parse_iflike(iter);
             ASTStatement::While(tuple.0, tuple.1)
         }
-        TokenKind::Var => advance_and_parse(iter, |iter| ASTStatement::Variable(parse_variable_body(iter, ASTVariableKind::Regular))),
-        TokenKind::Const => advance_and_parse(iter, |iter| ASTStatement::Variable(parse_variable_body(iter, ASTVariableKind::Constant))),
+        TokenKind::Var => advance_and_parse(iter, |iter| {
+            ASTStatement::Variable(parse_variable_body(iter, ASTVariableKind::Regular))
+        }),
+        TokenKind::Const => advance_and_parse(iter, |iter| {
+            ASTStatement::Variable(parse_variable_body(iter, ASTVariableKind::Constant))
+        }),
         TokenKind::Static => {
             iter.next();
             expect_blank_prefixed!(iter, TokenKind::Var, ());
@@ -60,7 +69,9 @@ pub fn parse_statement<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>)
     }
 }
 
-pub fn parse_iflike<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> (ASTValue<'a>, CodeBlock<'a>) {
+pub fn parse_iflike<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> (ASTValue<'a>, CodeBlock<'a>) {
     expect_blank_prefixed!(iter, TokenKind::If | TokenKind::Elif | TokenKind::While, ());
     let cond = parse_expr(iter);
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
@@ -69,7 +80,9 @@ pub fn parse_iflike<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) ->
     (cond, code)
 }
 
-pub fn parse_for_loop<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTStatement<'a> {
+pub fn parse_for_loop<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
     expect_blank_prefixed!(iter, TokenKind::For, ());
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
     let mut type_hint = None;
@@ -125,7 +138,9 @@ pub fn parse_match<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
     ASTStatement::Match(expr, pats)
 }
 
-pub fn parse_pat<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTMatchPatternKind<'a> {
+pub fn parse_pat<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> ASTMatchPatternKind<'a> {
     let temp = match peek_non_blank(iter).expect("unexpected EOF").kind {
         TokenKind::OpeningBrace => todo!(),
         TokenKind::Var => {
@@ -177,9 +192,7 @@ pub fn parse_pat<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> AS
             iter.next();
             ASTMatchPatternKind::Rest
         }
-        _ => {
-            ASTMatchPatternKind::Value(parse_expr(iter))
-        }
+        _ => ASTMatchPatternKind::Value(parse_expr(iter)),
     };
 
     temp

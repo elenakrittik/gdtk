@@ -4,12 +4,15 @@ use gdtk_ast::poor::{ASTFunction, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
+use crate::expressions::parse_expr;
 use crate::statement::parse_statement;
 use crate::utils::{delemited_by, expect_blank_prefixed, peek_non_blank};
-use crate::expressions::parse_expr;
 use crate::variables::parse_variable_body;
 
-pub fn parse_func<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>, lambda: bool) -> ASTFunction<'a> {
+pub fn parse_func<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    lambda: bool,
+) -> ASTFunction<'a> {
     expect_blank_prefixed!(iter, TokenKind::Func, ());
 
     let mut identifier = None;

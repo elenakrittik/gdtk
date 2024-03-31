@@ -4,10 +4,12 @@ use gdtk_ast::poor::{ASTClass, ASTEnum, ASTEnumVariant, ASTStatement};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
-use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
 use crate::expressions::parse_expr;
+use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
 
-pub fn parse_classname<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTStatement<'a> {
+pub fn parse_classname<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
     expect_blank_prefixed!(iter, TokenKind::ClassName, ());
     expect_blank_prefixed!(iter, TokenKind::Identifier(i), ASTStatement::ClassName(i))
 }
@@ -106,8 +108,7 @@ pub fn parse_class<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
     let mut extends = None;
 
-    if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Extends))
-    {
+    if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Extends)) {
         iter.next();
         extends = Some(expect_blank_prefixed!(iter, TokenKind::Identifier(s), s));
     }

@@ -7,7 +7,10 @@ use crate::expressions::parse_expr;
 use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
 
 /// Parses variable body, i.e. any variable without preceding keywords.
-pub fn parse_variable_body<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>, kind: ASTVariableKind) -> ASTVariable<'a> {
+pub fn parse_variable_body<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    kind: ASTVariableKind,
+) -> ASTVariable<'a> {
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
     let mut typehint = None;
     let mut infer_type = false;
@@ -49,7 +52,7 @@ pub fn parse_variable_body<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a
             TokenKind::Assignment => {
                 iter.next();
                 value = Some(parse_expr(iter))
-            },
+            }
             _ => unreachable!(),
         }
     }
