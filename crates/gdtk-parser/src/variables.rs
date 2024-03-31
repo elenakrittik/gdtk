@@ -6,10 +6,8 @@ use gdtk_lexer::{Token, TokenKind};
 use crate::expressions::parse_expr;
 use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
 
-pub fn parse_variable<'a, T>(iter: &mut Peekable<T>, kind: ASTVariableKind) -> ASTVariable<'a>
-where
-    T: Iterator<Item = Token<'a>>,
-{
+/// Parses variable body, i.e. any variable without preceding keywords.
+pub fn parse_variable_body<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>, kind: ASTVariableKind) -> ASTVariable<'a> {
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
     let mut typehint = None;
     let mut infer_type = false;
@@ -37,7 +35,7 @@ where
                         typehint = Some(parse_expr(iter));
 
                         if peek_non_blank(iter).is_some_and(|t| t.kind.is_assignment()) {
-                            match next_non_blank!(iter) {
+                            match next_non_blank(iter) {
                                 Token {
                                     kind: TokenKind::Assignment,
                                     ..
@@ -74,7 +72,7 @@ mod tests {
     #[test]
     fn test_variable_empty() {
         let mut parser = create_parser("ident");
-        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let result = super::parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
             identifier: "ident",
             infer_type: false,
@@ -89,7 +87,7 @@ mod tests {
     #[test]
     fn test_variable_with_type() {
         let mut parser = create_parser("ident: type");
-        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let result = super::parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
             identifier: "ident",
             infer_type: false,
@@ -104,7 +102,7 @@ mod tests {
     #[test]
     fn test_variable_with_value() {
         let mut parser = create_parser("ident = 0");
-        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let result = super::parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
             identifier: "ident",
             infer_type: false,
@@ -119,7 +117,7 @@ mod tests {
     #[test]
     fn test_variable_with_type_inference_and_value() {
         let mut parser = create_parser("ident := 0");
-        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let result = super::parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
             identifier: "ident",
             infer_type: true,
@@ -134,7 +132,7 @@ mod tests {
     #[test]
     fn test_variable_with_type_and_value() {
         let mut parser = create_parser("ident: type = 0");
-        let result = super::parse_variable(&mut parser, ASTVariableKind::Regular);
+        let result = super::parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
             identifier: "ident",
             infer_type: false,

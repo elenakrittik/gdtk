@@ -91,8 +91,8 @@ func other_something(p1, p2):
 
 
 # Inner class
-# class Something:
-#     var a = 10
+class Something:
+    var a = 10
 
 
 # Constructor

@@ -386,4 +386,8 @@ impl TokenKind<'_> {
                 | TokenKind::BitwiseShiftRightAssignment
         )
     }
+
+    pub fn same_as(&self, other: &TokenKind<'_>) -> bool {
+        std::mem::discriminant(self) == std::mem::discriminant(other)
+    }
 }

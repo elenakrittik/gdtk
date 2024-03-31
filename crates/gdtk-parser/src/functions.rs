@@ -1,17 +1,15 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::ASTFunction;
+use gdtk_ast::poor::{ASTFunction, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::statement::parse_statement;
-use crate::utils::{collect_params, expect_blank_prefixed, peek_non_blank};
+use crate::utils::{delemited_by, expect_blank_prefixed, peek_non_blank};
 use crate::expressions::parse_expr;
+use crate::variables::parse_variable_body;
 
-pub fn parse_func<'a, T>(iter: &mut Peekable<T>, lambda: bool) -> ASTFunction<'a>
-where
-    T: Iterator<Item = Token<'a>>,
-{
+pub fn parse_func<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>, lambda: bool) -> ASTFunction<'a> {
     expect_blank_prefixed!(iter, TokenKind::Func, ());
 
     let mut identifier = None;
@@ -23,7 +21,16 @@ where
         identifier = Some(expect_blank_prefixed!(iter, TokenKind::Identifier(s), s));
     }
 
-    let parameters = collect_params(iter);
+    expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
+
+    let parameters = delemited_by(
+        iter,
+        TokenKind::Comma,
+        &[TokenKind::ClosingParenthesis],
+        |iter| parse_variable_body(iter, ASTVariableKind::FunctionParameter),
+    );
+
+    expect_blank_prefixed!(iter, TokenKind::ClosingParenthesis, ());
 
     if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Arrow)) {
         iter.next();

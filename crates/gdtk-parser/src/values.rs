@@ -5,10 +5,7 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::{expressions::parse_expr, utils::{expect_blank_prefixed, next_non_blank, peek_non_blank}};
 
-pub fn parse_dictionary<'a, T>(iter: &mut Peekable<T>) -> DictValue<'a>
-where
-    T: Iterator<Item = Token<'a>>,
-{
+pub fn parse_dictionary<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     let mut vec: DictValue<'a> = vec![];
 
     expect_blank_prefixed!(iter, TokenKind::OpeningBrace, ());
@@ -44,7 +41,7 @@ pub fn parse_lua_dict<'a, T>(
     let mut expect_comma = true; // just got our pair, expect a comma
 
     loop {
-        match next_non_blank!(iter) {
+        match next_non_blank(iter) {
             Token {
                 kind: TokenKind::Comma,
                 ..

@@ -3,12 +3,9 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTValue, ASTBinaryOp, ASTUnaryOp};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::{functions::parse_func, utils::{collect_values, peek_non_blank}, values::parse_dictionary};
+use crate::{functions::parse_func, utils::{delemited_by, expect_blank_prefixed, peek_non_blank}, values::parse_dictionary};
 
-pub fn parse_expr<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
-where
-    T: Iterator<Item = Token<'a>>,
-{
+pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
     let initial_value = parse_expr_with_ops(iter);
     
     let mut values_and_ops= vec![];
@@ -58,10 +55,7 @@ where
 }
 
 /// Parses a value taking into account possible prefix and postfix OPs
-pub fn parse_expr_with_ops<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
-where
-    T: Iterator<Item = Token<'a>>,
-{
+pub fn parse_expr_with_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
     let mut prefix_ops = vec![];
 
     while let Some(op) = match peek_non_blank(iter) {
@@ -79,7 +73,17 @@ where
 
     // Calls have higher precedence, i.e. `-get_num()` should be parsed as `-(get_num())`
     if let Some(Token { kind: TokenKind::OpeningParenthesis, .. }) = peek_non_blank(iter) {
-        value = ASTValue::Call(Box::new(value), collect_values(iter, false));
+        iter.next();
+        value = ASTValue::Call(
+            Box::new(value),
+            delemited_by(
+                iter,
+                TokenKind::Comma,
+                &[TokenKind::ClosingParenthesis],
+                parse_expr
+            )
+        );
+        expect_blank_prefixed!(iter, TokenKind::ClosingParenthesis, ());
     }
 
     for op in prefix_ops {
@@ -90,10 +94,7 @@ where
 }
 
 /// Parses a "clean" value, without checking for possible prefix or postfix OPs
-pub fn parse_expr_without_ops<'a, T>(iter: &mut Peekable<T>) -> ASTValue<'a>
-where
-    T: Iterator<Item = Token<'a>>,
-{
+pub fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
     match &peek_non_blank(iter).expect("unexpected EOF").kind {
         TokenKind::Identifier(_) => ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap()),
         TokenKind::Integer(_) =>        ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap()),
@@ -109,7 +110,18 @@ where
         TokenKind::Boolean(_) =>       ASTValue::Boolean(iter.next().unwrap().kind.into_boolean().unwrap()),
         TokenKind::Comment(_) =>       ASTValue::Comment(iter.next().unwrap().kind.into_comment().unwrap()),
         TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),
-        TokenKind::OpeningBracket => ASTValue::Array(collect_values(iter, false)),
+        TokenKind::OpeningBracket => {
+            iter.next();
+            let value = ASTValue::Array(delemited_by(
+                iter,
+                TokenKind::Comma,
+                &[TokenKind::ClosingBracket],
+                parse_expr,
+            ));
+            expect_blank_prefixed!(iter, TokenKind::ClosingBracket, ());
+
+            value
+        },
         TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
         other => panic!("unknown or unsupported expression: {other:?}"),
     }

@@ -2,46 +2,7 @@
 
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTValue, ASTVariable};
 use gdtk_lexer::{Token, TokenKind};
-
-use crate::{expressions::parse_expr, variables::parse_variable};
-
-pub fn collect_params<'a, T>(iter: &mut Peekable<T>) -> Vec<ASTVariable<'a>>
-where
-    T: Iterator<Item = Token<'a>>,
-{
-    let mut parameters = vec![];
-
-    expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
-
-    if !peek_non_blank(iter).is_some_and(|t| t.kind.is_closing_parenthesis()) {
-        loop {
-            if !peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_))) {
-                panic!("unexpected {:?}, expected function parameter", iter.next());
-            }
-
-            let param = parse_variable(iter, gdtk_ast::poor::ASTVariableKind::FunctionParameter);
-            parameters.push(param);
-
-            match peek_non_blank(iter).expect("unexpected EOF").kind {
-                TokenKind::Comma => {
-                    iter.next();
-                    continue;
-                }
-                TokenKind::ClosingParenthesis => {
-                    iter.next();
-                    break;
-                }
-                ref other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
-            }
-        }
-    } else {
-        iter.next();
-    }
-
-    parameters
-}
 
 pub macro expect($iter:expr, $variant:pat, $ret:expr) {{
     type Token<'a> = ::gdtk_lexer::Token<'a>;
@@ -97,11 +58,9 @@ pub fn peek_non_blank<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) 
     }
 }
 
-pub macro next_non_blank($iter:expr) {{
-    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
-
+pub fn next_non_blank<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> Token<'a> {
     loop {
-        if let Some(token) = $iter.next() {
+        if let Some(token) = iter.next() {
             match token.kind {
                 TokenKind::Blank(_) => (),
                 _ => break token,
@@ -110,39 +69,40 @@ pub macro next_non_blank($iter:expr) {{
             panic!("unexpected EOF");
         }
     }
-}}
+}
 
-/// Collects values surrounded by parentheses or brackets
-pub fn collect_values<'a, T>(iter: &mut Peekable<T>, skip_first: bool) -> Vec<ASTValue<'a>>
+/// Parses a list of values (as defined by the passed callback) separated by the specified delimiter.
+/// ``stop_at`` is used to know when to stop looking for new values.
+pub fn delemited_by<'a, I, V>(
+    iter: &mut Peekable<I>,
+    delimiter: TokenKind<'a>,
+    stop_at: &[TokenKind<'a>],
+    mut callback: impl FnMut(&mut Peekable<I>) -> V,
+) -> Vec<V>
 where
-    T: Iterator<Item = Token<'a>>,
+    I: Iterator<Item = Token<'a>>,
 {
     let mut values = vec![];
 
-    if !skip_first {
-        expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis | TokenKind::OpeningBracket, ());
-    }
+    while iter.peek().is_some_and(|t| !(stop_at.iter().any(|k| k.same_as(&t.kind)))) {
+        values.push(callback(iter));
 
-    if !peek_non_blank(iter).is_some_and(|t| t.kind.is_closing_parenthesis() || t.kind.is_opening_bracket()) {
-        loop {
-            let value = parse_expr(iter);
-            values.push(value);
-
-            match peek_non_blank(iter).expect("unexpected EOF").kind {
-                TokenKind::Comma => {
-                    iter.next();
-                    continue;
-                }
-                TokenKind::ClosingParenthesis | TokenKind::ClosingBracket => {
-                    iter.next();
-                    break;
-                }
-                ref other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
-            }
+        if iter.peek().is_some_and(|t| t.kind.same_as(&delimiter)) {
+            iter.next();
         }
-    } else {
-        iter.next();
     }
 
     values
+}
+
+/// Calls ``iter.next()``, then ``callback(iter)``.
+pub fn advance_and_parse<'a, I, V>(
+    iter: &mut Peekable<I>,
+    mut callback: impl FnMut(&mut Peekable<I>) -> V
+) -> V
+where
+    I: Iterator<Item = Token<'a>>,
+{
+    iter.next();
+    callback(iter)
 }
