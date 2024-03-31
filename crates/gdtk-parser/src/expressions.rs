@@ -62,6 +62,7 @@ pub fn parse_expr_with_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a
             Some(Token { kind: TokenKind::Plus, .. }) => Some(ASTUnaryOp::Plus),
             Some(Token { kind: TokenKind::Minus, .. }) => Some(ASTUnaryOp::Minus),
             Some(Token { kind: TokenKind::Await, .. }) => Some(ASTUnaryOp::Await),
+            Some(Token { kind: TokenKind::BitwiseNot, .. }) => Some(ASTUnaryOp::BitwiseNot),
             None => panic!("expected expression"),
             _ => None,
     } {

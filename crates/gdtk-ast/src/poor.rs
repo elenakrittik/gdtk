@@ -91,11 +91,12 @@ impl<'a> prec::Token<ASTValue<'a>, ()> for ASTValue<'a> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
 pub enum ASTUnaryOp {
     Await,
     Plus,
     Minus,
+    BitwiseNot,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
@@ -111,7 +112,6 @@ pub enum ASTBinaryOp {
     Not,
     BitwiseAnd,
     BitwiseOr,
-    BitwiseNot,
     BitwiseXor,
     BitwiseShiftLeft,
     BitwiseShiftRight,
@@ -126,14 +126,28 @@ pub enum ASTBinaryOp {
     Contains,       // x in y
     PropertyAccess, // x.y
     Range,          // x..y // TODO: rename to "Rest"?
+    Assignment,
+    PlusAssignment,
+    MinusAssignment,
+    MultiplyAssignment,
+    PowerAssignment,
+    DivideAssignment,
+    RemainderAssignment,
+    BitwiseAndAssignment,
+    BitwiseOrAssignment,
+    BitwiseNotAssignment,
+    BitwiseXorAssignment,
+    BitwiseShiftLeftAssignment,
+    BitwiseShiftRightAssignment,
+    // todo
+    Call,
+    Subscript,
 }
 
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTStatement<'a> {
     Annotation(ASTAnnotation<'a>),
     Assert(ASTValue<'a>),
-    /// (identifier, kind, value)
-    Assignment(&'a str, ASTAssignmentKind, ASTValue<'a>),
     Break,
     Breakpoint,
     Class(ASTClass<'a>),
@@ -156,23 +170,6 @@ pub enum ASTStatement<'a> {
     While(ASTValue<'a>, CodeBlock<'a>),
     Variable(ASTVariable<'a>),
     Value(ASTValue<'a>),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum ASTAssignmentKind {
-    Regular,
-    Plus,
-    Minus,
-    Multiply,
-    Power,
-    Divide,
-    Remainder,
-    BitwiseAnd,
-    BitwiseOr,
-    BitwiseNot,
-    BitwiseXor,
-    BitwiseShiftLeft,
-    BitwiseShiftRight,
 }
 
 #[derive(Debug, Clone, PartialEq)]
