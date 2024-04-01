@@ -70,7 +70,6 @@ pub enum ASTValue<'a> {
     Node(&'a str),
     UniqueNode(&'a str),
     NodePath(&'a str),
-    Group(Vec<ASTValue<'a>>),
     Boolean(bool),
     Array(Vec<ASTValue<'a>>),
     Dictionary(DictValue<'a>),
@@ -78,11 +77,8 @@ pub enum ASTValue<'a> {
     UnaryExpr(ASTUnaryOp, Box<ASTValue<'a>>),
     /// (left, op, right)
     BinaryExpr(Box<ASTValue<'a>>, ASTBinaryOp, Box<ASTValue<'a>>),
-    /// (function_expr, arguments)
-    Call(Box<ASTValue<'a>>, Vec<ASTValue<'a>>),
-    /// (subcript_expr, index)
-    Subscript(Box<ASTValue<'a>>, Box<ASTValue<'a>>),
     Comment(&'a str),
+    Group(Box<ASTValue<'a>>),
 }
 
 impl<'a> prec::Token<ASTValue<'a>, ()> for ASTValue<'a> {
@@ -140,9 +136,9 @@ pub enum ASTBinaryOp {
     BitwiseXorAssignment,
     BitwiseShiftLeftAssignment,
     BitwiseShiftRightAssignment,
-    // todo
     Call,
     Subscript,
+    // todo
     NotContains, // don't punch me for grammar
 }
 

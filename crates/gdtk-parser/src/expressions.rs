@@ -161,6 +161,12 @@ pub fn parse_expr_without_ops<'a>(
             value
         }
         TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
+        TokenKind::OpeningParenthesis => {
+            iter.next();
+            let value = ASTValue::Group(Box::new(parse_expr(iter)));
+            expect_blank_prefixed!(iter, TokenKind::ClosingParenthesis, ());
+            value
+        },
         other => panic!("unknown or unsupported expression: {other:?}"),
     }
 }
