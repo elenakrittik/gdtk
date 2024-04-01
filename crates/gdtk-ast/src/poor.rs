@@ -122,7 +122,7 @@ pub enum ASTBinaryOp {
     TypeCheck,      // x is y
     Contains,       // x in y
     PropertyAccess, // x.y
-    Range,          // x..y // TODO: rename to "Rest"?
+    Range,          // ".." match pattern
     Assignment,
     PlusAssignment,
     MinusAssignment,
@@ -138,7 +138,6 @@ pub enum ASTBinaryOp {
     BitwiseShiftRightAssignment,
     Call,
     Subscript,
-    // todo
     NotContains, // don't punch me for grammar
 }
 

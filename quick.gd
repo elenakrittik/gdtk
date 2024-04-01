@@ -1,2 +1,2 @@
 var mydict = {}
-mydict["key"] = ("value")
+mydict["key"] = "value" not in ["value", "gibberish"]

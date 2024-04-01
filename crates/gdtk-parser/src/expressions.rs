@@ -40,6 +40,7 @@ pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
         Some(TokenKind::As) => Some(ASTBinaryOp::TypeCast),
         Some(TokenKind::Is) => Some(ASTBinaryOp::TypeCheck),
         Some(TokenKind::In) => Some(ASTBinaryOp::Contains),
+        Some(TokenKind::NotIn) => Some(ASTBinaryOp::NotContains),
         Some(TokenKind::Range) => Some(ASTBinaryOp::Range),
         Some(TokenKind::Assignment) => Some(ASTBinaryOp::Assignment),
         Some(TokenKind::PlusAssignment) => Some(ASTBinaryOp::PlusAssignment),

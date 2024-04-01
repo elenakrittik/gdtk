@@ -269,6 +269,9 @@ pub enum TokenKind<'a> {
     #[token("in")]
     In,
 
+    #[token("not in")]
+    NotIn,
+
     #[token("is")]
     Is,
 
