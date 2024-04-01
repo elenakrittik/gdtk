@@ -14,107 +14,46 @@ pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
 
     let mut values_and_ops = vec![];
 
-    while let Some(op) = match peek_non_blank(iter) {
-        Some(Token {
-            kind: TokenKind::Plus,
-            ..
-        }) => Some(ASTBinaryOp::Plus),
-        Some(Token {
-            kind: TokenKind::Minus,
-            ..
-        }) => Some(ASTBinaryOp::Minus),
-        Some(Token {
-            kind: TokenKind::Greater,
-            ..
-        }) => Some(ASTBinaryOp::Greater),
-        Some(Token {
-            kind: TokenKind::GreaterOrEqual,
-            ..
-        }) => Some(ASTBinaryOp::GreaterOrEqual),
-        Some(Token {
-            kind: TokenKind::Less,
-            ..
-        }) => Some(ASTBinaryOp::Less),
-        Some(Token {
-            kind: TokenKind::LessOrEqual,
-            ..
-        }) => Some(ASTBinaryOp::LessOrEqual),
-        Some(Token {
-            kind: TokenKind::Period,
-            ..
-        }) => Some(ASTBinaryOp::PropertyAccess),
-        Some(Token {
-            kind: TokenKind::Multiply,
-            ..
-        }) => Some(ASTBinaryOp::Multiply),
-        Some(Token {
-            kind: TokenKind::Divide,
-            ..
-        }) => Some(ASTBinaryOp::Divide),
-        Some(Token {
-            kind: TokenKind::Equal,
-            ..
-        }) => Some(ASTBinaryOp::Equal),
-        Some(Token {
-            kind: TokenKind::NotEqual,
-            ..
-        }) => Some(ASTBinaryOp::NotEqual),
-        Some(Token {
-            kind: TokenKind::And | TokenKind::SymbolizedAnd,
-            ..
-        }) => Some(ASTBinaryOp::And),
-        Some(Token {
-            kind: TokenKind::Or | TokenKind::SymbolizedOr,
-            ..
-        }) => Some(ASTBinaryOp::Or),
-        Some(Token {
-            kind: TokenKind::Not | TokenKind::SymbolizedNot,
-            ..
-        }) => Some(ASTBinaryOp::Not),
-        Some(Token {
-            kind: TokenKind::BitwiseAnd,
-            ..
-        }) => Some(ASTBinaryOp::BitwiseAnd),
-        Some(Token {
-            kind: TokenKind::BitwiseOr,
-            ..
-        }) => Some(ASTBinaryOp::BitwiseOr),
-        Some(Token {
-            kind: TokenKind::BitwiseXor,
-            ..
-        }) => Some(ASTBinaryOp::BitwiseXor),
-        Some(Token {
-            kind: TokenKind::BitwiseShiftLeft,
-            ..
-        }) => Some(ASTBinaryOp::BitwiseShiftLeft),
-        Some(Token {
-            kind: TokenKind::BitwiseShiftRight,
-            ..
-        }) => Some(ASTBinaryOp::BitwiseShiftRight),
-        Some(Token {
-            kind: TokenKind::Power,
-            ..
-        }) => Some(ASTBinaryOp::Power),
-        Some(Token {
-            kind: TokenKind::Remainder,
-            ..
-        }) => Some(ASTBinaryOp::Remainder),
-        Some(Token {
-            kind: TokenKind::As,
-            ..
-        }) => Some(ASTBinaryOp::TypeCast),
-        Some(Token {
-            kind: TokenKind::Is,
-            ..
-        }) => Some(ASTBinaryOp::TypeCheck),
-        Some(Token {
-            kind: TokenKind::In,
-            ..
-        }) => Some(ASTBinaryOp::Contains),
-        Some(Token {
-            kind: TokenKind::Range,
-            ..
-        }) => Some(ASTBinaryOp::Range),
+    #[rustfmt::skip]
+    while let Some(op) = match peek_non_blank(iter).map(|t| &t.kind) {
+        Some(TokenKind::Plus) => Some(ASTBinaryOp::Plus),
+        Some(TokenKind::Minus) => Some(ASTBinaryOp::Minus),
+        Some(TokenKind::Greater) => Some(ASTBinaryOp::Greater),
+        Some(TokenKind::GreaterOrEqual) => Some(ASTBinaryOp::GreaterOrEqual),
+        Some(TokenKind::Less) => Some(ASTBinaryOp::Less),
+        Some(TokenKind::LessOrEqual) => Some(ASTBinaryOp::LessOrEqual),
+        Some(TokenKind::Period) => Some(ASTBinaryOp::PropertyAccess),
+        Some(TokenKind::Multiply) => Some(ASTBinaryOp::Multiply),
+        Some(TokenKind::Divide) => Some(ASTBinaryOp::Divide),
+        Some(TokenKind::Equal) => Some(ASTBinaryOp::Equal),
+        Some(TokenKind::NotEqual) => Some(ASTBinaryOp::NotEqual),
+        Some(TokenKind::And | TokenKind::SymbolizedAnd) => Some(ASTBinaryOp::And),
+        Some(TokenKind::Or | TokenKind::SymbolizedOr) => Some(ASTBinaryOp::Or),
+        Some(TokenKind::Not | TokenKind::SymbolizedNot) => Some(ASTBinaryOp::Not),
+        Some(TokenKind::BitwiseAnd) => Some(ASTBinaryOp::BitwiseAnd),
+        Some(TokenKind::BitwiseOr) => Some(ASTBinaryOp::BitwiseOr),
+        Some(TokenKind::BitwiseXor) => Some(ASTBinaryOp::BitwiseXor),
+        Some(TokenKind::BitwiseShiftLeft) => Some(ASTBinaryOp::BitwiseShiftLeft),
+        Some(TokenKind::BitwiseShiftRight) => Some(ASTBinaryOp::BitwiseShiftRight),
+        Some(TokenKind::Power) => Some(ASTBinaryOp::Power),
+        Some(TokenKind::Remainder) => Some(ASTBinaryOp::Remainder),
+        Some(TokenKind::As) => Some(ASTBinaryOp::TypeCast),
+        Some(TokenKind::Is) => Some(ASTBinaryOp::TypeCheck),
+        Some(TokenKind::In) => Some(ASTBinaryOp::Contains),
+        Some(TokenKind::Range) => Some(ASTBinaryOp::Range),
+        Some(TokenKind::Assignment) => Some(ASTBinaryOp::Assignment),
+        Some(TokenKind::PlusAssignment) => Some(ASTBinaryOp::PlusAssignment),
+        Some(TokenKind::MinusAssignment) => Some(ASTBinaryOp::MinusAssignment),
+        Some(TokenKind::MultiplyAssignment) => Some(ASTBinaryOp::MultiplyAssignment),
+        Some(TokenKind::PowerAssignment) => Some(ASTBinaryOp::PowerAssignment),
+        Some(TokenKind::DivideAssignment) => Some(ASTBinaryOp::DivideAssignment),
+        Some(TokenKind::RemainderAssignment) => Some(ASTBinaryOp::RemainderAssignment),
+        Some(TokenKind::BitwiseAndAssignment) => Some(ASTBinaryOp::BitwiseAndAssignment),
+        Some(TokenKind::BitwiseOrAssignment) => Some(ASTBinaryOp::BitwiseNotAssignment),
+        Some(TokenKind::BitwiseNotAssignment) => Some(ASTBinaryOp::BitwiseNotAssignment),
+        Some(TokenKind::BitwiseXorAssignment) => Some(ASTBinaryOp::BitwiseXorAssignment),
+        Some(TokenKind::BitwiseShiftLeftAssignment) => Some(ASTBinaryOp::BitwiseShiftLeftAssignment),
+        Some(TokenKind::BitwiseShiftRightAssignment) => Some(ASTBinaryOp::BitwiseShiftRightAssignment),
         _ => None,
     } {
         iter.next();
@@ -134,23 +73,12 @@ pub fn parse_expr_with_ops<'a>(
 ) -> ASTValue<'a> {
     let mut prefix_ops = vec![];
 
-    while let Some(op) = match peek_non_blank(iter) {
-        Some(Token {
-            kind: TokenKind::Plus,
-            ..
-        }) => Some(ASTUnaryOp::Plus),
-        Some(Token {
-            kind: TokenKind::Minus,
-            ..
-        }) => Some(ASTUnaryOp::Minus),
-        Some(Token {
-            kind: TokenKind::Await,
-            ..
-        }) => Some(ASTUnaryOp::Await),
-        Some(Token {
-            kind: TokenKind::BitwiseNot,
-            ..
-        }) => Some(ASTUnaryOp::BitwiseNot),
+    while let Some(op) = match peek_non_blank(iter).map(|t| &t.kind) {
+        Some(TokenKind::Plus) => Some(ASTUnaryOp::Plus),
+        Some(TokenKind::Minus) => Some(ASTUnaryOp::Minus),
+        Some(TokenKind::Await) => Some(ASTUnaryOp::Await),
+        Some(TokenKind::BitwiseNot) => Some(ASTUnaryOp::BitwiseNot),
+        Some(TokenKind::Not | TokenKind::SymbolizedNot) => Some(ASTUnaryOp::Not),
         None => panic!("expected expression"),
         _ => None,
     } {
@@ -160,23 +88,37 @@ pub fn parse_expr_with_ops<'a>(
 
     let mut value = parse_expr_without_ops(iter);
 
-    // Calls have higher precedence, i.e. `-get_num()` should be parsed as `-(get_num())`
-    if let Some(Token {
-        kind: TokenKind::OpeningParenthesis,
-        ..
-    }) = peek_non_blank(iter)
-    {
+    // Calls/subscriptions have higher precedence, i.e. `-get_num()` should be parsed as `-(get_num())`
+    while let Some(op) = match peek_non_blank(iter).map(|t| &t.kind) {
+        Some(TokenKind::OpeningParenthesis) => Some(ASTBinaryOp::Call),
+        Some(TokenKind::OpeningBracket) => Some(ASTBinaryOp::Subscript),
+        _ => None,
+    } {
         iter.next();
-        value = ASTValue::Call(
-            Box::new(value),
-            delemited_by(
-                iter,
-                TokenKind::Comma,
-                &[TokenKind::ClosingParenthesis],
-                parse_expr,
-            ),
-        );
-        expect_blank_prefixed!(iter, TokenKind::ClosingParenthesis, ());
+        match op {
+            ASTBinaryOp::Call => {
+                value = ASTValue::BinaryExpr(
+                    Box::new(value),
+                    op,
+                    Box::new(ASTValue::Array(delemited_by(
+                        iter,
+                        TokenKind::Comma,
+                        &[TokenKind::ClosingParenthesis],
+                        parse_expr,
+                    ))),
+                );
+                expect_blank_prefixed!(iter, TokenKind::ClosingParenthesis, ());
+            },
+            ASTBinaryOp::Subscript => {
+                value = ASTValue::BinaryExpr(
+                    Box::new(value),
+                    op,
+                    Box::new(parse_expr(iter)),
+                );
+                expect_blank_prefixed!(iter, TokenKind::ClosingBracket, ());
+            },
+            _ => unreachable!(),
+        }
     }
 
     for op in prefix_ops {
@@ -190,40 +132,21 @@ pub fn parse_expr_with_ops<'a>(
 pub fn parse_expr_without_ops<'a>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
 ) -> ASTValue<'a> {
+    #[rustfmt::skip]
     match &peek_non_blank(iter).expect("unexpected EOF").kind {
-        TokenKind::Identifier(_) => {
-            ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap())
-        }
-        TokenKind::Integer(_) => {
-            ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap())
-        }
-        TokenKind::BinaryInteger(_) => {
-            ASTValue::Number(iter.next().unwrap().kind.into_binary_integer().unwrap() as i64)
-        }
-        TokenKind::HexInteger(_) => {
-            ASTValue::Number(iter.next().unwrap().kind.into_hex_integer().unwrap() as i64)
-        }
+        TokenKind::Identifier(_) => ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap()),
+        TokenKind::Integer(_) => ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap()),
+        TokenKind::BinaryInteger(_) => ASTValue::Number(iter.next().unwrap().kind.into_binary_integer().unwrap() as i64),
+        TokenKind::HexInteger(_) => ASTValue::Number(iter.next().unwrap().kind.into_hex_integer().unwrap() as i64),
         TokenKind::Float(_) => ASTValue::Float(iter.next().unwrap().kind.into_float().unwrap()),
-        TokenKind::ScientificFloat(_) => {
-            ASTValue::Float(iter.next().unwrap().kind.into_scientific_float().unwrap())
-        }
+        TokenKind::ScientificFloat(_) => ASTValue::Float(iter.next().unwrap().kind.into_scientific_float().unwrap()),
         TokenKind::String(_) => ASTValue::String(iter.next().unwrap().kind.into_string().unwrap()),
-        TokenKind::StringName(_) => {
-            ASTValue::StringName(iter.next().unwrap().kind.into_string_name().unwrap())
-        }
+        TokenKind::StringName(_) => ASTValue::StringName(iter.next().unwrap().kind.into_string_name().unwrap()),
         TokenKind::Node(_) => ASTValue::Node(iter.next().unwrap().kind.into_node().unwrap()),
-        TokenKind::UniqueNode(_) => {
-            ASTValue::UniqueNode(iter.next().unwrap().kind.into_unique_node().unwrap())
-        }
-        TokenKind::NodePath(_) => {
-            ASTValue::NodePath(iter.next().unwrap().kind.into_node_path().unwrap())
-        }
-        TokenKind::Boolean(_) => {
-            ASTValue::Boolean(iter.next().unwrap().kind.into_boolean().unwrap())
-        }
-        TokenKind::Comment(_) => {
-            ASTValue::Comment(iter.next().unwrap().kind.into_comment().unwrap())
-        }
+        TokenKind::UniqueNode(_) => ASTValue::UniqueNode(iter.next().unwrap().kind.into_unique_node().unwrap()),
+        TokenKind::NodePath(_) => ASTValue::NodePath(iter.next().unwrap().kind.into_node_path().unwrap()),
+        TokenKind::Boolean(_) => ASTValue::Boolean(iter.next().unwrap().kind.into_boolean().unwrap()),
+        TokenKind::Comment(_) => ASTValue::Comment(iter.next().unwrap().kind.into_comment().unwrap()),
         TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),
         TokenKind::OpeningBracket => {
             iter.next();
@@ -252,38 +175,44 @@ fn binary_climber<'a>() -> prec::Climber<ASTBinaryOp, ASTValue<'a>, ASTValue<'a>
         Ok(ASTValue::BinaryExpr(Box::new(lhs), op, Box::new(rhs)))
     }
 
-    // i have no idea what i did here and am just praying that it'll work
-    // if it does not, its easy to fix anyway
-
-    // if someone can read the official sources, corrections are welcome
-    // https://github.com/godotengine/godot/blob/master/modules/gdscript/gdscript_parser.cpp#L3847
+    // TODO: figure out the correct associations (pain)
     prec::Climber::new(
         vec![
+            prec::Rule::new(ASTBinaryOp::Subscript, prec::Assoc::Left),
+            prec::Rule::new(ASTBinaryOp::PropertyAccess, prec::Assoc::Left),
+            prec::Rule::new(ASTBinaryOp::Call, prec::Assoc::Left),
+            prec::Rule::new(ASTBinaryOp::TypeCheck, prec::Assoc::Left),
+            prec::Rule::new(ASTBinaryOp::Power, prec::Assoc::Left),
+            prec::Rule::new(ASTBinaryOp::Multiply, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::Divide, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::Remainder, prec::Assoc::Left),
             prec::Rule::new(ASTBinaryOp::Plus, prec::Assoc::Left)
                 | prec::Rule::new(ASTBinaryOp::Minus, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Multiply, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::Divide, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Remainder, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Power, prec::Assoc::Right),
-            prec::Rule::new(ASTBinaryOp::Range, prec::Assoc::Right),
-            prec::Rule::new(ASTBinaryOp::BitwiseOr, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::BitwiseXor, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::BitwiseAnd, prec::Assoc::Left),
             prec::Rule::new(ASTBinaryOp::BitwiseShiftLeft, prec::Assoc::Left)
                 | prec::Rule::new(ASTBinaryOp::BitwiseShiftRight, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::TypeCast, prec::Assoc::Right)
-                | prec::Rule::new(ASTBinaryOp::TypeCheck, prec::Assoc::Right),
-            prec::Rule::new(ASTBinaryOp::Contains, prec::Assoc::Right),
-            prec::Rule::new(ASTBinaryOp::PropertyAccess, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::And, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::Or, prec::Assoc::Left),
             prec::Rule::new(ASTBinaryOp::Less, prec::Assoc::Left)
                 | prec::Rule::new(ASTBinaryOp::LessOrEqual, prec::Assoc::Left)
                 | prec::Rule::new(ASTBinaryOp::Greater, prec::Assoc::Left)
                 | prec::Rule::new(ASTBinaryOp::GreaterOrEqual, prec::Assoc::Left)
                 | prec::Rule::new(ASTBinaryOp::Equal, prec::Assoc::Left)
                 | prec::Rule::new(ASTBinaryOp::NotEqual, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Not, prec::Assoc::Right),
+            prec::Rule::new(ASTBinaryOp::Contains, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::NotContains, prec::Assoc::Left),
+            prec::Rule::new(ASTBinaryOp::And, prec::Assoc::Left),
+            prec::Rule::new(ASTBinaryOp::Or, prec::Assoc::Left),
+            prec::Rule::new(ASTBinaryOp::TypeCast, prec::Assoc::Left),
+            prec::Rule::new(ASTBinaryOp::Assignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::PlusAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::MinusAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::MultiplyAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::DivideAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::PowerAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::RemainderAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::BitwiseAndAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::BitwiseOrAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::BitwiseXorAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::BitwiseShiftLeftAssignment, prec::Assoc::Left)
+                | prec::Rule::new(ASTBinaryOp::BitwiseShiftRightAssignment, prec::Assoc::Left),
         ],
         handler,
     )

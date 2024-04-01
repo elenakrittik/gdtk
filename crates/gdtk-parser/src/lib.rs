@@ -1,4 +1,4 @@
-#![feature(decl_macro)]
+#![feature(decl_macro, stmt_expr_attributes)]
 
 use gdtk_ast::poor::{ASTFile, CodeBlock};
 use gdtk_lexer::{token::TokenKind, LexOutput};

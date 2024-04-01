@@ -51,7 +51,7 @@ func some_function(param1, param2: int, param3 = 1, param4: int = 1, param5 := 1
         print(i)
 
     while param2 != 0:
-        # param2 -= 1
+        param2 -= 1
 
     match param3:
         3:

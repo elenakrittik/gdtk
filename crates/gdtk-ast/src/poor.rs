@@ -96,6 +96,7 @@ pub enum ASTUnaryOp {
     Await,
     Plus,
     Minus,
+    Not,
     BitwiseNot,
 }
 
@@ -142,6 +143,7 @@ pub enum ASTBinaryOp {
     // todo
     Call,
     Subscript,
+    NotContains, // don't punch me for grammar
 }
 
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
