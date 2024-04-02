@@ -1,8 +1,7 @@
 use std::iter::Peekable;
 
 use gdtk_ast::poor::{
-    ASTStatement, ASTValue, ASTVariable, ASTVariableKind,
-    CodeBlock,
+    ASTForStmt, ASTStatement, ASTValue, ASTVariable, ASTVariableKind, ASTWhileStmt, CodeBlock
 };
 use gdtk_lexer::{Token, TokenKind};
 
@@ -52,7 +51,7 @@ pub fn parse_statement<'a>(
         TokenKind::Match => parse_match(iter),
         TokenKind::While => {
             let tuple = parse_iflike(iter);
-            ASTStatement::While(tuple.0, tuple.1)
+            ASTStatement::While(ASTWhileStmt { expr: tuple.0, block: tuple.1 })
         }
         TokenKind::Var => advance_and_parse(iter, |iter| {
             ASTStatement::Variable(parse_variable_body(iter, ASTVariableKind::Regular))
@@ -97,5 +96,10 @@ pub fn parse_for_loop<'a>(
     expect_blank_prefixed!(iter, TokenKind::Colon, ());
     let block = parse_block(iter, false);
 
-    ASTStatement::For(identifier, type_hint, container, block)
+    ASTStatement::For(ASTForStmt {
+        binding: identifier,
+        typehint: type_hint,
+        container,
+        block,
+    })
 }

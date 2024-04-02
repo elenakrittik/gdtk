@@ -1,5 +1,5 @@
-match 0:
-    0:
-		pass
-	1:
-		pass
+match expr:
+    arm1:
+        pass
+    arm2:
+        pass
