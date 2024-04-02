@@ -38,6 +38,9 @@ pub enum ASTVariableKind {
 
     /// A variable that represents a function parameter.
     FunctionParameter,
+
+    /// A variable that represents a value bind in a match pattern.
+    PatternBinding,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -155,33 +158,50 @@ pub enum ASTStatement<'a> {
     Else(CodeBlock<'a>),
     Enum(ASTEnum<'a>),
     Extends(&'a str),
-    /// (identifier, type_hint, container, body)
-    For(&'a str, Option<ASTValue<'a>>, ASTValue<'a>, CodeBlock<'a>),
+    For(ASTForStmt<'a>),
     Func(ASTFunction<'a>),
     Pass,
     Return(ASTValue<'a>),
-    /// (name, args)
     Signal(ASTSignal<'a>),
-    /// (expression_being_matched_on, vec_of_patterns)
-    Match(ASTValue<'a>, Vec<ASTMatchPattern<'a>>),
-    While(ASTValue<'a>, CodeBlock<'a>),
+    Match(ASTMatchStmt<'a>),
+    While(ASTWhileStmt<'a>),
     Variable(ASTVariable<'a>),
     Value(ASTValue<'a>),
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub struct ASTMatchPattern<'a> {
-    pub body: CodeBlock<'a>,
-    pub kind: ASTMatchPatternKind<'a>,
+pub struct ASTForStmt<'a> {
+    pub binding: &'a str,
+    pub typehint: Option<ASTValue<'a>>,
+    pub container: ASTValue<'a>,
+    pub block: CodeBlock<'a>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
-pub enum ASTMatchPatternKind<'a> {
+pub struct ASTWhileStmt<'a> {
+    pub expr: ASTValue<'a>,
+    pub block: CodeBlock<'a>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ASTMatchStmt<'a> {
+    pub expr: ASTValue<'a>,
+    pub arms: Vec<ASTMatchArm<'a>>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub struct ASTMatchArm<'a> {
+    pub body: CodeBlock<'a>,
+    pub kind: ASTMatchPattern<'a>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ASTMatchPattern<'a> {
     Value(ASTValue<'a>),
     Binding(ASTVariable<'a>),
-    Array(Vec<ASTMatchPatternKind<'a>>),
+    Array(Vec<ASTMatchPattern<'a>>),
     // TODO: Dictionary(???),
-    Alternative(Vec<ASTMatchPatternKind<'a>>),
+    Alternative(Vec<ASTMatchPattern<'a>>),
     Rest,
 }
 

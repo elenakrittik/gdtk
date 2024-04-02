@@ -11,6 +11,7 @@ pub mod classes;
 pub mod error;
 pub mod expressions;
 pub mod functions;
+pub mod match_;
 pub mod misc;
 pub mod statement;
 pub mod test_utils;
@@ -18,6 +19,7 @@ pub mod utils;
 pub mod values;
 pub mod variables;
 
+/// Parse the result of lexing a GDScript source code file.
 pub fn parse_file(lexed: LexOutput) -> Result<ASTFile, Error> {
     let (tokens, _diags) = lexed;
 
@@ -26,6 +28,7 @@ pub fn parse_file(lexed: LexOutput) -> Result<ASTFile, Error> {
 
     while let Some(token) = iter.peek() {
         match token.kind {
+            // ignore leftover dedents from parsing paremthwsized lambdas
             TokenKind::Newline | TokenKind::Dedent => {
                 iter.next();
             }
