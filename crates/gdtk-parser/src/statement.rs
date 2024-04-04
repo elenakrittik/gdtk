@@ -48,7 +48,7 @@ pub fn parse_statement<'a>(
         TokenKind::Func => ASTStatement::Func(parse_func(iter, false)),
         TokenKind::Return => advance_and_parse(iter, |iter| ASTStatement::Return(parse_expr(iter))),
         TokenKind::Signal => ASTStatement::Signal(parse_signal(iter)),
-        TokenKind::Match => parse_match(iter),
+        TokenKind::Match => ASTStatement::Match(parse_match(iter)),
         TokenKind::While => {
             let tuple = parse_iflike(iter);
             ASTStatement::While(ASTWhileStmt { expr: tuple.0, block: tuple.1 })
@@ -84,11 +84,11 @@ pub fn parse_for_loop<'a>(
 ) -> ASTStatement<'a> {
     expect_blank_prefixed!(iter, TokenKind::For, ());
     let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
-    let mut type_hint = None;
+    let mut typehint = None;
 
     if peek_non_blank(iter).is_some_and(|t| t.kind.is_colon()) {
         iter.next();
-        type_hint = Some(parse_expr(iter));
+        typehint = Some(parse_expr(iter));
     }
 
     expect_blank_prefixed!(iter, TokenKind::In, ());
@@ -97,8 +97,13 @@ pub fn parse_for_loop<'a>(
     let block = parse_block(iter, false);
 
     ASTStatement::For(ASTForStmt {
-        binding: identifier,
-        typehint: type_hint,
+        binding: ASTVariable {
+            identifier,
+            infer_type: false, // TODO: or is it "true"?
+            typehint,
+            value: None,
+            kind: ASTVariableKind::Binding,
+        },
         container,
         block,
     })

@@ -1,5 +1,7 @@
 match expr:
     arm1:
         pass
-    arm2:
+    var binding:
+        pass
+    ..:
         pass

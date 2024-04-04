@@ -36,11 +36,9 @@ pub enum ASTVariableKind {
     /// Static (`static var`) variable.
     Static,
 
-    /// A variable that represents a function parameter.
-    FunctionParameter,
-
-    /// A variable that represents a value bind in a match pattern.
-    PatternBinding,
+    /// A variable that represents a value binded by other means, like for loops,
+    /// match patterns, and function parameters.
+    Binding,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -55,6 +53,7 @@ pub struct ASTEnumVariant<'a> {
     pub value: Option<ASTValue<'a>>,
 }
 
+/// A function.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTFunction<'a> {
     pub identifier: Option<&'a str>,
@@ -63,24 +62,38 @@ pub struct ASTFunction<'a> {
     pub body: CodeBlock<'a>,
 }
 
+/// An expression.
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTValue<'a> {
+    /// An identifier literal.
     Identifier(&'a str),
+    /// An integer number literal.
     Number(i64),
+    /// A float number literal.
     Float(f64),
+    /// A string literal.
     String(&'a str),
+    /// A ``StringName`` literal.
     StringName(&'a str),
+    /// TODO: change stringname/node/uniquenode/nodepath literals to be an PrefixExpr(string, ...)
     Node(&'a str),
     UniqueNode(&'a str),
     NodePath(&'a str),
+    /// A boolean literal.
     Boolean(bool),
+    /// An array literal.
     Array(Vec<ASTValue<'a>>),
+    /// A dictionary literal.
     Dictionary(DictValue<'a>),
+    /// A lambda function expression.
     Lambda(ASTFunction<'a>),
+    /// An unary prefix expression.
     UnaryExpr(ASTUnaryOp, Box<ASTValue<'a>>),
-    /// (left, op, right)
+    /// A binary expression.
     BinaryExpr(Box<ASTValue<'a>>, ASTBinaryOp, Box<ASTValue<'a>>),
+    /// A comment.
     Comment(&'a str),
+    /// A parenthesized expression.
     Group(Box<ASTValue<'a>>),
 }
 
@@ -90,127 +103,221 @@ impl<'a> prec::Token<ASTValue<'a>, ()> for ASTValue<'a> {
     }
 }
 
+// TODO: rename to PrefixOp and add PostfixOp for calls and subscripts
 #[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
 pub enum ASTUnaryOp {
+    /// ``await a``.
     Await,
-    Plus,
+    /// ``+a``.
+    Identity,
+    /// ``-a``.
     Minus,
+    /// ``not a`` or ``!a``.
     Not,
+    /// ``~a``.
     BitwiseNot,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
 pub enum ASTBinaryOp {
+    /// ``a < b``.
     Less,
+    /// ``a <= b``.
     LessOrEqual,
+    /// ``a > b``.
     Greater,
+    /// ``a >= b``.
     GreaterOrEqual,
+    /// ``a == b``.
     Equal,
+    /// ``a != b``.
     NotEqual,
+    /// ``a and b`` or ``a && b``.
     And,
+    /// ``a or b`` or ``a || b``.
     Or,
-    Not,
+    /// ``a & b``.
     BitwiseAnd,
+    /// ``a | b``.
     BitwiseOr,
+    /// ``a ^ b``.
     BitwiseXor,
+    /// ``a << b``.
     BitwiseShiftLeft,
+    /// ``a >> b``.
     BitwiseShiftRight,
+    /// ``a + b``.
     Plus,
+    /// ``a - b``.
     Minus,
+    /// ``a * b``.
     Multiply,
+    /// ``a ** b``.
     Power,
+    /// ``a / b``.
     Divide,
+    /// ``a % b``.
     Remainder,
-    TypeCast,       // x as y
-    TypeCheck,      // x is y
-    Contains,       // x in y
-    PropertyAccess, // x.y
-    Range,          // ".." match pattern
+    /// ``a as b``.
+    TypeCast,
+    /// ``a is b``.
+    TypeCheck,
+    /// ``a in b``.
+    Contains,
+    /// ``a.b``.
+    PropertyAccess,
+    /// ``a..b``. **UNOFFICIAL EXTENSION**.
+    Range,
+    /// ``a = b``.
     Assignment,
+    /// ``a += b``.
     PlusAssignment,
+    /// ``a -= b``.
     MinusAssignment,
+    /// ``a *= b``.
     MultiplyAssignment,
+    /// ``a **= b``.
     PowerAssignment,
+    /// ``a /= b``.
     DivideAssignment,
+    /// ``a %= b``.
     RemainderAssignment,
+    /// ``a &= b``.
     BitwiseAndAssignment,
+    /// ``a |= b``.
     BitwiseOrAssignment,
+    /// ``a ~= b``.
     BitwiseNotAssignment,
+    /// ``a ^= b``.
     BitwiseXorAssignment,
+    /// ``a <<= b``.
     BitwiseShiftLeftAssignment,
+    /// ``a >>= b``.
     BitwiseShiftRightAssignment,
+    /// ``a(b)``.
     Call,
+    /// ``a[b]``.
     Subscript,
+    /// ``a not in b``.
     NotContains, // don't punch me for grammar
 }
 
+/// A statement.
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTStatement<'a> {
+    /// An annotation in form of a statement.
     Annotation(ASTAnnotation<'a>),
+    /// An ``assert`` statement.
     Assert(ASTValue<'a>),
+    /// A ``break`` statement.
     Break,
+    /// A ``breakpoint`` statement.
     Breakpoint,
+    /// An inner class statement.
     Class(ASTClass<'a>),
+    /// A ``class_name`` statement.
     ClassName(&'a str),
+    /// A ``continue`` statement.
     Continue,
-    If(ASTValue<'a>, CodeBlock<'a>),
-    Elif(ASTValue<'a>, CodeBlock<'a>),
-    Else(CodeBlock<'a>),
+    /// An ``if`` statement.
+    If(ASTIfStmt<'a>),
+    /// An ``elif`` statement.
+    Elif(ASTElifStmt<'a>),
+    /// An ``else`` statement.
+    Else(ASTElseStmt<'a>),
+    /// A enum definition statement.
     Enum(ASTEnum<'a>),
+    /// An ``extends`` statement.
     Extends(&'a str),
+    /// A ``for`` loop statement.
     For(ASTForStmt<'a>),
+    /// A function definition statement.
     Func(ASTFunction<'a>),
+    /// A ``pass`` statement.
     Pass,
+    /// A ``return`` statement.
     Return(ASTValue<'a>),
+    /// A ``signal`` definition statement.
     Signal(ASTSignal<'a>),
+    /// A ``match`` statement.
     Match(ASTMatchStmt<'a>),
+    /// A ``while`` loop statement.
     While(ASTWhileStmt<'a>),
+    /// A variable definition statement.
     Variable(ASTVariable<'a>),
+    /// A standalone expression.
     Value(ASTValue<'a>),
 }
 
+/// A ``for`` loop statement.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTForStmt<'a> {
-    pub binding: &'a str,
-    pub typehint: Option<ASTValue<'a>>,
+    pub binding: ASTVariable<'a>,
     pub container: ASTValue<'a>,
     pub block: CodeBlock<'a>,
 }
 
+/// A ``while`` loop statement.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTWhileStmt<'a> {
     pub expr: ASTValue<'a>,
     pub block: CodeBlock<'a>,
 }
 
+/// An ``if`` statement.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ASTIfStmt<'a> {
+    pub expr: ASTValue<'a>,
+    pub block: CodeBlock<'a>,
+}
+
+/// An ``elif`` statement.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ASTElifStmt<'a> {
+    pub expr: ASTValue<'a>,
+    pub block: CodeBlock<'a>,
+}
+
+/// An ``else`` statement.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ASTElseStmt<'a> {
+    pub block: CodeBlock<'a>,
+}
+
+/// A ``match`` statement.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTMatchStmt<'a> {
     pub expr: ASTValue<'a>,
     pub arms: Vec<ASTMatchArm<'a>>,
 }
 
+/// An arm of a [ASTMatchStmt].
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTMatchArm<'a> {
-    pub body: CodeBlock<'a>,
-    pub kind: ASTMatchPattern<'a>,
+    pub pattern: ASTMatchPattern<'a>,
+    pub block: CodeBlock<'a>,
 }
 
+/// A pattern of an [ASTMatchArm].
 #[derive(Debug, Clone, PartialEq)]
 pub enum ASTMatchPattern<'a> {
     Value(ASTValue<'a>),
     Binding(ASTVariable<'a>),
     Array(Vec<ASTMatchPattern<'a>>),
+    // TODO: Alternative(Vec<ASTMatchPattern<'a>>), // i forgot how these are spelled out
     // TODO: Dictionary(???),
-    Alternative(Vec<ASTMatchPattern<'a>>),
-    Rest,
+    /// Represents the ".." found inside array and dictionary patterns.
+    Ignore,
 }
 
+/// An ``@annotation`` attached to an item.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTAnnotation<'a> {
     pub identifier: &'a str,
     pub arguments: Vec<ASTValue<'a>>,
 }
 
+/// A ``signal`` definition.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTSignal<'a> {
     pub identifier: &'a str,

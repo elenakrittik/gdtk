@@ -41,7 +41,7 @@ pub fn parse_signal<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) ->
         iter,
         TokenKind::Comma,
         &[TokenKind::ClosingParenthesis],
-        |iter| parse_variable_body(iter, ASTVariableKind::FunctionParameter),
+        |iter| parse_variable_body(iter, ASTVariableKind::Binding),
     );
     expect_blank_prefixed!(iter, TokenKind::ClosingParenthesis, ());
 
