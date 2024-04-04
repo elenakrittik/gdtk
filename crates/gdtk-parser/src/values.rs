@@ -8,11 +8,25 @@ use crate::{
     utils::{delemited_by, expect},
 };
 
+pub fn parse_array<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> Vec<ASTValue<'a>> {
+    iter.next();
+
+    let value = delemited_by(
+        iter,
+        TokenKind::Comma,
+        &[TokenKind::ClosingBracket],
+        parse_expr,
+    );
+
+    expect!(iter, TokenKind::ClosingBracket);
+
+    value
+}
+
 pub fn parse_dictionary<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     expect!(iter, TokenKind::OpeningBrace);
 
     let value = match iter.peek().expect("unexpected EOF").kind {
-        #[rustfmt::skip]
         TokenKind::ClosingBrace => vec![], // empty dict
         TokenKind::Identifier(_) => parse_lua_dict(iter),
         _ => parse_python_dict(iter),

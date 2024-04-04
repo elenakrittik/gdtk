@@ -1,23 +1,26 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTBinaryOp, ASTUnaryOp, ASTValue};
+use gdtk_ast::poor::{ASTBinaryOp, ASTPostfixOp, ASTPrefixOp, ASTValue};
 use gdtk_lexer::{Token, TokenKind};
+use pratt::{Affix, Associativity, PrattParser, Precedence};
 
 use crate::{
     functions::parse_func,
     utils::{delemited_by, expect},
-    values::parse_dictionary,
+    values::{parse_array, parse_dictionary},
 };
 
 pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
-    let initial_value = parse_expr_with_ops(iter);
+    ExprParser.parse(parse_expr_impl(iter).into_iter()).unwrap()
+}
 
-    let mut values_and_ops = vec![];
+fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> Vec<ExprIR<'a>> {
+    let mut result = parse_expr_with_ops(iter);
 
     #[rustfmt::skip]
     while let Some(op) = match iter.peek().map(|t| &t.kind) {
-        Some(TokenKind::Plus) => Some(ASTBinaryOp::Plus),
-        Some(TokenKind::Minus) => Some(ASTBinaryOp::Minus),
+        Some(TokenKind::Plus) => Some(ASTBinaryOp::Add),
+        Some(TokenKind::Minus) => Some(ASTBinaryOp::Substract),
         Some(TokenKind::Greater) => Some(ASTBinaryOp::Greater),
         Some(TokenKind::GreaterOrEqual) => Some(ASTBinaryOp::GreaterOrEqual),
         Some(TokenKind::Less) => Some(ASTBinaryOp::Less),
@@ -54,82 +57,56 @@ pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
         Some(TokenKind::BitwiseXorAssignment) => Some(ASTBinaryOp::BitwiseXorAssignment),
         Some(TokenKind::BitwiseShiftLeftAssignment) => Some(ASTBinaryOp::BitwiseShiftLeftAssignment),
         Some(TokenKind::BitwiseShiftRightAssignment) => Some(ASTBinaryOp::BitwiseShiftRightAssignment),
-        _ => None,
-    } {
-        iter.next();
-
-        let value = parse_expr_with_ops(iter);
-        values_and_ops.push((op, value));
-    }
-
-    let expr = prec::Expression::new(initial_value, values_and_ops);
-
-    binary_climber().process(&expr, &()).unwrap()
-}
-
-/// Parses a value taking into account possible prefix and postfix OPs
-pub fn parse_expr_with_ops<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
-) -> ASTValue<'a> {
-    let mut prefix_ops = vec![];
-
-    while let Some(op) = match iter.peek().map(|t| &t.kind) {
-        Some(TokenKind::Plus) => Some(ASTUnaryOp::Identity),
-        Some(TokenKind::Minus) => Some(ASTUnaryOp::Minus),
-        Some(TokenKind::Await) => Some(ASTUnaryOp::Await),
-        Some(TokenKind::BitwiseNot) => Some(ASTUnaryOp::BitwiseNot),
-        Some(TokenKind::Not | TokenKind::SymbolizedNot) => Some(ASTUnaryOp::Not),
-        None => panic!("expected expression"),
-        _ => None,
-    } {
-        iter.next();
-        prefix_ops.push(op);
-    }
-
-    let mut value = parse_expr_without_ops(iter);
-
-    // Calls/subscriptions have higher precedence, i.e. `-get_num()` should be parsed as `-(get_num())`
-    while let Some(op) = match iter.peek().map(|t| &t.kind) {
         Some(TokenKind::OpeningParenthesis) => Some(ASTBinaryOp::Call),
         Some(TokenKind::OpeningBracket) => Some(ASTBinaryOp::Subscript),
         _ => None,
     } {
         iter.next();
+        result.push(ExprIR::Binary(op));
+
+        let value = parse_expr_with_ops(iter);
+        result.extend(value);
+
         match op {
-            ASTBinaryOp::Call => {
-                value = ASTValue::BinaryExpr(
-                    Box::new(value),
-                    op,
-                    Box::new(ASTValue::Array(delemited_by(
-                        iter,
-                        TokenKind::Comma,
-                        &[TokenKind::ClosingParenthesis],
-                        parse_expr,
-                    ))),
-                );
-                expect!(iter, TokenKind::ClosingParenthesis);
-            }
-            ASTBinaryOp::Subscript => {
-                value = ASTValue::BinaryExpr(Box::new(value), op, Box::new(parse_expr(iter)));
-                expect!(iter, TokenKind::ClosingBracket);
-            }
-            _ => unreachable!(),
+            ASTBinaryOp::Call => expect!(iter, TokenKind::ClosingParenthesis),
+            ASTBinaryOp::Subscript => expect!(iter, TokenKind::ClosingBracket),
+            _ => (),
         }
     }
 
-    for op in prefix_ops {
-        value = ASTValue::UnaryExpr(op, Box::new(value));
+    result
+}
+
+/// Parses a value taking into account possible prefix and postfix OPs
+fn parse_expr_with_ops<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> Vec<ExprIR<'a>> {
+    let mut result = vec![];
+
+    while let Some(op) = match iter.peek().map(|t| &t.kind) {
+        Some(TokenKind::Plus) => Some(ASTPrefixOp::Identity),
+        Some(TokenKind::Minus) => Some(ASTPrefixOp::Negation),
+        Some(TokenKind::Await) => Some(ASTPrefixOp::Await),
+        Some(TokenKind::BitwiseNot) => Some(ASTPrefixOp::BitwiseNot),
+        Some(TokenKind::Not | TokenKind::SymbolizedNot) => Some(ASTPrefixOp::Not),
+        None => panic!("expected expression"),
+        _ => None,
+    } {
+        iter.next();
+        result.push(ExprIR::Prefix(op));
     }
 
-    value
+    result.push(parse_expr_without_ops(iter));
+
+    result
 }
 
 /// Parses a "clean" value, without checking for possible prefix or postfix OPs
-pub fn parse_expr_without_ops<'a>(
+fn parse_expr_without_ops<'a>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
-) -> ASTValue<'a> {
+) -> ExprIR<'a> {
     #[rustfmt::skip]
-    match &iter.peek().expect("unexpected EOF").kind {
+    let value = match &iter.peek().expect("unexpected EOF").kind {
         TokenKind::Identifier(_) => ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap()),
         TokenKind::Integer(_) => ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap()),
         TokenKind::BinaryInteger(_) => ASTValue::Number(iter.next().unwrap().kind.into_binary_integer().unwrap() as i64),
@@ -144,78 +121,146 @@ pub fn parse_expr_without_ops<'a>(
         TokenKind::Boolean(_) => ASTValue::Boolean(iter.next().unwrap().kind.into_boolean().unwrap()),
         TokenKind::Comment(_) => ASTValue::Comment(iter.next().unwrap().kind.into_comment().unwrap()),
         TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),
-        TokenKind::OpeningBracket => {
-            iter.next();
-            let value = ASTValue::Array(delemited_by(
-                iter,
-                TokenKind::Comma,
-                &[TokenKind::ClosingBracket],
-                parse_expr,
-            ));
-            expect!(iter, TokenKind::ClosingBracket);
-
-            value
-        }
+        TokenKind::OpeningBracket => ASTValue::Array(parse_array(iter)),
         TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
         TokenKind::OpeningParenthesis => {
             iter.next();
-            let value = ASTValue::Group(Box::new(parse_expr(iter)));
+
+            let values = delemited_by(
+                iter,
+                TokenKind::Comma,
+                &[TokenKind::ClosingParenthesis],
+                parse_expr_impl,
+            ).into_iter().flatten().collect();
+
             expect!(iter, TokenKind::ClosingParenthesis);
-            value
+            
+            return ExprIR::Group(values);
         },
         other => panic!("unknown or unsupported expression: {other:?}"),
-    }
+    };
+
+    ExprIR::Primary(value)
 }
 
-fn binary_climber<'a>() -> prec::Climber<ASTBinaryOp, ASTValue<'a>, ASTValue<'a>, ()> {
-    fn handler<'a>(
-        lhs: ASTValue<'a>,
-        op: ASTBinaryOp,
-        rhs: ASTValue<'a>,
-        _ctx: &(),
-    ) -> Result<ASTValue<'a>, ()> {
-        Ok(ASTValue::BinaryExpr(Box::new(lhs), op, Box::new(rhs)))
+#[derive(Debug, enum_as_inner::EnumAsInner)]
+enum ExprIR<'a> {
+    Prefix(ASTPrefixOp),
+    Binary(ASTBinaryOp),
+    Group(Vec<ExprIR<'a>>),
+    Primary(ASTValue<'a>),
+}
+
+struct ExprParser;
+
+impl<'a, I> pratt::PrattParser<I> for ExprParser
+where
+    I: Iterator<Item = ExprIR<'a>>,
+{
+    type Error = pratt::NoError;
+    type Input = ExprIR<'a>;
+    type Output = ASTValue<'a>;
+
+    fn query(&mut self, input: &Self::Input) -> Result<Affix, Self::Error> {
+        Ok(match input {
+            ExprIR::Primary(_) => Affix::Nilfix,
+            ExprIR::Group(_) => Affix::Nilfix,
+            ExprIR::Binary(ASTBinaryOp::Subscript) => Affix::Postfix(Precedence(22)),
+            ExprIR::Binary(ASTBinaryOp::PropertyAccess) => Affix::Infix(Precedence(21), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Call) => Affix::Postfix(Precedence(20)),
+            ExprIR::Prefix(ASTPrefixOp::Await) => Affix::Prefix(Precedence(19)),
+            ExprIR::Binary(ASTBinaryOp::TypeCheck) => Affix::Infix(Precedence(18), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Power) => Affix::Infix(Precedence(17), Associativity::Left),
+
+            ExprIR::Prefix(ASTPrefixOp::BitwiseNot) => Affix::Prefix(Precedence(16)),
+
+            ExprIR::Prefix(ASTPrefixOp::Identity) => Affix::Prefix(Precedence(15)),
+            ExprIR::Prefix(ASTPrefixOp::Negation) => Affix::Prefix(Precedence(15)),
+
+            ExprIR::Binary(ASTBinaryOp::Multiply) => Affix::Infix(Precedence(14), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Divide) => Affix::Infix(Precedence(14), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Remainder) => Affix::Infix(Precedence(14), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::Add) => Affix::Infix(Precedence(13), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Substract) => Affix::Infix(Precedence(13), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeft) => Affix::Infix(Precedence(12), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRight) => Affix::Infix(Precedence(12), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::BitwiseAnd) => Affix::Infix(Precedence(11), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::BitwiseXor) => Affix::Infix(Precedence(10), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::BitwiseOr) => Affix::Infix(Precedence(9), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::Equal) => Affix::Infix(Precedence(8), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::NotEqual) => Affix::Infix(Precedence(8), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Less) => Affix::Infix(Precedence(8), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::LessOrEqual) => Affix::Infix(Precedence(8), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Greater) => Affix::Infix(Precedence(8), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::GreaterOrEqual) => Affix::Infix(Precedence(8), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::Contains) => Affix::Infix(Precedence(7), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::NotContains) => Affix::Infix(Precedence(7), Associativity::Left),
+
+            ExprIR::Prefix(ASTPrefixOp::Not) => Affix::Prefix(Precedence(6)),
+
+            ExprIR::Binary(ASTBinaryOp::And) => Affix::Infix(Precedence(5), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::Or) => Affix::Infix(Precedence(4), Associativity::Left),
+
+            // TODO: ternary if/else
+
+            ExprIR::Binary(ASTBinaryOp::Range) => Affix::Infix(Precedence(3), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::TypeCast) => Affix::Infix(Precedence(2), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::Assignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::PlusAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::MinusAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::MultiplyAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::DivideAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::PowerAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::RemainderAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseAndAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseOrAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseXorAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseNotAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeftAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRightAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+        })
     }
 
-    // TODO: figure out the correct associations (pain)
-    prec::Climber::new(
-        vec![
-            prec::Rule::new(ASTBinaryOp::Subscript, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::PropertyAccess, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Call, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::TypeCheck, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Power, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Multiply, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::Divide, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::Remainder, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Plus, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::Minus, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::BitwiseShiftLeft, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::BitwiseShiftRight, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Less, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::LessOrEqual, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::Greater, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::GreaterOrEqual, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::Equal, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::NotEqual, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Contains, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::NotContains, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::And, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Or, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::TypeCast, prec::Assoc::Left),
-            prec::Rule::new(ASTBinaryOp::Assignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::PlusAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::MinusAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::MultiplyAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::DivideAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::PowerAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::RemainderAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::BitwiseAndAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::BitwiseOrAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::BitwiseXorAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::BitwiseShiftLeftAssignment, prec::Assoc::Left)
-                | prec::Rule::new(ASTBinaryOp::BitwiseShiftRightAssignment, prec::Assoc::Left),
-        ],
-        handler,
-    )
+    fn primary(&mut self, input: Self::Input) -> Result<Self::Output, Self::Error> {
+        Ok(match input {
+            ExprIR::Primary(v) => v,
+            ExprIR::Group(inner) => self.parse(&mut inner.into_iter()).unwrap(),
+            _ => unreachable!(),
+        })
+    }
+
+    fn infix(
+        &mut self,
+        lhs: Self::Output,
+        op: Self::Input,
+        rhs: Self::Output,
+    ) -> Result<Self::Output, Self::Error> {
+        Ok(ASTValue::BinaryExpr(Box::new(lhs), op.into_binary().unwrap(), Box::new(rhs)))
+    }
+
+    fn prefix(
+        &mut self,
+        op: Self::Input,
+        rhs: Self::Output,
+    ) -> Result<Self::Output, Self::Error> {
+        Ok(ASTValue::PrefixExpr(op.into_prefix().unwrap(), Box::new(rhs)))
+    }
+
+    fn postfix(
+        &mut self,
+        lhs: Self::Output,
+        op: Self::Input,
+    ) -> Result<Self::Output, Self::Error> {
+        unreachable!()
+    }
 }

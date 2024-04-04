@@ -65,6 +65,8 @@ pub struct ASTFunction<'a> {
 /// An expression.
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTValue<'a> {
+    /// A parenthesized expression.
+    Group(Box<ASTValue<'a>>),
     /// An identifier literal.
     Identifier(&'a str),
     /// An integer number literal.
@@ -75,7 +77,7 @@ pub enum ASTValue<'a> {
     String(&'a str),
     /// A ``StringName`` literal.
     StringName(&'a str),
-    /// TODO: change stringname/node/uniquenode/nodepath literals to be an PrefixExpr(string, ...)
+    /// TODO: change stringname/node/uniquenode/nodepath literals to be an PrefixExpr(string, ...) // or not?
     Node(&'a str),
     UniqueNode(&'a str),
     NodePath(&'a str),
@@ -88,13 +90,13 @@ pub enum ASTValue<'a> {
     /// A lambda function expression.
     Lambda(ASTFunction<'a>),
     /// An unary prefix expression.
-    UnaryExpr(ASTUnaryOp, Box<ASTValue<'a>>),
+    PrefixExpr(ASTPrefixOp, Box<ASTValue<'a>>),
+    /// An unary postfix expression.
+    PostfixExpr(Box<ASTValue<'a>>, ASTPostfixOp),
     /// A binary expression.
     BinaryExpr(Box<ASTValue<'a>>, ASTBinaryOp, Box<ASTValue<'a>>),
     /// A comment.
     Comment(&'a str),
-    /// A parenthesized expression.
-    Group(Box<ASTValue<'a>>),
 }
 
 impl<'a> prec::Token<ASTValue<'a>, ()> for ASTValue<'a> {
@@ -103,23 +105,29 @@ impl<'a> prec::Token<ASTValue<'a>, ()> for ASTValue<'a> {
     }
 }
 
-// TODO: rename to PrefixOp and add PostfixOp for calls and subscripts
-#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
-pub enum ASTUnaryOp {
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
+pub enum ASTPrefixOp {
     /// ``await a``.
     Await,
     /// ``+a``.
     Identity,
     /// ``-a``.
-    Minus,
+    Negation,
     /// ``not a`` or ``!a``.
     Not,
     /// ``~a``.
     BitwiseNot,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
+pub enum ASTPostfixOp {}
+
+#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
 pub enum ASTBinaryOp {
+    /// ``a(b)``.
+    Call,
+    /// ``a[b]``.
+    Subscript,
     /// ``a < b``.
     Less,
     /// ``a <= b``.
@@ -147,9 +155,9 @@ pub enum ASTBinaryOp {
     /// ``a >> b``.
     BitwiseShiftRight,
     /// ``a + b``.
-    Plus,
+    Add,
     /// ``a - b``.
-    Minus,
+    Substract,
     /// ``a * b``.
     Multiply,
     /// ``a ** b``.
@@ -164,6 +172,8 @@ pub enum ASTBinaryOp {
     TypeCheck,
     /// ``a in b``.
     Contains,
+    /// ``a not in b``.
+    NotContains, // don't punch me for grammar
     /// ``a.b``.
     PropertyAccess,
     /// ``a..b``. **UNOFFICIAL EXTENSION**.
@@ -194,12 +204,6 @@ pub enum ASTBinaryOp {
     BitwiseShiftLeftAssignment,
     /// ``a >>= b``.
     BitwiseShiftRightAssignment,
-    /// ``a(b)``.
-    Call,
-    /// ``a[b]``.
-    Subscript,
-    /// ``a not in b``.
-    NotContains, // don't punch me for grammar
 }
 
 /// A statement.
