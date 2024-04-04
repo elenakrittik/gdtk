@@ -13,15 +13,12 @@ use crate::statements::{
     parse_for_stmt, parse_if_stmt, parse_return_stmt, parse_static_var_stmt, parse_var_stmt,
     parse_while_stmt,
 };
-use crate::utils::{advance_and_parse, peek_non_blank};
+use crate::utils::advance_and_parse;
 
 pub fn parse_statement<'a>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    match peek_non_blank(iter)
-        .expect("expected a statement, found EOF")
-        .kind
-    {
+    match iter.peek().expect("expected a statement, found EOF").kind {
         TokenKind::Annotation => ASTStatement::Annotation(parse_annotation(iter)),
         TokenKind::Assert => ASTStatement::Assert(advance_and_parse(iter, parse_expr)),
         TokenKind::Break => advance_and_parse(iter, |_| ASTStatement::Break),

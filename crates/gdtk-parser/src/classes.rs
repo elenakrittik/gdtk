@@ -5,17 +5,19 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::expressions::parse_expr;
-use crate::utils::{advance_and_parse, delemited_by, expect, peek_non_blank};
+use crate::utils::{advance_and_parse, delemited_by, expect};
 
 pub fn parse_enum<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTEnum<'a> {
     expect!(iter, TokenKind::Enum);
 
-    let identifier =
-        if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_))) {
-            Some(iter.next().unwrap().kind.into_identifier().unwrap())
-        } else {
-            None
-        };
+    let identifier = if iter
+        .peek()
+        .is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_)))
+    {
+        Some(iter.next().unwrap().kind.into_identifier().unwrap())
+    } else {
+        None
+    };
 
     expect!(iter, TokenKind::OpeningBrace);
 
@@ -24,7 +26,7 @@ pub fn parse_enum<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
     ) -> ASTEnumVariant<'a> {
         let identifier = expect!(iter, TokenKind::Identifier(s), s);
 
-        let value = if peek_non_blank(iter).is_some_and(|t| t.kind.is_assignment()) {
+        let value = if iter.peek().is_some_and(|t| t.kind.is_assignment()) {
             Some(advance_and_parse(iter, parse_expr))
         } else {
             None
@@ -53,7 +55,10 @@ pub fn parse_class<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
     let identifier = expect!(iter, TokenKind::Identifier(s), s);
     let mut extends = None;
 
-    if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Extends)) {
+    if iter
+        .peek()
+        .is_some_and(|t| matches!(t.kind, TokenKind::Extends))
+    {
         iter.next();
         extends = Some(expect!(iter, TokenKind::Identifier(s), s));
     }

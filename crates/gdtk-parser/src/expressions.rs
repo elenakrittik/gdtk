@@ -5,7 +5,7 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
     functions::parse_func,
-    utils::{delemited_by, expect, peek_non_blank},
+    utils::{delemited_by, expect},
     values::parse_dictionary,
 };
 
@@ -15,7 +15,7 @@ pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
     let mut values_and_ops = vec![];
 
     #[rustfmt::skip]
-    while let Some(op) = match peek_non_blank(iter).map(|t| &t.kind) {
+    while let Some(op) = match iter.peek().map(|t| &t.kind) {
         Some(TokenKind::Plus) => Some(ASTBinaryOp::Plus),
         Some(TokenKind::Minus) => Some(ASTBinaryOp::Minus),
         Some(TokenKind::Greater) => Some(ASTBinaryOp::Greater),
@@ -73,7 +73,7 @@ pub fn parse_expr_with_ops<'a>(
 ) -> ASTValue<'a> {
     let mut prefix_ops = vec![];
 
-    while let Some(op) = match peek_non_blank(iter).map(|t| &t.kind) {
+    while let Some(op) = match iter.peek().map(|t| &t.kind) {
         Some(TokenKind::Plus) => Some(ASTUnaryOp::Identity),
         Some(TokenKind::Minus) => Some(ASTUnaryOp::Minus),
         Some(TokenKind::Await) => Some(ASTUnaryOp::Await),
@@ -89,7 +89,7 @@ pub fn parse_expr_with_ops<'a>(
     let mut value = parse_expr_without_ops(iter);
 
     // Calls/subscriptions have higher precedence, i.e. `-get_num()` should be parsed as `-(get_num())`
-    while let Some(op) = match peek_non_blank(iter).map(|t| &t.kind) {
+    while let Some(op) = match iter.peek().map(|t| &t.kind) {
         Some(TokenKind::OpeningParenthesis) => Some(ASTBinaryOp::Call),
         Some(TokenKind::OpeningBracket) => Some(ASTBinaryOp::Subscript),
         _ => None,
@@ -129,7 +129,7 @@ pub fn parse_expr_without_ops<'a>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
 ) -> ASTValue<'a> {
     #[rustfmt::skip]
-    match &peek_non_blank(iter).expect("unexpected EOF").kind {
+    match &iter.peek().expect("unexpected EOF").kind {
         TokenKind::Identifier(_) => ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap()),
         TokenKind::Integer(_) => ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap()),
         TokenKind::BinaryInteger(_) => ASTValue::Number(iter.next().unwrap().kind.into_binary_integer().unwrap() as i64),

@@ -5,13 +5,13 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
     expressions::parse_expr,
-    utils::{delemited_by, expect, peek_non_blank},
+    utils::{delemited_by, expect},
 };
 
 pub fn parse_dictionary<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     expect!(iter, TokenKind::OpeningBrace);
 
-    let value = match peek_non_blank(iter).expect("unexpected EOF").kind {
+    let value = match iter.peek().expect("unexpected EOF").kind {
         #[rustfmt::skip]
         TokenKind::ClosingBrace => vec![], // empty dict
         TokenKind::Identifier(_) => parse_lua_dict(iter),

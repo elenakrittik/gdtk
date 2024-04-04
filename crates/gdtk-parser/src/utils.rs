@@ -20,36 +20,6 @@ pub macro expect {
     }}
 }
 
-pub fn peek_non_blank<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
-) -> Option<&Token<'a>> {
-    loop {
-        if iter
-            .peek()
-            .is_some_and(|t| matches!(t.kind, TokenKind::Blank(_)))
-        {
-            iter.next();
-        } else if iter.peek().is_some() {
-            break Some(iter.peek().unwrap());
-        } else {
-            break None;
-        }
-    }
-}
-
-pub fn next_non_blank<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> Token<'a> {
-    loop {
-        if let Some(token) = iter.next() {
-            match token.kind {
-                TokenKind::Blank(_) => (),
-                _ => break token,
-            }
-        } else {
-            panic!("unexpected EOF");
-        }
-    }
-}
-
 /// Parses a list of values (as defined by the passed callback) separated by the specified delimiter.
 /// ``stop_at`` is used to know when to stop looking for new values.
 pub fn delemited_by<'a, I, V>(

@@ -4,7 +4,7 @@ use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::expressions::parse_expr;
-use crate::utils::{expect, next_non_blank, peek_non_blank};
+use crate::utils::expect;
 
 /// Parses variable body, i.e. any variable without preceding keywords.
 pub fn parse_variable_body<'a>(
@@ -23,38 +23,31 @@ pub fn parse_variable_body<'a>(
     // [var] ident: type = val
     // [var] ident: type
 
-    if peek_non_blank(iter).is_some_and(|t| t.kind.is_colon() || t.kind.is_assignment()) {
-        match peek_non_blank(iter).expect("unexpected EOF").kind {
-            TokenKind::Colon => {
-                iter.next();
+    match iter.peek().map(|t| &t.kind) {
+        Some(TokenKind::Colon) => {
+            iter.next();
 
-                match peek_non_blank(iter).expect("unexpected EOF").kind {
-                    TokenKind::Assignment => {
+            match iter.peek().expect("unexpected EOF").kind {
+                TokenKind::Assignment => {
+                    iter.next();
+                    infer_type = true;
+                    value = Some(parse_expr(iter));
+                }
+                _ => {
+                    typehint = Some(parse_expr(iter));
+
+                    if iter.peek().is_some_and(|t| t.kind.is_assignment()) {
                         iter.next();
-                        infer_type = true;
                         value = Some(parse_expr(iter));
                     }
-                    _ => {
-                        typehint = Some(parse_expr(iter));
-
-                        if peek_non_blank(iter).is_some_and(|t| t.kind.is_assignment()) {
-                            match next_non_blank(iter) {
-                                Token {
-                                    kind: TokenKind::Assignment,
-                                    ..
-                                } => value = Some(parse_expr(iter)),
-                                _ => unreachable!(),
-                            }
-                        }
-                    }
-                };
-            }
-            TokenKind::Assignment => {
-                iter.next();
-                value = Some(parse_expr(iter))
-            }
-            _ => unreachable!(),
+                }
+            };
         }
+        Some(TokenKind::Assignment) => {
+            iter.next();
+            value = Some(parse_expr(iter))
+        }
+        _ => (),
     }
 
     ASTVariable {

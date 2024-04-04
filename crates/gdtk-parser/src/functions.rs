@@ -6,7 +6,7 @@ use gdtk_lexer::{Token, TokenKind};
 use crate::block::parse_block;
 use crate::expressions::parse_expr;
 use crate::statement::parse_statement;
-use crate::utils::{delemited_by, expect, peek_non_blank};
+use crate::utils::{delemited_by, expect};
 use crate::variables::parse_variable_body;
 
 pub fn parse_func<'a>(
@@ -20,7 +20,10 @@ pub fn parse_func<'a>(
     #[allow(unused_assignments)] // false positive
     let mut body = None;
 
-    if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_))) {
+    if iter
+        .peek()
+        .is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_)))
+    {
         identifier = Some(expect!(iter, TokenKind::Identifier(s), s));
     }
 
@@ -35,14 +38,20 @@ pub fn parse_func<'a>(
 
     expect!(iter, TokenKind::ClosingParenthesis);
 
-    if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Arrow)) {
+    if iter
+        .peek()
+        .is_some_and(|t| matches!(t.kind, TokenKind::Arrow))
+    {
         iter.next();
         return_type = Some(parse_expr(iter));
     }
 
     expect!(iter, TokenKind::Colon);
 
-    if peek_non_blank(iter).is_some_and(|t| matches!(t.kind, TokenKind::Newline)) {
+    if iter
+        .peek()
+        .is_some_and(|t| matches!(t.kind, TokenKind::Newline))
+    {
         body = Some(parse_block(iter, lambda));
     } else {
         body = Some(vec![parse_statement(iter)]);

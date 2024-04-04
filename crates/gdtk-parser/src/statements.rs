@@ -7,10 +7,7 @@ use gdtk_ast::poor::{
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
-    block::parse_block,
-    expressions::parse_expr,
-    utils::{expect, peek_non_blank},
-    variables::parse_variable_body,
+    block::parse_block, expressions::parse_expr, utils::expect, variables::parse_variable_body,
 };
 
 /// Parses a `return` statement.
@@ -29,7 +26,7 @@ pub fn parse_for_stmt<'a>(
     let identifier = expect!(iter, TokenKind::Identifier(s), s);
     let mut typehint = None;
 
-    if peek_non_blank(iter).is_some_and(|t| t.kind.is_colon()) {
+    if iter.peek().is_some_and(|t| t.kind.is_colon()) {
         iter.next();
         typehint = Some(parse_expr(iter));
     }
