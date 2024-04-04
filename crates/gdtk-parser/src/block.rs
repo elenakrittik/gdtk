@@ -12,8 +12,8 @@ pub fn parse_block<'a>(
 ) -> CodeBlock<'a> {
     let mut stmts = vec![];
 
-    expect!(iter, TokenKind::Newline, ());
-    expect!(iter, TokenKind::Indent, ());
+    expect!(iter, TokenKind::Newline);
+    expect!(iter, TokenKind::Indent);
 
     while let Some(Token { kind, .. }) = iter.peek() {
         match kind {

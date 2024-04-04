@@ -4,14 +4,14 @@ use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::expressions::parse_expr;
-use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
+use crate::utils::{expect, next_non_blank, peek_non_blank};
 
 /// Parses variable body, i.e. any variable without preceding keywords.
 pub fn parse_variable_body<'a>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
     kind: ASTVariableKind,
 ) -> ASTVariable<'a> {
-    let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
+    let identifier = expect!(iter, TokenKind::Identifier(s), s);
     let mut typehint = None;
     let mut infer_type = false;
     let mut value = None;

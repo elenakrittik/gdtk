@@ -5,7 +5,7 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
     functions::parse_func,
-    utils::{delemited_by, expect_blank_prefixed, peek_non_blank},
+    utils::{delemited_by, expect, peek_non_blank},
     values::parse_dictionary,
 };
 
@@ -29,7 +29,6 @@ pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
         Some(TokenKind::NotEqual) => Some(ASTBinaryOp::NotEqual),
         Some(TokenKind::And | TokenKind::SymbolizedAnd) => Some(ASTBinaryOp::And),
         Some(TokenKind::Or | TokenKind::SymbolizedOr) => Some(ASTBinaryOp::Or),
-        Some(TokenKind::Not | TokenKind::SymbolizedNot) => Some(ASTBinaryOp::Not),
         Some(TokenKind::BitwiseAnd) => Some(ASTBinaryOp::BitwiseAnd),
         Some(TokenKind::BitwiseOr) => Some(ASTBinaryOp::BitwiseOr),
         Some(TokenKind::BitwiseXor) => Some(ASTBinaryOp::BitwiseXor),
@@ -75,7 +74,7 @@ pub fn parse_expr_with_ops<'a>(
     let mut prefix_ops = vec![];
 
     while let Some(op) = match peek_non_blank(iter).map(|t| &t.kind) {
-        Some(TokenKind::Plus) => Some(ASTUnaryOp::Plus),
+        Some(TokenKind::Plus) => Some(ASTUnaryOp::Identity),
         Some(TokenKind::Minus) => Some(ASTUnaryOp::Minus),
         Some(TokenKind::Await) => Some(ASTUnaryOp::Await),
         Some(TokenKind::BitwiseNot) => Some(ASTUnaryOp::BitwiseNot),
@@ -108,16 +107,12 @@ pub fn parse_expr_with_ops<'a>(
                         parse_expr,
                     ))),
                 );
-                expect_blank_prefixed!(iter, TokenKind::ClosingParenthesis, ());
-            },
+                expect!(iter, TokenKind::ClosingParenthesis);
+            }
             ASTBinaryOp::Subscript => {
-                value = ASTValue::BinaryExpr(
-                    Box::new(value),
-                    op,
-                    Box::new(parse_expr(iter)),
-                );
-                expect_blank_prefixed!(iter, TokenKind::ClosingBracket, ());
-            },
+                value = ASTValue::BinaryExpr(Box::new(value), op, Box::new(parse_expr(iter)));
+                expect!(iter, TokenKind::ClosingBracket);
+            }
             _ => unreachable!(),
         }
     }
@@ -157,7 +152,7 @@ pub fn parse_expr_without_ops<'a>(
                 &[TokenKind::ClosingBracket],
                 parse_expr,
             ));
-            expect_blank_prefixed!(iter, TokenKind::ClosingBracket, ());
+            expect!(iter, TokenKind::ClosingBracket);
 
             value
         }
@@ -165,7 +160,7 @@ pub fn parse_expr_without_ops<'a>(
         TokenKind::OpeningParenthesis => {
             iter.next();
             let value = ASTValue::Group(Box::new(parse_expr(iter)));
-            expect_blank_prefixed!(iter, TokenKind::ClosingParenthesis, ());
+            expect!(iter, TokenKind::ClosingParenthesis);
             value
         },
         other => panic!("unknown or unsupported expression: {other:?}"),

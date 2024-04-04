@@ -5,3 +5,5 @@ match expr:
         pass
     ..:
         pass
+
+enum MyEnum { A, B, C = 1 }

@@ -4,47 +4,21 @@ use std::iter::Peekable;
 
 use gdtk_lexer::{Token, TokenKind};
 
-pub macro expect($iter:expr, $variant:pat, $ret:expr) {{
-    type Token<'a> = ::gdtk_lexer::Token<'a>;
+/// Assert that the next token is of the given variant, and optionally
+/// return it's value.
+pub macro expect {
+    ($iter:expr, $variant:pat) => {
+        $crate::utils::expect!($iter, $variant, ())
+    },
+    ($iter:expr, $variant:pat, $ret:expr) => {{
+        type Token<'a> = ::gdtk_lexer::Token<'a>;
 
-    match $iter.next() {
-        Some(Token { kind: $variant, .. }) => $ret,
-        other => panic!("expected {}, found {other:?}", stringify!($variant)),
-    }
-}}
-
-pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {{
-    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
-
-    loop {
-        if let Some(token) = $iter.next() {
-            match token.kind {
-                TokenKind::Blank(_) => (),
-                $variant => break $ret,
-                _ => panic!("expected {}, found {token:?}", stringify!($variant)),
-            }
-        } else {
-            panic!("unexpected EOF");
+        match $iter.next() {
+            Some(Token { kind: $variant, .. }) => $ret,
+            other => panic!("expected {}, found {other:?}", stringify!($variant)),
         }
-    }
-}}
-
-// pub macro peek_non_blank($iter:expr) {{
-//     type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
-
-//     loop {
-//         if let Some(token) = $iter.peek() {
-//             match token.kind {
-//                 TokenKind::Blank(_) => {
-//                     $iter.next();
-//                 }
-//                 _ => break token,
-//             }
-//         } else {
-//             panic!("unexpected EOF");
-//         }
-//     }
-// }}
+    }}
+}
 
 pub fn peek_non_blank<'a>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
