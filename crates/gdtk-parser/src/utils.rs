@@ -1,5 +1,3 @@
-// TODO: refactor some stuff to utilize new option to .peek()
-
 use std::iter::Peekable;
 
 use gdtk_lexer::{Token, TokenKind};

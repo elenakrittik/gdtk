@@ -6,20 +6,14 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ahash = { version = "0.8.6", features = ["serde"] }
+ahash = "0.8.6"
 dirs = "5.0.1"
-gdtk-macros = { version = "0.1.0", path = "../gdtk-macros" }
 gdtk-utils = { version = "0.1.0", path = "../gdtk-utils" }
-reqwest = { version = "0.12.2", features = ["json"] }
+serde = { version = "1.0.197", features = ["derive"] }
+reqwest = "0.12.2"
 thiserror = "1.0.50"
-bytes = "1.5.0"
 toml = "0.8.6"
 versions = "6.0.0"
-xxhash-rust = { version = "0.8.7", features = ["xxh3"] }
 scraper = "0.19.0"
-rayon = "1.8.0"
-serde = { version = "1.0.192", features = ["derive"] }
-tokio = "1.34.0"
 url = "2.4.1"
-serde_json = "1.0.114"
 tabled = "0.15.0"

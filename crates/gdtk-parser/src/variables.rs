@@ -34,11 +34,15 @@ pub fn parse_variable_body<'a>(
                     value = Some(parse_expr(iter));
                 }
                 _ => {
-                    typehint = Some(parse_expr(iter));
+                    let typehint_val = parse_expr(iter);
 
-                    if iter.peek().is_some_and(|t| t.kind.is_assignment()) {
-                        iter.next();
-                        value = Some(parse_expr(iter));
+                    if typehint_val.as_binary_expr().is_some_and(|(_, op, _)| op.is_assignment()) {
+                        let (lhs, _, rhs) = typehint_val.into_binary_expr().unwrap();
+
+                        typehint = Some(lhs);
+                        value = Some(rhs);
+                    } else {
+                        typehint = Some(typehint_val);
                     }
                 }
             };

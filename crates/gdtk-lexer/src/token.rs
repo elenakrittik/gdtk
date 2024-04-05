@@ -284,6 +284,9 @@ pub enum TokenKind<'a> {
     #[token("var")]
     Var,
 
+    #[token("when")]
+    When,
+
     /* Punctuation */
     
     #[regex("@")]

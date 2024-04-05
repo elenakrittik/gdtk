@@ -10,6 +10,5 @@ gdtk-lexer = { version = "0.1.0", path = "../gdtk-lexer" }
 gdtk-ast = { version = "0.1.0", path = "../gdtk-ast" }
 gdtk-diag = { version = "0.1.0", path = "../gdtk-diag" }
 thiserror = "1.0.43"
-prec = { version = "1.1.0", git = "https://github.com/mcpar-land/prec" }
 pratt = "0.4.0"
 enum-as-inner = "0.6.0"

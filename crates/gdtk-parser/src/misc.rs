@@ -16,14 +16,22 @@ pub fn parse_annotation<'a>(
 
     let identifier = expect!(iter, TokenKind::Identifier(i), i);
 
-    expect!(iter, TokenKind::OpeningParenthesis);
-    let arguments = delemited_by(
-        iter,
-        TokenKind::Comma,
-        &[TokenKind::ClosingParenthesis],
-        parse_expr,
-    );
-    expect!(iter, TokenKind::ClosingParenthesis);
+    let arguments = if iter.peek().is_some_and(|t| t.kind.is_opening_parenthesis()) {
+        iter.next();
+
+        let args = delemited_by(
+            iter,
+            TokenKind::Comma,
+            &[TokenKind::ClosingParenthesis],
+            parse_expr,
+        );
+
+        expect!(iter, TokenKind::ClosingParenthesis);
+
+        Some(args)
+    } else {
+        None
+    };
 
     ASTAnnotation {
         identifier,
@@ -36,17 +44,95 @@ pub fn parse_signal<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) ->
 
     let identifier = expect!(iter, TokenKind::Identifier(s), s);
 
-    expect!(iter, TokenKind::OpeningParenthesis);
-    let parameters = delemited_by(
-        iter,
-        TokenKind::Comma,
-        &[TokenKind::ClosingParenthesis],
-        |iter| parse_variable_body(iter, ASTVariableKind::Binding),
-    );
-    expect!(iter, TokenKind::ClosingParenthesis);
+    let parameters = if iter.peek().is_some_and(|t| t.kind.is_opening_parenthesis()) {
+        iter.next();
+
+        let params = delemited_by(
+            iter,
+            TokenKind::Comma,
+            &[TokenKind::ClosingParenthesis],
+            |iter| parse_variable_body(iter, ASTVariableKind::Binding),
+        );
+
+        expect!(iter, TokenKind::ClosingParenthesis);
+
+        Some(params)
+    } else {
+        None
+    };
 
     ASTSignal {
         identifier,
         parameters,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::create_parser;
+    use gdtk_ast::poor::*;
+
+    #[test]
+    fn test_annotation_empty() {
+        let mut parser = create_parser("@annotation");
+        let result = parse_annotation(&mut parser);
+        let expected = ASTAnnotation {
+            identifier: "annotation",
+            arguments: None,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_annotation_zero_args() {
+        let mut parser = create_parser("@annotation()");
+        let result = parse_annotation(&mut parser);
+        let expected = ASTAnnotation {
+            identifier: "annotation",
+            arguments: Some(vec![]),
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_annotation_one_arg() {
+        let mut parser = create_parser("@annotation(0)");
+        let result = parse_annotation(&mut parser);
+        let expected = ASTAnnotation {
+            identifier: "annotation",
+            arguments: Some(vec![ASTValue::Number(0)]),
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_annotation_two_args() {
+        let mut parser = create_parser("@annotation(0, 1)");
+        let result = parse_annotation(&mut parser);
+        let expected = ASTAnnotation {
+            identifier: "annotation",
+            arguments: Some(vec![
+                ASTValue::Number(0),
+                ASTValue::Number(1),
+            ]),
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_annotation_trailing_comma() {
+        let mut parser = create_parser("@annotation(0,)");
+        let result = parse_annotation(&mut parser);
+        let expected = ASTAnnotation {
+            identifier: "annotation",
+            arguments: Some(vec![ASTValue::Number(0)]),
+        };
+
+        assert_eq!(result, expected);
     }
 }

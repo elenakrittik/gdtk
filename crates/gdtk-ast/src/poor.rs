@@ -77,9 +77,11 @@ pub enum ASTValue<'a> {
     String(&'a str),
     /// A ``StringName`` literal.
     StringName(&'a str),
-    /// TODO: change stringname/node/uniquenode/nodepath literals to be an PrefixExpr(string, ...) // or not?
+    /// A ``Node`` literal.
     Node(&'a str),
+    /// A ``UniqueNode`` literal.
     UniqueNode(&'a str),
+    /// A ``NodePath`` literal.
     NodePath(&'a str),
     /// A boolean literal.
     Boolean(bool),
@@ -95,14 +97,8 @@ pub enum ASTValue<'a> {
     PostfixExpr(Box<ASTValue<'a>>, ASTPostfixOp),
     /// A binary expression.
     BinaryExpr(Box<ASTValue<'a>>, ASTBinaryOp, Box<ASTValue<'a>>),
-    /// A comment.
-    Comment(&'a str),
-}
-
-impl<'a> prec::Token<ASTValue<'a>, ()> for ASTValue<'a> {
-    fn convert(self, _ctx: &()) -> Result<ASTValue<'a>, ()> {
-        Ok(self)
-    }
+    /// A special value type used to represent call and subscript operations' arguments.
+    Args(Vec<ASTValue<'a>>),
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
@@ -299,6 +295,7 @@ pub struct ASTMatchStmt<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTMatchArm<'a> {
     pub pattern: ASTMatchPattern<'a>,
+    pub guard: Option<ASTValue<'a>>,
     pub block: CodeBlock<'a>,
 }
 
@@ -308,8 +305,8 @@ pub enum ASTMatchPattern<'a> {
     Value(ASTValue<'a>),
     Binding(ASTVariable<'a>),
     Array(Vec<ASTMatchPattern<'a>>),
-    // TODO: Alternative(Vec<ASTMatchPattern<'a>>), // i forgot how these are spelled out
-    // TODO: Dictionary(???),
+    Alternative(Vec<ASTMatchPattern<'a>>),
+    Dictionary(Vec<(ASTValue<'a>, Option<Box<ASTMatchPattern<'a>>>)>),
     /// Represents the ".." found inside array and dictionary patterns.
     Ignore,
 }
@@ -318,12 +315,12 @@ pub enum ASTMatchPattern<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTAnnotation<'a> {
     pub identifier: &'a str,
-    pub arguments: Vec<ASTValue<'a>>,
+    pub arguments: Option<Vec<ASTValue<'a>>>,
 }
 
 /// A ``signal`` definition.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTSignal<'a> {
     pub identifier: &'a str,
-    pub parameters: Vec<ASTVariable<'a>>,
+    pub parameters: Option<Vec<ASTVariable<'a>>>,
 }

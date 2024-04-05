@@ -1,6 +1,6 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTBinaryOp, ASTPostfixOp, ASTPrefixOp, ASTValue};
+use gdtk_ast::poor::{ASTBinaryOp, ASTPrefixOp, ASTValue};
 use gdtk_lexer::{Token, TokenKind};
 use pratt::{Affix, Associativity, PrattParser, Precedence};
 
@@ -10,6 +10,7 @@ use crate::{
     values::{parse_array, parse_dictionary},
 };
 
+/// Parse an expression.
 pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
     ExprParser.parse(parse_expr_impl(iter).into_iter()).unwrap()
 }
@@ -17,7 +18,6 @@ pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
 fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> Vec<ExprIR<'a>> {
     let mut result = parse_expr_with_ops(iter);
 
-    #[rustfmt::skip]
     while let Some(op) = match iter.peek().map(|t| &t.kind) {
         Some(TokenKind::Plus) => Some(ASTBinaryOp::Add),
         Some(TokenKind::Minus) => Some(ASTBinaryOp::Substract),
@@ -64,13 +64,32 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
         iter.next();
         result.push(ExprIR::Binary(op));
 
-        let value = parse_expr_with_ops(iter);
-        result.extend(value);
-
         match op {
-            ASTBinaryOp::Call => expect!(iter, TokenKind::ClosingParenthesis),
-            ASTBinaryOp::Subscript => expect!(iter, TokenKind::ClosingBracket),
-            _ => (),
+            ASTBinaryOp::Call => {
+                let values = delemited_by(
+                    iter,
+                    TokenKind::Comma,
+                    &[TokenKind::ClosingParenthesis],
+                    parse_expr,
+                );
+
+                expect!(iter, TokenKind::ClosingParenthesis);
+
+                result.push(ExprIR::Primary(ASTValue::Args(values)));
+            },
+            ASTBinaryOp::Subscript => {
+                let values = delemited_by(
+                    iter,
+                    TokenKind::Comma,
+                    &[TokenKind::ClosingBracket],
+                    parse_expr,
+                );
+
+                expect!(iter, TokenKind::ClosingBracket);
+
+                result.push(ExprIR::Primary(ASTValue::Args(values)));
+            },
+            _ => result.extend(parse_expr_with_ops(iter)),
         }
     }
 
@@ -105,7 +124,6 @@ fn parse_expr_with_ops<'a>(
 fn parse_expr_without_ops<'a>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
 ) -> ExprIR<'a> {
-    #[rustfmt::skip]
     let value = match &iter.peek().expect("unexpected EOF").kind {
         TokenKind::Identifier(_) => ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap()),
         TokenKind::Integer(_) => ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap()),
@@ -119,7 +137,6 @@ fn parse_expr_without_ops<'a>(
         TokenKind::UniqueNode(_) => ASTValue::UniqueNode(iter.next().unwrap().kind.into_unique_node().unwrap()),
         TokenKind::NodePath(_) => ASTValue::NodePath(iter.next().unwrap().kind.into_node_path().unwrap()),
         TokenKind::Boolean(_) => ASTValue::Boolean(iter.next().unwrap().kind.into_boolean().unwrap()),
-        TokenKind::Comment(_) => ASTValue::Comment(iter.next().unwrap().kind.into_comment().unwrap()),
         TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),
         TokenKind::OpeningBracket => ASTValue::Array(parse_array(iter)),
         TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
@@ -165,9 +182,9 @@ where
         Ok(match input {
             ExprIR::Primary(_) => Affix::Nilfix,
             ExprIR::Group(_) => Affix::Nilfix,
-            ExprIR::Binary(ASTBinaryOp::Subscript) => Affix::Postfix(Precedence(22)),
+            ExprIR::Binary(ASTBinaryOp::Subscript) => Affix::Infix(Precedence(22), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::PropertyAccess) => Affix::Infix(Precedence(21), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::Call) => Affix::Postfix(Precedence(20)),
+            ExprIR::Binary(ASTBinaryOp::Call) => Affix::Infix(Precedence(20), Associativity::Left),
             ExprIR::Prefix(ASTPrefixOp::Await) => Affix::Prefix(Precedence(19)),
             ExprIR::Binary(ASTBinaryOp::TypeCheck) => Affix::Infix(Precedence(18), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::Power) => Affix::Infix(Precedence(17), Associativity::Left),
@@ -261,6 +278,6 @@ where
         lhs: Self::Output,
         op: Self::Input,
     ) -> Result<Self::Output, Self::Error> {
-        unreachable!()
+        unimplemented!()
     }
 }
