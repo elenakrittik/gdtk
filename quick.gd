@@ -1,3 +1,4 @@
-match expr:
-	[1]:
-		pass
+func(): pass
+
+func():
+	pass

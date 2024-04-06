@@ -1,6 +1,6 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, ASTVariableKind};
+use gdtk_ast::poor::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, ASTVariableKind, DictPattern};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
@@ -47,33 +47,19 @@ pub fn parse_match_arm<'a>(
     ASTMatchArm { pattern, guard, block }
 }
 
-/// Parse a match arm pattern.
+/// Parse a match arm pattern, including alternatives.
 pub fn parse_match_pattern<'a>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchPattern<'a> {
-    fn callback<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTMatchPattern<'a> {
-        match iter
-            .peek()
-            .expect("unexpected EOF, expected a pattern")
-            .kind
-        {
-            TokenKind::Range => advance_and_parse(iter, |_| ASTMatchPattern::Ignore),
-            TokenKind::Var => parse_match_binding_pattern(iter),
-            TokenKind::OpeningBracket => parse_match_array_pattern(iter),
-            TokenKind::OpeningBrace => parse_match_dict_pattern(iter),
-            _ => ASTMatchPattern::Value(parse_expr(iter)),
-        }
-    }
-
     let pats = delemited_by(
         iter,
         TokenKind::Comma,
         &[
             TokenKind::When,
             TokenKind::Colon,
-            TokenKind::ClosingBracket, // HACK/TODO: figure out why this is needed
+            TokenKind::ClosingBracket, // i don't know why this is necessary, let's pray it doesn't break anything
         ],
-        callback,
+        parse_raw_match_pattern,
     );
 
     if pats.len() == 1 {
@@ -83,10 +69,25 @@ pub fn parse_match_pattern<'a>(
     }
 }
 
+/// Parse a match arm pattern without checking for alternatives.
+fn parse_raw_match_pattern<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTMatchPattern<'a> {
+    match iter
+        .peek()
+        .expect("unexpected EOF, expected a pattern")
+        .kind
+    {
+        TokenKind::Range => advance_and_parse(iter, |_| ASTMatchPattern::Ignore),
+        TokenKind::Var => parse_match_binding_pattern(iter),
+        TokenKind::OpeningBracket => parse_match_array_pattern(iter),
+        TokenKind::OpeningBrace => parse_match_dict_pattern(iter),
+        _ => ASTMatchPattern::Value(parse_expr(iter)),
+    }
+}
+
 fn parse_match_binding_pattern<'a>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchPattern<'a> {
-    iter.next();
+    expect!(iter, TokenKind::Var);
 
     let identifier = expect!(iter, TokenKind::Identifier(s), s);
 
@@ -108,7 +109,7 @@ fn parse_match_array_pattern<'a>(
         iter,
         TokenKind::Comma,
         &[TokenKind::ClosingBracket],
-        parse_match_pattern,
+        parse_raw_match_pattern,
     );
 
     expect!(iter, TokenKind::ClosingBracket);
@@ -117,7 +118,34 @@ fn parse_match_array_pattern<'a>(
 }
 
 fn parse_match_dict_pattern<'a>(
-    _iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchPattern<'a> {
-    todo!()
+    expect!(iter, TokenKind::OpeningBrace);
+
+    fn callback<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> DictPattern<'a> {
+        let key = parse_expr(iter);
+
+        let value = if iter.peek().is_some_and(|t| t.kind == TokenKind::Colon) {
+            expect!(iter, TokenKind::Colon);
+
+            let value = parse_raw_match_pattern(iter);
+
+            Some(Box::new(value))
+        } else {
+            None
+        };
+
+        (key, value)
+    }
+
+    let pairs = delemited_by(
+        iter,
+        TokenKind::Comma,
+        &[TokenKind::ClosingBrace],
+        callback,
+    );
+
+    expect!(iter, TokenKind::ClosingBrace);
+
+    ASTMatchPattern::Dictionary(pairs)
 }

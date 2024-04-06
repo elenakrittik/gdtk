@@ -12,7 +12,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Commands {
     /// Namespace for arbitrary commands useful when working on gdtk.
-    #[cfg(debug_assertions)]
+    #[cfg(any(debug_assertions, feature = "dev"))]
     Dev {
         #[command(subcommand)]
         command: DevCommands,

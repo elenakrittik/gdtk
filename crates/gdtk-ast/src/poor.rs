@@ -1,8 +1,10 @@
 //! "Poor" GDScript abstract syntax tree. Does not interlink any references
 //! and instead represents them as raw strings.
 
+/// A block of statements.
 pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
 pub type DictValue<'a> = Vec<(ASTValue<'a>, ASTValue<'a>)>;
+pub type DictPattern<'a> = (ASTValue<'a>, Option<Box<ASTMatchPattern<'a>>>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTFile<'a> {
@@ -306,7 +308,7 @@ pub enum ASTMatchPattern<'a> {
     Binding(ASTVariable<'a>),
     Array(Vec<ASTMatchPattern<'a>>),
     Alternative(Vec<ASTMatchPattern<'a>>),
-    Dictionary(Vec<(ASTValue<'a>, Option<Box<ASTMatchPattern<'a>>>)>),
+    Dictionary(Vec<DictPattern<'a>>),
     /// Represents the ".." found inside array and dictionary patterns.
     Ignore,
 }
