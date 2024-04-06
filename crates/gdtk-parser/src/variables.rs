@@ -39,8 +39,8 @@ pub fn parse_variable_body<'a>(
                     if typehint_val.as_binary_expr().is_some_and(|(_, op, _)| op.is_assignment()) {
                         let (lhs, _, rhs) = typehint_val.into_binary_expr().unwrap();
 
-                        typehint = Some(lhs);
-                        value = Some(rhs);
+                        typehint = Some(*lhs);
+                        value = Some(*rhs);
                     } else {
                         typehint = Some(typehint_val);
                     }

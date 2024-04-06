@@ -275,8 +275,8 @@ where
 
     fn postfix(
         &mut self,
-        lhs: Self::Output,
-        op: Self::Input,
+        _lhs: Self::Output,
+        _op: Self::Input,
     ) -> Result<Self::Output, Self::Error> {
         unimplemented!()
     }
