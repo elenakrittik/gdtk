@@ -9,7 +9,7 @@ use crate::{
     error::Error,
 };
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {
     pub range: Span,
     pub kind: TokenKind<'a>,

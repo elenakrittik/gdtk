@@ -1,10 +1,9 @@
+#[cfg(any(debug_assertions, feature = "dev"))]
+use gdtk::cli::DevCommands;
 use gdtk::{
     cli::{Commands, GodotCommands},
     commands as cmds,
 };
-
-#[cfg(any(debug_assertions, feature = "dev"))]
-use gdtk::cli::DevCommands;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {

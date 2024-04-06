@@ -56,3 +56,89 @@ where
     iter.next();
     callback(iter)
 }
+
+#[cfg(test)]
+mod tests {
+    use gdtk_lexer::TokenKind;
+
+    use crate::test_utils::{create_parser, next_kind};
+    use crate::utils::{advance_and_parse, delemited_by, expect};
+
+    #[test]
+    fn test_delemited_by() {
+        let mut parser = create_parser("1, 2;");
+        let result = delemited_by(
+            &mut parser,
+            TokenKind::Comma,
+            &[TokenKind::Semicolon],
+            next_kind,
+        );
+        let expected = vec![TokenKind::Integer(1), TokenKind::Integer(2)];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_delemited_by_trailing() {
+        let mut parser = create_parser("1, 2,;");
+        let result = delemited_by(
+            &mut parser,
+            TokenKind::Comma,
+            &[TokenKind::Semicolon],
+            next_kind,
+        );
+        let expected = vec![TokenKind::Integer(1), TokenKind::Integer(2)];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_delemited_by_single() {
+        let mut parser = create_parser("1;");
+        let result = delemited_by(
+            &mut parser,
+            TokenKind::Comma,
+            &[TokenKind::Semicolon],
+            next_kind,
+        );
+        let expected = vec![TokenKind::Integer(1)];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_delemited_by_empty() {
+        let mut parser = create_parser(";");
+        let result = delemited_by(
+            &mut parser,
+            TokenKind::Comma,
+            &[TokenKind::Semicolon],
+            next_kind,
+        );
+        let expected = vec![];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_advance_and_parse() {
+        let mut parser = create_parser(".1");
+        let result = advance_and_parse(&mut parser, next_kind);
+        let expected = TokenKind::Integer(1);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_advance_and_parse_invalid() {
+        let mut parser = create_parser(";");
+        advance_and_parse(&mut parser, next_kind);
+    }
+
+    #[test]
+    fn test_expect() {
+        let mut parser = create_parser(";");
+        expect!(&mut parser, TokenKind::Semicolon);
+    }
+}

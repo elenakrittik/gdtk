@@ -69,9 +69,10 @@ pub fn parse_signal<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) ->
 
 #[cfg(test)]
 mod tests {
+    use gdtk_ast::poor::*;
+
     use super::*;
     use crate::test_utils::create_parser;
-    use gdtk_ast::poor::*;
 
     #[test]
     fn test_annotation_empty() {
@@ -115,10 +116,7 @@ mod tests {
         let result = parse_annotation(&mut parser);
         let expected = ASTAnnotation {
             identifier: "annotation",
-            arguments: Some(vec![
-                ASTValue::Number(0),
-                ASTValue::Number(1),
-            ]),
+            arguments: Some(vec![ASTValue::Number(0), ASTValue::Number(1)]),
         };
 
         assert_eq!(result, expected);

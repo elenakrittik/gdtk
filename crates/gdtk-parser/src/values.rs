@@ -76,3 +76,66 @@ fn parse_python_dict<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -
         parse_python_key_value,
     )
 }
+
+#[cfg(test)]
+mod tests {
+    use gdtk_ast::poor::*;
+
+    use crate::test_utils::create_parser;
+    use crate::values::{parse_array, parse_dictionary};
+
+    #[test]
+    fn test_parse_empty_array() {
+        let mut parser = create_parser("[]");
+        let result = parse_array(&mut parser);
+        let expected = vec![];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_array() {
+        let mut parser = create_parser("[1, 2, 3]");
+        let result = parse_array(&mut parser);
+        let expected = vec![
+            ASTValue::Number(1),
+            ASTValue::Number(2),
+            ASTValue::Number(3),
+        ];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_empty_dictionary() {
+        let mut parser = create_parser("{}");
+        let result = parse_dictionary(&mut parser);
+        let expected = vec![];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_python_dictionary() {
+        let mut parser = create_parser("{'a': 1, 'b': 2}");
+        let result = parse_dictionary(&mut parser);
+        let expected = vec![
+            (ASTValue::String("a"), ASTValue::Number(1)),
+            (ASTValue::String("b"), ASTValue::Number(2)),
+        ];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_lua_dictionary() {
+        let mut parser = create_parser("{a = 1, b = 2}");
+        let result = parse_dictionary(&mut parser);
+        let expected = vec![
+            (ASTValue::Identifier("a"), ASTValue::Number(1)),
+            (ASTValue::Identifier("b"), ASTValue::Number(2)),
+        ];
+
+        assert_eq!(result, expected);
+    }
+}

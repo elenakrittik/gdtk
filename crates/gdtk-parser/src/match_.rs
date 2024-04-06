@@ -1,6 +1,8 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, ASTVariableKind, DictPattern};
+use gdtk_ast::poor::{
+    ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, ASTVariableKind, DictPattern,
+};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
@@ -44,7 +46,11 @@ pub fn parse_match_arm<'a>(
 
     let block = parse_block(iter, false);
 
-    ASTMatchArm { pattern, guard, block }
+    ASTMatchArm {
+        pattern,
+        guard,
+        block,
+    }
 }
 
 /// Parse a match arm pattern, including alternatives.
@@ -70,7 +76,9 @@ pub fn parse_match_pattern<'a>(
 }
 
 /// Parse a match arm pattern without checking for alternatives.
-fn parse_raw_match_pattern<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTMatchPattern<'a> {
+fn parse_raw_match_pattern<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> ASTMatchPattern<'a> {
     match iter
         .peek()
         .expect("unexpected EOF, expected a pattern")
@@ -138,12 +146,7 @@ fn parse_match_dict_pattern<'a>(
         (key, value)
     }
 
-    let pairs = delemited_by(
-        iter,
-        TokenKind::Comma,
-        &[TokenKind::ClosingBrace],
-        callback,
-    );
+    let pairs = delemited_by(iter, TokenKind::Comma, &[TokenKind::ClosingBrace], callback);
 
     expect!(iter, TokenKind::ClosingBrace);
 

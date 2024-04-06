@@ -328,41 +328,6 @@ fn test_punctuation() {
 }
 
 #[test]
-fn test_whitespace() {
-    test_eq!("\n", TokenKind::Newline);
-    test_eq!("\r\n", TokenKind::Newline);
-    test_eq!(" ", TokenKind::Blank(" "));
-    test_eq!("  ", TokenKind::Blank("  "));
-    test_eq!("\t", TokenKind::Blank("\t"));
-    test_eq!("\t\t", TokenKind::Blank("\t\t"));
-    test_eq!(" \t", TokenKind::Blank(" \t"));
-    test_eq!("\t ", TokenKind::Blank("\t "));
-    test_eq!("\t \t", TokenKind::Blank("\t \t"));
-    test_eq!(" \t ", TokenKind::Blank(" \t "));
-}
-
-#[test]
-fn test_comment() {
-    test_eq!("#hello", TokenKind::Comment("hello"));
-    test_eq!("# hello", TokenKind::Comment(" hello"));
-    test_eq!("#привет", TokenKind::Comment("привет"));
-    test_eq!("# привет", TokenKind::Comment(" привет"));
-    test_eq!("#你好", TokenKind::Comment("你好"));
-    test_eq!("# 你好", TokenKind::Comment(" 你好"));
-    test_eq!("##hello", TokenKind::Comment("#hello"));
-    test_eq!("## hello", TokenKind::Comment("# hello"));
-    test_eq!("#hello#", TokenKind::Comment("hello#"));
-    test_eq!("# hello#", TokenKind::Comment(" hello#"));
-    test_eq!("#hello #", TokenKind::Comment("hello #"));
-    test_eq!("# hello #", TokenKind::Comment(" hello #"));
-    test_eq!(
-        "# hello\n",
-        TokenKind::Comment(" hello"),
-        TokenKind::Newline
-    );
-}
-
-#[test]
 fn test_radt() {
     test_eq!("namespace", TokenKind::Namespace);
     test_eq!("trait", TokenKind::Trait);

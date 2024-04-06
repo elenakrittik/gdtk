@@ -55,8 +55,12 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
         Some(TokenKind::BitwiseOrAssignment) => Some(ASTBinaryOp::BitwiseNotAssignment),
         Some(TokenKind::BitwiseNotAssignment) => Some(ASTBinaryOp::BitwiseNotAssignment),
         Some(TokenKind::BitwiseXorAssignment) => Some(ASTBinaryOp::BitwiseXorAssignment),
-        Some(TokenKind::BitwiseShiftLeftAssignment) => Some(ASTBinaryOp::BitwiseShiftLeftAssignment),
-        Some(TokenKind::BitwiseShiftRightAssignment) => Some(ASTBinaryOp::BitwiseShiftRightAssignment),
+        Some(TokenKind::BitwiseShiftLeftAssignment) => {
+            Some(ASTBinaryOp::BitwiseShiftLeftAssignment)
+        }
+        Some(TokenKind::BitwiseShiftRightAssignment) => {
+            Some(ASTBinaryOp::BitwiseShiftRightAssignment)
+        }
         Some(TokenKind::OpeningParenthesis) => Some(ASTBinaryOp::Call),
         Some(TokenKind::OpeningBracket) => Some(ASTBinaryOp::Subscript),
         _ => None,
@@ -76,7 +80,7 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
                 expect!(iter, TokenKind::ClosingParenthesis);
 
                 result.push(ExprIR::Primary(ASTValue::Args(values)));
-            },
+            }
             ASTBinaryOp::Subscript => {
                 let values = delemited_by(
                     iter,
@@ -88,7 +92,7 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
                 expect!(iter, TokenKind::ClosingBracket);
 
                 result.push(ExprIR::Primary(ASTValue::Args(values)));
-            },
+            }
             _ => result.extend(parse_expr_with_ops(iter)),
         }
     }
@@ -121,22 +125,38 @@ fn parse_expr_with_ops<'a>(
 }
 
 /// Parses a "clean" value, without checking for possible prefix or postfix OPs
-fn parse_expr_without_ops<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
-) -> ExprIR<'a> {
+fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ExprIR<'a> {
     let value = match &iter.peek().expect("unexpected EOF").kind {
-        TokenKind::Identifier(_) => ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap()),
-        TokenKind::Integer(_) => ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap()),
-        TokenKind::BinaryInteger(_) => ASTValue::Number(iter.next().unwrap().kind.into_binary_integer().unwrap() as i64),
-        TokenKind::HexInteger(_) => ASTValue::Number(iter.next().unwrap().kind.into_hex_integer().unwrap() as i64),
+        TokenKind::Identifier(_) => {
+            ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap())
+        }
+        TokenKind::Integer(_) => {
+            ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap())
+        }
+        TokenKind::BinaryInteger(_) => {
+            ASTValue::Number(iter.next().unwrap().kind.into_binary_integer().unwrap() as i64)
+        }
+        TokenKind::HexInteger(_) => {
+            ASTValue::Number(iter.next().unwrap().kind.into_hex_integer().unwrap() as i64)
+        }
         TokenKind::Float(_) => ASTValue::Float(iter.next().unwrap().kind.into_float().unwrap()),
-        TokenKind::ScientificFloat(_) => ASTValue::Float(iter.next().unwrap().kind.into_scientific_float().unwrap()),
+        TokenKind::ScientificFloat(_) => {
+            ASTValue::Float(iter.next().unwrap().kind.into_scientific_float().unwrap())
+        }
         TokenKind::String(_) => ASTValue::String(iter.next().unwrap().kind.into_string().unwrap()),
-        TokenKind::StringName(_) => ASTValue::StringName(iter.next().unwrap().kind.into_string_name().unwrap()),
+        TokenKind::StringName(_) => {
+            ASTValue::StringName(iter.next().unwrap().kind.into_string_name().unwrap())
+        }
         TokenKind::Node(_) => ASTValue::Node(iter.next().unwrap().kind.into_node().unwrap()),
-        TokenKind::UniqueNode(_) => ASTValue::UniqueNode(iter.next().unwrap().kind.into_unique_node().unwrap()),
-        TokenKind::NodePath(_) => ASTValue::NodePath(iter.next().unwrap().kind.into_node_path().unwrap()),
-        TokenKind::Boolean(_) => ASTValue::Boolean(iter.next().unwrap().kind.into_boolean().unwrap()),
+        TokenKind::UniqueNode(_) => {
+            ASTValue::UniqueNode(iter.next().unwrap().kind.into_unique_node().unwrap())
+        }
+        TokenKind::NodePath(_) => {
+            ASTValue::NodePath(iter.next().unwrap().kind.into_node_path().unwrap())
+        }
+        TokenKind::Boolean(_) => {
+            ASTValue::Boolean(iter.next().unwrap().kind.into_boolean().unwrap())
+        }
         TokenKind::Func => ASTValue::Lambda(parse_func(iter, true)),
         TokenKind::OpeningBracket => ASTValue::Array(parse_array(iter)),
         TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(iter)),
@@ -148,12 +168,15 @@ fn parse_expr_without_ops<'a>(
                 TokenKind::Comma,
                 &[TokenKind::ClosingParenthesis],
                 parse_expr_impl,
-            ).into_iter().flatten().collect();
+            )
+            .into_iter()
+            .flatten()
+            .collect();
 
             expect!(iter, TokenKind::ClosingParenthesis);
-            
+
             return ExprIR::Group(values);
-        },
+        }
         other => panic!("unknown or unsupported expression: {other:?}"),
     };
 
@@ -182,11 +205,17 @@ where
         Ok(match input {
             ExprIR::Primary(_) => Affix::Nilfix,
             ExprIR::Group(_) => Affix::Nilfix,
-            ExprIR::Binary(ASTBinaryOp::Subscript) => Affix::Infix(Precedence(22), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::PropertyAccess) => Affix::Infix(Precedence(21), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Subscript) => {
+                Affix::Infix(Precedence(22), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::PropertyAccess) => {
+                Affix::Infix(Precedence(21), Associativity::Left)
+            }
             ExprIR::Binary(ASTBinaryOp::Call) => Affix::Infix(Precedence(20), Associativity::Left),
             ExprIR::Prefix(ASTPrefixOp::Await) => Affix::Prefix(Precedence(19)),
-            ExprIR::Binary(ASTBinaryOp::TypeCheck) => Affix::Infix(Precedence(18), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::TypeCheck) => {
+                Affix::Infix(Precedence(18), Associativity::Left)
+            }
             ExprIR::Binary(ASTBinaryOp::Power) => Affix::Infix(Precedence(17), Associativity::Left),
 
             ExprIR::Prefix(ASTPrefixOp::BitwiseNot) => Affix::Prefix(Precedence(16)),
@@ -194,31 +223,61 @@ where
             ExprIR::Prefix(ASTPrefixOp::Identity) => Affix::Prefix(Precedence(15)),
             ExprIR::Prefix(ASTPrefixOp::Negation) => Affix::Prefix(Precedence(15)),
 
-            ExprIR::Binary(ASTBinaryOp::Multiply) => Affix::Infix(Precedence(14), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::Divide) => Affix::Infix(Precedence(14), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::Remainder) => Affix::Infix(Precedence(14), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Multiply) => {
+                Affix::Infix(Precedence(14), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::Divide) => {
+                Affix::Infix(Precedence(14), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::Remainder) => {
+                Affix::Infix(Precedence(14), Associativity::Left)
+            }
 
             ExprIR::Binary(ASTBinaryOp::Add) => Affix::Infix(Precedence(13), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::Substract) => Affix::Infix(Precedence(13), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Substract) => {
+                Affix::Infix(Precedence(13), Associativity::Left)
+            }
 
-            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeft) => Affix::Infix(Precedence(12), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRight) => Affix::Infix(Precedence(12), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeft) => {
+                Affix::Infix(Precedence(12), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRight) => {
+                Affix::Infix(Precedence(12), Associativity::Left)
+            }
 
-            ExprIR::Binary(ASTBinaryOp::BitwiseAnd) => Affix::Infix(Precedence(11), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseAnd) => {
+                Affix::Infix(Precedence(11), Associativity::Left)
+            }
 
-            ExprIR::Binary(ASTBinaryOp::BitwiseXor) => Affix::Infix(Precedence(10), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseXor) => {
+                Affix::Infix(Precedence(10), Associativity::Left)
+            }
 
-            ExprIR::Binary(ASTBinaryOp::BitwiseOr) => Affix::Infix(Precedence(9), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseOr) => {
+                Affix::Infix(Precedence(9), Associativity::Left)
+            }
 
             ExprIR::Binary(ASTBinaryOp::Equal) => Affix::Infix(Precedence(8), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::NotEqual) => Affix::Infix(Precedence(8), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::NotEqual) => {
+                Affix::Infix(Precedence(8), Associativity::Left)
+            }
             ExprIR::Binary(ASTBinaryOp::Less) => Affix::Infix(Precedence(8), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::LessOrEqual) => Affix::Infix(Precedence(8), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::Greater) => Affix::Infix(Precedence(8), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::GreaterOrEqual) => Affix::Infix(Precedence(8), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::LessOrEqual) => {
+                Affix::Infix(Precedence(8), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::Greater) => {
+                Affix::Infix(Precedence(8), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::GreaterOrEqual) => {
+                Affix::Infix(Precedence(8), Associativity::Left)
+            }
 
-            ExprIR::Binary(ASTBinaryOp::Contains) => Affix::Infix(Precedence(7), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::NotContains) => Affix::Infix(Precedence(7), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Contains) => {
+                Affix::Infix(Precedence(7), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::NotContains) => {
+                Affix::Infix(Precedence(7), Associativity::Left)
+            }
 
             ExprIR::Prefix(ASTPrefixOp::Not) => Affix::Prefix(Precedence(6)),
 
@@ -227,24 +286,51 @@ where
             ExprIR::Binary(ASTBinaryOp::Or) => Affix::Infix(Precedence(4), Associativity::Left),
 
             // TODO: ternary if/else
-
             ExprIR::Binary(ASTBinaryOp::Range) => Affix::Infix(Precedence(3), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::TypeCast) => Affix::Infix(Precedence(2), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::TypeCast) => {
+                Affix::Infix(Precedence(2), Associativity::Left)
+            }
 
-            ExprIR::Binary(ASTBinaryOp::Assignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::PlusAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::MinusAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::MultiplyAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::DivideAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::PowerAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::RemainderAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::BitwiseAndAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::BitwiseOrAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::BitwiseXorAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::BitwiseNotAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeftAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRightAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Assignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::PlusAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::MinusAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::MultiplyAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::DivideAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::PowerAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::RemainderAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseAndAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseOrAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseXorAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseNotAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeftAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRightAssignment) => {
+                Affix::Infix(Precedence(1), Associativity::Left)
+            }
         })
     }
 
@@ -262,15 +348,18 @@ where
         op: Self::Input,
         rhs: Self::Output,
     ) -> Result<Self::Output, Self::Error> {
-        Ok(ASTValue::BinaryExpr(Box::new(lhs), op.into_binary().unwrap(), Box::new(rhs)))
+        Ok(ASTValue::BinaryExpr(
+            Box::new(lhs),
+            op.into_binary().unwrap(),
+            Box::new(rhs),
+        ))
     }
 
-    fn prefix(
-        &mut self,
-        op: Self::Input,
-        rhs: Self::Output,
-    ) -> Result<Self::Output, Self::Error> {
-        Ok(ASTValue::PrefixExpr(op.into_prefix().unwrap(), Box::new(rhs)))
+    fn prefix(&mut self, op: Self::Input, rhs: Self::Output) -> Result<Self::Output, Self::Error> {
+        Ok(ASTValue::PrefixExpr(
+            op.into_prefix().unwrap(),
+            Box::new(rhs),
+        ))
     }
 
     fn postfix(
