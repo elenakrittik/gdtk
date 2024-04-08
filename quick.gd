@@ -1,4 +1,5 @@
-func(): pass
-
-func():
+func(
+	idk,
+		what,
+):
 	pass

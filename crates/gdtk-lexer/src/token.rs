@@ -1,13 +1,11 @@
 use gdtk_diag::Span;
 use logos::Logos;
 
-use crate::{
-    callbacks::{
-        parse_binary, parse_bool, parse_e_notation, parse_float, parse_hex, parse_integer,
-        strip_prefix_and_quotes, strip_quotes, trim_comment,
-    },
-    error::Error,
+use crate::callbacks::{
+    convert, convert_radix, mut_open_paren, trim_quotes,
+    State,
 };
+use crate::error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {
@@ -31,7 +29,7 @@ impl<'a> Token<'a> {
 
 #[rustfmt::skip]
 #[derive(Logos, Debug, PartialEq, Clone, enum_as_inner::EnumAsInner)]
-#[logos(error = Error)]
+#[logos(error = Error, extras = State)]
 #[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
 #[logos(subpattern float = r"(?&int)\.(?&int)")]
 #[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
@@ -45,37 +43,37 @@ pub enum TokenKind<'a> {
 
     // TODO: multiline strings
 
-    #[regex("(?&int)", parse_integer)]
-    Integer(i64),
+    #[regex("(?&int)", convert)]
+    Integer(u64),
 
-    #[regex("0b[01](_?[01])*", parse_binary)]
+    #[regex("0b[01](_?[01])*", convert_radix::<2>)]
     BinaryInteger(u64),
 
-    #[regex("0x[0-9abcdefABCDEF](_?[0-9abcdefABCDEF])*", parse_hex)]
+    #[regex("0x[0-9abcdefABCDEF](_?[0-9abcdefABCDEF])*", convert_radix::<16>)]
     HexInteger(u64),
 
-    #[regex(r"(?&float)[eE][+-](?&int)", parse_e_notation)]
+    #[regex(r"(?&float)[eE][+-](?&int)", convert)]
     ScientificFloat(f64),
 
-    #[regex(r"(?&float)", parse_float)]
+    #[regex(r"(?&float)", convert)]
     Float(f64),
 
-    #[regex("(?&string)", strip_quotes)]
+    #[regex("(?&string)", trim_quotes::<false>)]
     String(&'a str),
 
-    #[regex("\\&(?&string)", |lex| strip_prefix_and_quotes(lex, '&'))]
+    #[regex("\\&(?&string)", trim_quotes::<true>)]
     StringName(&'a str),
 
-    #[regex("\\$(?&string)", |lex| strip_prefix_and_quotes(lex, '$'))]
+    #[regex("\\$(?&string)", trim_quotes::<true>)]
     Node(&'a str),
 
-    #[regex("%(?&string)", |lex| strip_prefix_and_quotes(lex, '%'))]
+    #[regex("%(?&string)", trim_quotes::<true>)]
     UniqueNode(&'a str),
 
-    #[regex("\\^(?&string)", |lex| strip_prefix_and_quotes(lex, '^'))]
+    #[regex("\\^(?&string)", trim_quotes::<true>)]
     NodePath(&'a str),
 
-    #[regex("true|false", parse_bool)]
+    #[regex("true|false", convert)]
     Boolean(bool),
 
     #[token("null")]
@@ -292,22 +290,22 @@ pub enum TokenKind<'a> {
     #[regex("@")]
     Annotation,
 
-    #[token("(")]
+    #[token("(", mut_open_paren::<1>)]
     OpeningParenthesis,
 
-    #[token(")")]
+    #[token(")", mut_open_paren::<-1>)]
     ClosingParenthesis,
 
-    #[token("[")]
+    #[token("[", mut_open_paren::<1>)]
     OpeningBracket,
 
-    #[token("]")]
+    #[token("]", mut_open_paren::<-1>)]
     ClosingBracket,
 
-    #[token("{")]
+    #[token("{", mut_open_paren::<1>)]
     OpeningBrace,
 
-    #[token("}")]
+    #[token("}", mut_open_paren::<-1>)]
     ClosingBrace,
 
     #[token(",")]
@@ -336,16 +334,16 @@ pub enum TokenKind<'a> {
     #[regex("(\r\n)|(\n)")]
     Newline,
 
+    #[regex("([ ]|[\t])+")]
+    Blank(&'a str),
+
     // these two are generated manually
     Indent,
     Dedent,
 
-    #[regex("([ ]|[\t])+")]
-    Blank(&'a str),
-
     /* Specials */
 
-    #[regex("#[^\n]*", trim_comment)]
+    #[regex("#[^\n]*", |lex| &lex.slice()[1..])]
     Comment(&'a str),
 
     /* Reserved and deprecated tokens */

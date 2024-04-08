@@ -27,6 +27,19 @@ pub struct ASTVariable<'a> {
     pub kind: ASTVariableKind,
 }
 
+impl<'a> ASTVariable<'a> {
+    /// Creates a [ASTVariableKind::Binding] variable with ``infer_type: true``.
+    pub fn new_binding(identifier: &'a str) -> Self {
+        Self {
+            identifier,
+            infer_type: true,
+            typehint: None,
+            value: None,
+            kind: ASTVariableKind::Binding,
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum ASTVariableKind {
     /// Regular (`var`) variable.
@@ -72,7 +85,7 @@ pub enum ASTValue<'a> {
     /// An identifier literal.
     Identifier(&'a str),
     /// An integer number literal.
-    Number(i64),
+    Number(u64),
     /// A float number literal.
     Float(f64),
     /// A string literal.
@@ -87,6 +100,8 @@ pub enum ASTValue<'a> {
     NodePath(&'a str),
     /// A boolean literal.
     Boolean(bool),
+    /// A null literal.
+    Null,
     /// An array literal.
     Array(Vec<ASTValue<'a>>),
     /// A dictionary literal.

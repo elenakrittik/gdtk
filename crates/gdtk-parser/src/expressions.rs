@@ -134,10 +134,10 @@ fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>
             ASTValue::Number(iter.next().unwrap().kind.into_integer().unwrap())
         }
         TokenKind::BinaryInteger(_) => {
-            ASTValue::Number(iter.next().unwrap().kind.into_binary_integer().unwrap() as i64)
+            ASTValue::Number(iter.next().unwrap().kind.into_binary_integer().unwrap())
         }
         TokenKind::HexInteger(_) => {
-            ASTValue::Number(iter.next().unwrap().kind.into_hex_integer().unwrap() as i64)
+            ASTValue::Number(iter.next().unwrap().kind.into_hex_integer().unwrap())
         }
         TokenKind::Float(_) => ASTValue::Float(iter.next().unwrap().kind.into_float().unwrap()),
         TokenKind::ScientificFloat(_) => {
@@ -177,6 +177,7 @@ fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>
 
             return ExprIR::Group(values);
         }
+        TokenKind::Null => ASTValue::Null,
         other => panic!("unknown or unsupported expression: {other:?}"),
     };
 
