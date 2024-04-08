@@ -19,8 +19,12 @@ pub fn lex<'a>(input: &'a str) -> impl Iterator<Item = Token<'a>> {
     generate_indents(tokens).into_iter()
 }
 
+// I wish there was a way to make it 100% iterator-based, but last time i tried it turned out
+// clunky and even slower. Help appreciated
 fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -> Vec<Token<'a>> {
+    // TODO: check if smallvec will improve perf here
     let mut stack: Vec<usize> = vec![0];
+    // TODO: check if pre-allocating will improve perf here
     let mut out = vec![];
 
     while let Some(token) = tokens.next() {
@@ -42,6 +46,7 @@ fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -
                 match indent_len.cmp(stack.last().unwrap()) {
                     std::cmp::Ordering::Greater => {
                         stack.push(indent_len);
+                        // TODO: check if squashing into .extend will improve perf here
                         out.push(token);
                         out.push(Token {
                             range,
@@ -55,6 +60,7 @@ fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -
                             kind: TokenKind::Dedent,
                         };
 
+                        // TODO: check if squashing into std::iter::repeat_n will improve perf here
                         while stack.last().unwrap() > &indent_len {
                             stack.pop();
                             out.push(token.clone());
