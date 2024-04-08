@@ -1,7 +1,7 @@
 #![feature(decl_macro, stmt_expr_attributes)]
 
 use gdtk_ast::poor::{ASTFile, CodeBlock};
-use gdtk_lexer::{token::TokenKind, LexOutput};
+use gdtk_lexer::{token::TokenKind, Token};
 
 pub use crate::error::Error;
 use crate::statement::parse_statement;
@@ -21,11 +21,9 @@ pub mod values;
 pub mod variables;
 
 /// Parse the result of lexing a GDScript source code file.
-pub fn parse_file(lexed: LexOutput) -> Result<ASTFile, Error> {
-    let (tokens, _diags) = lexed;
-
+pub fn parse_file<'a>(tokens: impl Iterator<Item = Token<'a>>) -> Result<ASTFile<'a>, Error> {
     let mut body: CodeBlock<'_> = vec![];
-    let mut iter = tokens.into_iter().peekable();
+    let mut iter = tokens.peekable();
 
     while let Some(token) = iter.peek() {
         match token.kind {

@@ -6,20 +6,13 @@ macro_rules! test_eq {
             let lexed = $crate::lex($input);
             let mut lexemes = vec![];
 
-            for token in lexed.0 {
+            for token in lexed {
                 lexemes.push(token.kind);
             }
 
             assert_eq!(lexemes, vec![$($expected),*]);
         }
     };
-}
-
-macro_rules! test_all_fails {
-    ($input: expr) => {{
-        let lexed = $crate::lex($input);
-        assert!(lexed.0.len() == 0 && lexed.1.len() > 0);
-    }};
 }
 
 #[test]
@@ -332,11 +325,4 @@ fn test_radt() {
     test_eq!("namespace", TokenKind::Namespace);
     test_eq!("trait", TokenKind::Trait);
     test_eq!("yield", TokenKind::Yield);
-}
-
-#[test]
-fn test_invalid() {
-    test_all_fails!("`");
-    test_all_fails!("\0");
-    test_all_fails!("\r");
 }
