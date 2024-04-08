@@ -152,3 +152,92 @@ fn parse_match_dict_pattern<'a>(
 
     ASTMatchPattern::Dictionary(pairs)
 }
+
+#[cfg(test)]
+mod tests {
+    use gdtk_ast::poor::*;
+
+    use crate::match_::{parse_match, parse_match_arm, parse_match_pattern};
+    use crate::test_utils::create_parser;
+
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+    #[test]
+    fn test_value_pattern() {
+        let mut parser = create_parser("literal");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+
+        assert_eq!(result, expected);
+    }
+}
