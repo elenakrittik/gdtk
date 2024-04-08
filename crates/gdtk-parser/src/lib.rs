@@ -27,7 +27,7 @@ pub fn parse_file<'a>(tokens: impl Iterator<Item = Token<'a>>) -> Result<ASTFile
 
     while let Some(token) = iter.peek() {
         match token.kind {
-            // ignore leftover dedents from parsing paremthwsized lambdas
+            // ignore leftover dedents from parsing parenthesized lambdas
             TokenKind::Newline | TokenKind::Dedent => {
                 iter.next();
             }
