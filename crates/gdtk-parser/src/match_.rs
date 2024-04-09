@@ -63,7 +63,6 @@ pub fn parse_match_pattern<'a>(
         &[
             TokenKind::When,
             TokenKind::Colon,
-            TokenKind::ClosingBracket, // i don't know why this is necessary, let's pray it doesn't break anything
         ],
         parse_raw_match_pattern,
     );
