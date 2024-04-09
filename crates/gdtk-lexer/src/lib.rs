@@ -10,7 +10,7 @@ use logos::Logos;
 
 pub use crate::token::{Token, TokenKind};
 
-pub fn lex<'a>(input: &'a str) -> impl Iterator<Item = Token<'a>> {
+pub fn lex(input: &str) -> impl Iterator<Item = Token<'_>> {
     let tokens = TokenKind::lexer(input)
         .spanned()
         .filter_map(|(result, range)| result.ok().map(|kind| Token { range, kind }))

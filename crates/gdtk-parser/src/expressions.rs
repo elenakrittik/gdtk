@@ -60,7 +60,7 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
         }
         Some(TokenKind::BitwiseShiftRightAssignment) => {
             Some(ASTBinaryOp::BitwiseShiftRightAssignment)
-        },
+        }
         _ => None,
     } {
         iter.next();
@@ -93,7 +93,13 @@ fn parse_expr_with_ops<'a>(
     result.push(parse_expr_without_ops(iter));
 
     loop {
-        if !matches!(iter.peek(), Some(Token { kind: TokenKind::OpeningParenthesis | TokenKind::OpeningBracket, .. })) {
+        if !matches!(
+            iter.peek(),
+            Some(Token {
+                kind: TokenKind::OpeningParenthesis | TokenKind::OpeningBracket,
+                ..
+            })
+        ) {
             break;
         }
 
@@ -367,11 +373,10 @@ where
         ))
     }
 
-    fn postfix(
-        &mut self,
-        lhs: Self::Output,
-        op: Self::Input,
-    ) -> Result<Self::Output, Self::Error> {
-        Ok(ASTValue::PostfixExpr(Box::new(lhs), op.into_postfix().unwrap()))
+    fn postfix(&mut self, lhs: Self::Output, op: Self::Input) -> Result<Self::Output, Self::Error> {
+        Ok(ASTValue::PostfixExpr(
+            Box::new(lhs),
+            op.into_postfix().unwrap(),
+        ))
     }
 }

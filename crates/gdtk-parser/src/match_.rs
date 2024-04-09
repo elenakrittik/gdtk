@@ -1,7 +1,7 @@
 use std::iter::Peekable;
 
 use gdtk_ast::poor::{
-    ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, ASTVariableKind, DictPattern,
+    ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, DictPattern,
 };
 use gdtk_lexer::{Token, TokenKind};
 
@@ -60,10 +60,7 @@ pub fn parse_match_pattern<'a>(
     let pats = delemited_by(
         iter,
         TokenKind::Comma,
-        &[
-            TokenKind::When,
-            TokenKind::Colon,
-        ],
+        &[TokenKind::When, TokenKind::Colon],
         parse_raw_match_pattern,
     );
 
@@ -150,7 +147,7 @@ fn parse_match_dict_pattern<'a>(
 mod tests {
     use gdtk_ast::poor::*;
 
-    use crate::match_::{parse_match, parse_match_arm, parse_match_pattern};
+    use crate::match_::{parse_match_arm, parse_match_pattern};
     use crate::test_utils::create_parser;
 
     #[test]
