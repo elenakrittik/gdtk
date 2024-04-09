@@ -1,5 +1,1 @@
-func(
-	idk,
-		what,
-):
-	pass
+expr(expr)[1]()()

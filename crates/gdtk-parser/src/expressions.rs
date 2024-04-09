@@ -1,12 +1,12 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTBinaryOp, ASTPrefixOp, ASTValue};
+use gdtk_ast::poor::{ASTBinaryOp, ASTPostfixOp, ASTPrefixOp, ASTValue};
 use gdtk_lexer::{Token, TokenKind};
 use pratt::{Affix, Associativity, PrattParser, Precedence};
 
 use crate::{
     functions::parse_func,
-    utils::{delemited_by, expect},
+    utils::{advance_and_parse, delemited_by, expect},
     values::{parse_array, parse_dictionary},
 };
 
@@ -60,41 +60,12 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
         }
         Some(TokenKind::BitwiseShiftRightAssignment) => {
             Some(ASTBinaryOp::BitwiseShiftRightAssignment)
-        }
-        Some(TokenKind::OpeningParenthesis) => Some(ASTBinaryOp::Call),
-        Some(TokenKind::OpeningBracket) => Some(ASTBinaryOp::Subscript),
+        },
         _ => None,
     } {
         iter.next();
         result.push(ExprIR::Binary(op));
-
-        match op {
-            ASTBinaryOp::Call => {
-                let values = delemited_by(
-                    iter,
-                    TokenKind::Comma,
-                    &[TokenKind::ClosingParenthesis],
-                    parse_expr,
-                );
-
-                expect!(iter, TokenKind::ClosingParenthesis);
-
-                result.push(ExprIR::Primary(ASTValue::Args(values)));
-            }
-            ASTBinaryOp::Subscript => {
-                let values = delemited_by(
-                    iter,
-                    TokenKind::Comma,
-                    &[TokenKind::ClosingBracket],
-                    parse_expr,
-                );
-
-                expect!(iter, TokenKind::ClosingBracket);
-
-                result.push(ExprIR::Primary(ASTValue::Args(values)));
-            }
-            _ => result.extend(parse_expr_with_ops(iter)),
-        }
+        result.extend(parse_expr_with_ops(iter));
     }
 
     result
@@ -120,6 +91,40 @@ fn parse_expr_with_ops<'a>(
     }
 
     result.push(parse_expr_without_ops(iter));
+
+    loop {
+        if !matches!(iter.peek(), Some(Token { kind: TokenKind::OpeningParenthesis | TokenKind::OpeningBracket, .. })) {
+            break;
+        }
+
+        match iter.next().unwrap().kind {
+            TokenKind::OpeningParenthesis => {
+                let values = delemited_by(
+                    iter,
+                    TokenKind::Comma,
+                    &[TokenKind::ClosingParenthesis],
+                    parse_expr,
+                );
+
+                expect!(iter, TokenKind::ClosingParenthesis);
+
+                result.push(ExprIR::Postfix(ASTPostfixOp::Call(values)));
+            }
+            TokenKind::OpeningBracket => {
+                let values = delemited_by(
+                    iter,
+                    TokenKind::Comma,
+                    &[TokenKind::ClosingBracket],
+                    parse_expr,
+                );
+
+                expect!(iter, TokenKind::ClosingBracket);
+
+                result.push(ExprIR::Postfix(ASTPostfixOp::Subscript(values)));
+            }
+            _ => unreachable!(),
+        }
+    }
 
     result
 }
@@ -177,7 +182,7 @@ fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>
 
             return ExprIR::Group(values);
         }
-        TokenKind::Null => ASTValue::Null,
+        TokenKind::Null => advance_and_parse(iter, |_| ASTValue::Null),
         other => panic!("unknown or unsupported expression: {other:?}"),
     };
 
@@ -187,6 +192,7 @@ fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>
 #[derive(Debug, enum_as_inner::EnumAsInner)]
 enum ExprIR<'a> {
     Prefix(ASTPrefixOp),
+    Postfix(ASTPostfixOp<'a>),
     Binary(ASTBinaryOp),
     Group(Vec<ExprIR<'a>>),
     Primary(ASTValue<'a>),
@@ -206,13 +212,11 @@ where
         Ok(match input {
             ExprIR::Primary(_) => Affix::Nilfix,
             ExprIR::Group(_) => Affix::Nilfix,
-            ExprIR::Binary(ASTBinaryOp::Subscript) => {
-                Affix::Infix(Precedence(22), Associativity::Left)
-            }
+            ExprIR::Postfix(ASTPostfixOp::Subscript(_)) => Affix::Postfix(Precedence(22)),
             ExprIR::Binary(ASTBinaryOp::PropertyAccess) => {
                 Affix::Infix(Precedence(21), Associativity::Left)
             }
-            ExprIR::Binary(ASTBinaryOp::Call) => Affix::Infix(Precedence(20), Associativity::Left),
+            ExprIR::Postfix(ASTPostfixOp::Call(_)) => Affix::Postfix(Precedence(20)),
             ExprIR::Prefix(ASTPrefixOp::Await) => Affix::Prefix(Precedence(19)),
             ExprIR::Binary(ASTBinaryOp::TypeCheck) => {
                 Affix::Infix(Precedence(18), Associativity::Left)
@@ -365,9 +369,9 @@ where
 
     fn postfix(
         &mut self,
-        _lhs: Self::Output,
-        _op: Self::Input,
+        lhs: Self::Output,
+        op: Self::Input,
     ) -> Result<Self::Output, Self::Error> {
-        unimplemented!()
+        Ok(ASTValue::PostfixExpr(Box::new(lhs), op.into_postfix().unwrap()))
     }
 }

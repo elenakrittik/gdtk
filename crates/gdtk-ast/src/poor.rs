@@ -111,11 +111,9 @@ pub enum ASTValue<'a> {
     /// An unary prefix expression.
     PrefixExpr(ASTPrefixOp, Box<ASTValue<'a>>),
     /// An unary postfix expression.
-    PostfixExpr(Box<ASTValue<'a>>, ASTPostfixOp),
+    PostfixExpr(Box<ASTValue<'a>>, ASTPostfixOp<'a>),
     /// A binary expression.
     BinaryExpr(Box<ASTValue<'a>>, ASTBinaryOp, Box<ASTValue<'a>>),
-    /// A special value type used to represent call and subscript operations' arguments.
-    Args(Vec<ASTValue<'a>>),
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
@@ -132,15 +130,16 @@ pub enum ASTPrefixOp {
     BitwiseNot,
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
-pub enum ASTPostfixOp {}
-
-#[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
-pub enum ASTBinaryOp {
+#[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
+pub enum ASTPostfixOp<'a> {
     /// ``a(b)``.
-    Call,
+    Call(Vec<ASTValue<'a>>),
     /// ``a[b]``.
-    Subscript,
+    Subscript(Vec<ASTValue<'a>>),
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, enum_as_inner::EnumAsInner)]
+pub enum ASTBinaryOp {
     /// ``a < b``.
     Less,
     /// ``a <= b``.

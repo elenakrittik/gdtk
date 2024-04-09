@@ -13,10 +13,7 @@
                     "kind": "bin",
                 }
             },
-            "args": ["dev", "parse", ".\\quick.gd"],
-            "env": {
-                "CARGO_BUILD_TARGET": "x86_64-pc-windows-gnu"
-            }
+            "args": ["dev", "parse", ".\\xml_node.gd"],
         }
     ],
     "inputs": [

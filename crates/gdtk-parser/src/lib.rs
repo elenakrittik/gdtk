@@ -1,3 +1,5 @@
+//! A GDScript 2.0 parser.
+
 #![feature(decl_macro, stmt_expr_attributes)]
 
 use gdtk_ast::poor::{ASTFile, CodeBlock};
