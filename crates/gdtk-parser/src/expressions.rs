@@ -61,11 +61,24 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
         Some(TokenKind::BitwiseShiftRightAssignment) => {
             Some(ASTBinaryOp::BitwiseShiftRightAssignment)
         }
+        Some(TokenKind::If) => Some(ASTBinaryOp::TernaryIfElsePlaceholder),
         _ => None,
     } {
         iter.next();
-        result.push(ExprIR::Binary(op));
-        result.extend(parse_expr_with_ops(iter));
+
+        match op {
+            ASTBinaryOp::TernaryIfElsePlaceholder => {
+                // TODO: Should i use parse_expr or parse_expr_with_ops here?
+                let op = ASTBinaryOp::TernaryIfElse(Box::new(parse_expr(iter)));
+                result.push(ExprIR::Binary(op));
+                expect!(iter, TokenKind::Else);
+                result.push(ExprIR::Primary(parse_expr(iter)));
+            },
+            other => {
+                result.push(ExprIR::Binary(other));
+                result.extend(parse_expr_with_ops(iter));
+            }
+        }
     }
 
     result
@@ -199,7 +212,7 @@ fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>
 enum ExprIR<'a> {
     Prefix(ASTPrefixOp),
     Postfix(ASTPostfixOp<'a>),
-    Binary(ASTBinaryOp),
+    Binary(ASTBinaryOp<'a>),
     Group(Vec<ExprIR<'a>>),
     Primary(ASTValue<'a>),
 }
@@ -296,51 +309,53 @@ where
 
             ExprIR::Binary(ASTBinaryOp::Or) => Affix::Infix(Precedence(4), Associativity::Left),
 
-            // TODO: ternary if/else
-            ExprIR::Binary(ASTBinaryOp::Range) => Affix::Infix(Precedence(3), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::TernaryIfElse(_)) => Affix::Infix(Precedence(3), Associativity::Right),
+            ExprIR::Binary(ASTBinaryOp::TernaryIfElsePlaceholder) => unreachable!(),
+
+            ExprIR::Binary(ASTBinaryOp::Range) => Affix::Infix(Precedence(2), Associativity::Left),
 
             ExprIR::Binary(ASTBinaryOp::TypeCast) => {
-                Affix::Infix(Precedence(2), Associativity::Left)
+                Affix::Infix(Precedence(1), Associativity::Left)
             }
 
             ExprIR::Binary(ASTBinaryOp::Assignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::PlusAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::MinusAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::MultiplyAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::DivideAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::PowerAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::RemainderAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::BitwiseAndAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::BitwiseOrAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::BitwiseXorAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::BitwiseNotAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeftAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
             ExprIR::Binary(ASTBinaryOp::BitwiseShiftRightAssignment) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
+                Affix::Infix(Precedence(0), Associativity::Left)
             }
         })
     }

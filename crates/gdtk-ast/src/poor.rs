@@ -113,7 +113,7 @@ pub enum ASTValue<'a> {
     /// An unary postfix expression.
     PostfixExpr(Box<ASTValue<'a>>, ASTPostfixOp<'a>),
     /// A binary expression.
-    BinaryExpr(Box<ASTValue<'a>>, ASTBinaryOp, Box<ASTValue<'a>>),
+    BinaryExpr(Box<ASTValue<'a>>, ASTBinaryOp<'a>, Box<ASTValue<'a>>),
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
@@ -138,8 +138,8 @@ pub enum ASTPostfixOp<'a> {
     Subscript(Vec<ASTValue<'a>>),
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, enum_as_inner::EnumAsInner)]
-pub enum ASTBinaryOp {
+#[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
+pub enum ASTBinaryOp<'a> {
     /// ``a < b``.
     Less,
     /// ``a <= b``.
@@ -190,6 +190,10 @@ pub enum ASTBinaryOp {
     PropertyAccess,
     /// ``a..b``. **UNOFFICIAL EXTENSION**.
     Range,
+    /// ``a if c else b``.
+    TernaryIfElse(Box<ASTValue<'a>>),
+    /// A placeholder for [ASTBinaryOp::TernaryIfElse].
+    TernaryIfElsePlaceholder,
     /// ``a = b``.
     Assignment,
     /// ``a += b``.
