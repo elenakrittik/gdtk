@@ -394,3 +394,23 @@ where
         ))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use gdtk_ast::poor::*;
+
+    use crate::expressions::parse_expr;
+    use crate::test_utils::create_parser;
+
+    #[test]
+    fn test_literals() {
+        let inputs = &[
+            "ident",
+            "0123556789",
+            "0x123abc",
+            "0.123456789",
+            "1.0e2",
+            "\"\"",
+        ];
+    }
+}
