@@ -34,7 +34,7 @@ pub fn parse_variable_body<'a>(
                     value = Some(parse_expr(iter));
                 }
                 _ => {
-                    let typehint_val = parse_expr(iter);
+                    let typehint_val = dbg!(parse_expr(iter));
 
                     if typehint_val
                         .as_binary_expr()
@@ -42,9 +42,15 @@ pub fn parse_variable_body<'a>(
                     {
                         let (lhs, _, rhs) = typehint_val.into_binary_expr().unwrap();
 
-                        typehint = Some(*lhs);
-                        value = Some(*rhs);
+                        eprintln!("is assignment");
+
+                        typehint = Some(*dbg!(lhs));
+                        value = Some(*dbg!(rhs));
                     } else {
+                        eprintln!("is not assignment");
+
+                        dbg!(iter.peek());
+
                         typehint = Some(typehint_val);
                     }
                 }

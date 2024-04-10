@@ -49,7 +49,7 @@ pub enum TokenKind<'a> {
     #[regex("0x[0-9abcdefABCDEF](_?[0-9abcdefABCDEF])*", convert_radix::<16>)]
     HexInteger(u64),
 
-    #[regex(r"(?&float)[eE][+-](?&int)", convert)]
+    #[regex(r"(?&float)[eE][+-]?(?&int)", convert)]
     ScientificFloat(f64),
 
     #[regex(r"(?&float)", convert)]

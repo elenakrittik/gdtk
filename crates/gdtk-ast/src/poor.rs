@@ -169,7 +169,7 @@ pub enum ASTBinaryOp<'a> {
     /// ``a + b``.
     Add,
     /// ``a - b``.
-    Substract,
+    Subtract,
     /// ``a * b``.
     Multiply,
     /// ``a ** b``.

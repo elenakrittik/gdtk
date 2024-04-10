@@ -20,7 +20,7 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
 
     while let Some(op) = match iter.peek().map(|t| &t.kind) {
         Some(TokenKind::Plus) => Some(ASTBinaryOp::Add),
-        Some(TokenKind::Minus) => Some(ASTBinaryOp::Substract),
+        Some(TokenKind::Minus) => Some(ASTBinaryOp::Subtract),
         Some(TokenKind::Greater) => Some(ASTBinaryOp::Greater),
         Some(TokenKind::GreaterOrEqual) => Some(ASTBinaryOp::GreaterOrEqual),
         Some(TokenKind::Less) => Some(ASTBinaryOp::Less),
@@ -72,7 +72,7 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
                 result.push(ExprIR::Binary(op));
                 expect!(iter, TokenKind::Else);
                 result.push(ExprIR::Primary(parse_expr(iter)));
-            },
+            }
             other => {
                 result.push(ExprIR::Binary(other));
                 result.extend(parse_expr_with_ops(iter));
@@ -80,7 +80,7 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
         }
     }
 
-    result
+    dbg!(result)
 }
 
 /// Parses a value taking into account possible prefix and postfix OPs
@@ -227,135 +227,79 @@ where
     type Output = ASTValue<'a>;
 
     fn query(&mut self, input: &Self::Input) -> Result<Affix, Self::Error> {
+        #[rustfmt::skip]
         Ok(match input {
             ExprIR::Primary(_) => Affix::Nilfix,
             ExprIR::Group(_) => Affix::Nilfix,
-            ExprIR::Postfix(ASTPostfixOp::Subscript(_)) => Affix::Postfix(Precedence(22)),
-            ExprIR::Binary(ASTBinaryOp::PropertyAccess) => {
-                Affix::Infix(Precedence(21), Associativity::Left)
-            }
-            ExprIR::Postfix(ASTPostfixOp::Call(_)) => Affix::Postfix(Precedence(20)),
-            ExprIR::Prefix(ASTPrefixOp::Await) => Affix::Prefix(Precedence(19)),
-            ExprIR::Binary(ASTBinaryOp::TypeCheck) => {
-                Affix::Infix(Precedence(18), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::Power) => Affix::Infix(Precedence(17), Associativity::Left),
 
-            ExprIR::Prefix(ASTPrefixOp::BitwiseNot) => Affix::Prefix(Precedence(16)),
+            ExprIR::Postfix(ASTPostfixOp::Subscript(_)) => Affix::Postfix(Precedence(23)),
+            
+            ExprIR::Binary(ASTBinaryOp::PropertyAccess) => Affix::Infix(Precedence(22), Associativity::Left),
+            
+            ExprIR::Postfix(ASTPostfixOp::Call(_)) => Affix::Postfix(Precedence(21)),
+            
+            ExprIR::Prefix(ASTPrefixOp::Await) => Affix::Prefix(Precedence(20)),
+            
+            ExprIR::Binary(ASTBinaryOp::TypeCheck) => Affix::Infix(Precedence(19), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Power) => Affix::Infix(Precedence(18), Associativity::Left),
 
-            ExprIR::Prefix(ASTPrefixOp::Identity) => Affix::Prefix(Precedence(15)),
-            ExprIR::Prefix(ASTPrefixOp::Negation) => Affix::Prefix(Precedence(15)),
+            ExprIR::Prefix(ASTPrefixOp::BitwiseNot) => Affix::Prefix(Precedence(17)),
 
-            ExprIR::Binary(ASTBinaryOp::Multiply) => {
-                Affix::Infix(Precedence(14), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::Divide) => {
-                Affix::Infix(Precedence(14), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::Remainder) => {
-                Affix::Infix(Precedence(14), Associativity::Left)
-            }
+            ExprIR::Prefix(ASTPrefixOp::Identity) => Affix::Prefix(Precedence(16)),
+            ExprIR::Prefix(ASTPrefixOp::Negation) => Affix::Prefix(Precedence(16)),
 
-            ExprIR::Binary(ASTBinaryOp::Add) => Affix::Infix(Precedence(13), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::Substract) => {
-                Affix::Infix(Precedence(13), Associativity::Left)
-            }
+            ExprIR::Binary(ASTBinaryOp::Multiply) => Affix::Infix(Precedence(15), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Divide) => Affix::Infix(Precedence(15), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Remainder) => Affix::Infix(Precedence(15), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeft) => {
-                Affix::Infix(Precedence(12), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRight) => {
-                Affix::Infix(Precedence(12), Associativity::Left)
-            }
+            ExprIR::Binary(ASTBinaryOp::Add) => Affix::Infix(Precedence(14), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Subtract) => Affix::Infix(Precedence(14), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::BitwiseAnd) => {
-                Affix::Infix(Precedence(11), Associativity::Left)
-            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeft) => Affix::Infix(Precedence(13), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRight) => Affix::Infix(Precedence(13), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::BitwiseXor) => {
-                Affix::Infix(Precedence(10), Associativity::Left)
-            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseAnd) => Affix::Infix(Precedence(12), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::BitwiseOr) => {
-                Affix::Infix(Precedence(9), Associativity::Left)
-            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseXor) => Affix::Infix(Precedence(11), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::Equal) => Affix::Infix(Precedence(8), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::NotEqual) => {
-                Affix::Infix(Precedence(8), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::Less) => Affix::Infix(Precedence(8), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::LessOrEqual) => {
-                Affix::Infix(Precedence(8), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::Greater) => {
-                Affix::Infix(Precedence(8), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::GreaterOrEqual) => {
-                Affix::Infix(Precedence(8), Associativity::Left)
-            }
+            ExprIR::Binary(ASTBinaryOp::BitwiseOr) => Affix::Infix(Precedence(10), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::Contains) => {
-                Affix::Infix(Precedence(7), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::NotContains) => {
-                Affix::Infix(Precedence(7), Associativity::Left)
-            }
+            ExprIR::Binary(ASTBinaryOp::Equal) => Affix::Infix(Precedence(9), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::NotEqual) => Affix::Infix(Precedence(9), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Less) => Affix::Infix(Precedence(9), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::LessOrEqual) => Affix::Infix(Precedence(9), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Greater) => Affix::Infix(Precedence(9), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::GreaterOrEqual) => Affix::Infix(Precedence(9), Associativity::Left),
 
-            ExprIR::Prefix(ASTPrefixOp::Not) => Affix::Prefix(Precedence(6)),
+            ExprIR::Binary(ASTBinaryOp::Contains) => Affix::Infix(Precedence(8), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::NotContains) => Affix::Infix(Precedence(8), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::And) => Affix::Infix(Precedence(5), Associativity::Left),
+            ExprIR::Prefix(ASTPrefixOp::Not) => Affix::Prefix(Precedence(7)),
 
-            ExprIR::Binary(ASTBinaryOp::Or) => Affix::Infix(Precedence(4), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::And) => Affix::Infix(Precedence(6), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::TernaryIfElse(_)) => Affix::Infix(Precedence(3), Associativity::Right),
+            ExprIR::Binary(ASTBinaryOp::Or) => Affix::Infix(Precedence(5), Associativity::Left),
+
+            ExprIR::Binary(ASTBinaryOp::TernaryIfElse(_)) => Affix::Infix(Precedence(4), Associativity::Right),
             ExprIR::Binary(ASTBinaryOp::TernaryIfElsePlaceholder) => unreachable!(),
 
-            ExprIR::Binary(ASTBinaryOp::Range) => Affix::Infix(Precedence(2), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Range) => Affix::Infix(Precedence(3), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::TypeCast) => {
-                Affix::Infix(Precedence(1), Associativity::Left)
-            }
+            ExprIR::Binary(ASTBinaryOp::TypeCast) => Affix::Infix(Precedence(2), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::Assignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::PlusAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::MinusAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::MultiplyAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::DivideAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::PowerAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::RemainderAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::BitwiseAndAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::BitwiseOrAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::BitwiseXorAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::BitwiseNotAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeftAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
-            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRightAssignment) => {
-                Affix::Infix(Precedence(0), Associativity::Left)
-            }
+            ExprIR::Binary(ASTBinaryOp::Assignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::PlusAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::MinusAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::MultiplyAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::DivideAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::PowerAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::RemainderAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseAndAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseOrAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseXorAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseNotAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftLeftAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::BitwiseShiftRightAssignment) => Affix::Infix(Precedence(1), Associativity::Left),
         })
     }
 
@@ -373,11 +317,11 @@ where
         op: Self::Input,
         rhs: Self::Output,
     ) -> Result<Self::Output, Self::Error> {
-        Ok(ASTValue::BinaryExpr(
+        Ok(dbg!(ASTValue::BinaryExpr(
             Box::new(lhs),
             op.into_binary().unwrap(),
             Box::new(rhs),
-        ))
+        )))
     }
 
     fn prefix(&mut self, op: Self::Input, rhs: Self::Output) -> Result<Self::Output, Self::Error> {
@@ -404,13 +348,405 @@ mod tests {
 
     #[test]
     fn test_literals() {
-        let inputs = &[
+        let inputs = [
             "ident",
             "0123556789",
             "0x123abc",
             "0.123456789",
             "1.0e2",
-            "\"\"",
+            "\"string\"",
+            "&\"string\"",
+            "$\"string\"",
+            "%\"string\"",
+            "^\"string\"",
+            "true",
+            "false",
+            "null",
         ];
+        let outputs = [
+            ASTValue::Identifier("ident"),
+            ASTValue::Number(123556789),
+            ASTValue::Number(0x123abc),
+            ASTValue::Float(0.123456789),
+            ASTValue::Float(1.0e2),
+            ASTValue::String("string"),
+            ASTValue::StringName("string"),
+            ASTValue::Node("string"),
+            ASTValue::UniqueNode("string"),
+            ASTValue::NodePath("string"),
+            ASTValue::Boolean(true),
+            ASTValue::Boolean(false),
+            ASTValue::Null,
+        ];
+
+        for (input, output) in inputs.into_iter().zip(outputs) {
+            let mut parser = create_parser(input);
+
+            assert_eq!(parse_expr(&mut parser), output);
+        }
     }
+
+    #[test]
+    fn test_parse_prefix_exprs() {
+        let inputs = ["await 1", "+1", "-1", "not 1", "!1", "~1"];
+        let outputs = [
+            ASTValue::PrefixExpr(ASTPrefixOp::Await, Box::new(ASTValue::Number(1))),
+            ASTValue::PrefixExpr(ASTPrefixOp::Identity, Box::new(ASTValue::Number(1))),
+            ASTValue::PrefixExpr(ASTPrefixOp::Negation, Box::new(ASTValue::Number(1))),
+            ASTValue::PrefixExpr(ASTPrefixOp::Not, Box::new(ASTValue::Number(1))),
+            ASTValue::PrefixExpr(ASTPrefixOp::Not, Box::new(ASTValue::Number(1))),
+            ASTValue::PrefixExpr(ASTPrefixOp::BitwiseNot, Box::new(ASTValue::Number(1))),
+        ];
+
+        for (input, output) in inputs.into_iter().zip(outputs) {
+            let mut parser = create_parser(input);
+
+            assert_eq!(parse_expr(&mut parser), output);
+        }
+    }
+
+    #[test]
+    fn test_parse_postfix_exprs() {
+        let inputs = ["1(2, 3)", "[1, 2, 3][0]", "1.1[0]", "{'foo': 'bar'}['foo']"];
+        let outputs = [
+            ASTValue::PostfixExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTPostfixOp::Call(vec![ASTValue::Number(2), ASTValue::Number(3)]),
+            ),
+            ASTValue::PostfixExpr(
+                Box::new(ASTValue::Array(vec![
+                    ASTValue::Number(1),
+                    ASTValue::Number(2),
+                    ASTValue::Number(3),
+                ])),
+                ASTPostfixOp::Subscript(vec![ASTValue::Number(0)]),
+            ),
+            ASTValue::PostfixExpr(
+                Box::new(ASTValue::Float(1.1)),
+                ASTPostfixOp::Subscript(vec![ASTValue::Number(0)]),
+            ),
+            ASTValue::PostfixExpr(
+                Box::new(ASTValue::Dictionary(vec![(
+                    ASTValue::String("foo"),
+                    ASTValue::String("bar"),
+                )])),
+                ASTPostfixOp::Subscript(vec![ASTValue::String("foo")]),
+            ),
+        ];
+
+        for (input, output) in inputs.into_iter().zip(outputs) {
+            let mut parser = create_parser(input);
+
+            assert_eq!(parse_expr(&mut parser), output);
+        }
+    }
+
+    #[test]
+    fn test_parse_binary_exprs() {
+        let inputs = [
+            "1 + 2",
+            "1 - 2",
+            "1 * 2",
+            "1 / 2",
+            "1 % 2",
+            "1 << 2",
+            "1 >> 2",
+            "1 | 2",
+            "1 & 2",
+            "1 ^ 2",
+            "1 == 2",
+            "1 != 2",
+            "1 > 2",
+            "1 >= 2",
+            "1 < 2",
+            "1 <= 2",
+            "1 and 2",
+            "1 or 2",
+            "1 && 2",
+            "1 || 2",
+            "1 if 2 else 3",
+        ];
+        let outputs = [
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Add,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Subtract,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Multiply,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Divide,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Remainder,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::BitwiseShiftLeft,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::BitwiseShiftRight,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::BitwiseOr,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::BitwiseAnd,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::BitwiseXor,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Equal,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::NotEqual,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Greater,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::GreaterOrEqual,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Less,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::LessOrEqual,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::And,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Or,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::And,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::Or,
+                Box::new(ASTValue::Number(2)),
+            ),
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::TernaryIfElse(Box::new(ASTValue::Number(2))),
+                Box::new(ASTValue::Number(3)),
+            ),
+        ];
+
+        for (input, output) in inputs.into_iter().zip(outputs) {
+            let mut parser = create_parser(input);
+
+            assert_eq!(parse_expr(&mut parser), output);
+        }
+    }
+
+    #[test]
+    fn test_expr_associativity() {
+        let inputs = [
+            "1 + 2 - 3",
+            "1 * 2 / 3 % 4",
+            "1 << 2 >> 3",
+            "1 | 2 | 3",
+            "1 & 2 & 3",
+            "1 ^ 2 ^ 3",
+            "1 == 2 != 3 > 4 >= 5 < 6 <= 7",
+            "1 and 2 and 3",
+            "1 or 2 or 3",
+            "1 && 2 && 3",
+            "1 || 2 || 3",
+            "1 if 2 else 3 if 4 else 5",
+        ];
+
+        let outputs = [
+            // 1 + 2 - 3
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(1)),
+                    ASTBinaryOp::Add,
+                    Box::new(ASTValue::Number(2)),
+                )),
+                ASTBinaryOp::Subtract,
+                Box::new(ASTValue::Number(3)),
+            ),
+            // 1 * 2 / 3 % 4
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::BinaryExpr(
+                        Box::new(ASTValue::Number(1)),
+                        ASTBinaryOp::Multiply,
+                        Box::new(ASTValue::Number(2)),
+                    )),
+                    ASTBinaryOp::Divide,
+                    Box::new(ASTValue::Number(3)),
+                )),
+                ASTBinaryOp::Remainder,
+                Box::new(ASTValue::Number(4)),
+            ),
+            // 1 << 2 >> 3
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(1)),
+                    ASTBinaryOp::BitwiseShiftLeft,
+                    Box::new(ASTValue::Number(2)),
+                )),
+                ASTBinaryOp::BitwiseShiftRight,
+                Box::new(ASTValue::Number(3)),
+            ),
+            // 1 | 2 | 3
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(1)),
+                    ASTBinaryOp::BitwiseOr,
+                    Box::new(ASTValue::Number(2)),
+                )),
+                ASTBinaryOp::BitwiseOr,
+                Box::new(ASTValue::Number(3)),
+            ),
+            // 1 & 2 & 3
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(1)),
+                    ASTBinaryOp::BitwiseAnd,
+                    Box::new(ASTValue::Number(2)),
+                )),
+                ASTBinaryOp::BitwiseAnd,
+                Box::new(ASTValue::Number(3)),
+            ),
+            // 1 ^ 2 ^ 3
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(1)),
+                    ASTBinaryOp::BitwiseXor,
+                    Box::new(ASTValue::Number(2)),
+                )),
+                ASTBinaryOp::BitwiseXor,
+                Box::new(ASTValue::Number(3)),
+            ),
+            // 1 == 2 != 3 > 4 >= 5 < 6 <= 7
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::BinaryExpr(
+                        Box::new(ASTValue::BinaryExpr(
+                            Box::new(ASTValue::BinaryExpr(
+                                Box::new(ASTValue::BinaryExpr(
+                                    Box::new(ASTValue::Number(1)),
+                                    ASTBinaryOp::Equal,
+                                    Box::new(ASTValue::Number(2)),
+                                )),
+                                ASTBinaryOp::NotEqual,
+                                Box::new(ASTValue::Number(3)),
+                            )),
+                            ASTBinaryOp::Greater,
+                            Box::new(ASTValue::Number(4)),
+                        )),
+                        ASTBinaryOp::GreaterOrEqual,
+                        Box::new(ASTValue::Number(5)),
+                    )),
+                    ASTBinaryOp::Less,
+                    Box::new(ASTValue::Number(6)),
+                )),
+                ASTBinaryOp::LessOrEqual,
+                Box::new(ASTValue::Number(7)),
+            ),
+            // 1 and 2 and 3
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(1)),
+                    ASTBinaryOp::And,
+                    Box::new(ASTValue::Number(2)),
+                )),
+                ASTBinaryOp::And,
+                Box::new(ASTValue::Number(3)),
+            ),
+            // 1 or 2 or 3
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(1)),
+                    ASTBinaryOp::Or,
+                    Box::new(ASTValue::Number(2)),
+                )),
+                ASTBinaryOp::Or,
+                Box::new(ASTValue::Number(3)),
+            ),
+            // 1 && 2 && 3
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(1)),
+                    ASTBinaryOp::And,
+                    Box::new(ASTValue::Number(2)),
+                )),
+                ASTBinaryOp::And,
+                Box::new(ASTValue::Number(3)),
+            ),
+            // 1 || 2 || 3
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(1)),
+                    ASTBinaryOp::Or,
+                    Box::new(ASTValue::Number(2)),
+                )),
+                ASTBinaryOp::Or,
+                Box::new(ASTValue::Number(3)),
+            ),
+            // 1 if 2 else 3 if 4 else 5
+            ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::TernaryIfElse(Box::new(ASTValue::Number(2))),
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Number(3)),
+                    ASTBinaryOp::TernaryIfElse(Box::new(ASTValue::Number(4))),
+                    Box::new(ASTValue::Number(5)),
+                )),
+            ),
+        ];
+
+        for (input, output) in inputs.into_iter().zip(outputs) {
+            let mut parser = create_parser(input);
+
+            assert_eq!(parse_expr(&mut parser), output);
+        }
+    }
+
+    fn fun() {}
 }
