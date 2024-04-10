@@ -1,8 +1,6 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{
-    ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, DictPattern,
-};
+use gdtk_ast::poor::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, DictPattern};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;

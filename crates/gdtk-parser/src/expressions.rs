@@ -226,20 +226,20 @@ where
     type Input = ExprIR<'a>;
     type Output = ASTValue<'a>;
 
+    #[rustfmt::skip]
     fn query(&mut self, input: &Self::Input) -> Result<Affix, Self::Error> {
-        #[rustfmt::skip]
         Ok(match input {
             ExprIR::Primary(_) => Affix::Nilfix,
             ExprIR::Group(_) => Affix::Nilfix,
 
             ExprIR::Postfix(ASTPostfixOp::Subscript(_)) => Affix::Postfix(Precedence(23)),
-            
+        
             ExprIR::Binary(ASTBinaryOp::PropertyAccess) => Affix::Infix(Precedence(22), Associativity::Left),
-            
+        
             ExprIR::Postfix(ASTPostfixOp::Call(_)) => Affix::Postfix(Precedence(21)),
-            
+        
             ExprIR::Prefix(ASTPrefixOp::Await) => Affix::Prefix(Precedence(20)),
-            
+        
             ExprIR::Binary(ASTBinaryOp::TypeCheck) => Affix::Infix(Precedence(19), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::Power) => Affix::Infix(Precedence(18), Associativity::Left),
 
@@ -747,6 +747,4 @@ mod tests {
             assert_eq!(parse_expr(&mut parser), output);
         }
     }
-
-    fn fun() {}
 }
