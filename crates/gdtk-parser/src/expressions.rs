@@ -68,7 +68,6 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
 
         match op {
             ASTBinaryOp::TernaryIfElsePlaceholder => {
-                // TODO: Should i use parse_expr or parse_expr_with_ops here?
                 let op = ASTBinaryOp::TernaryIfElse(Box::new(parse_expr(iter)));
                 result.push(ExprIR::Binary(op));
                 expect!(iter, TokenKind::Else);

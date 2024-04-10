@@ -159,7 +159,7 @@ fn test_string() {
         r#""~!@#$%^&*()_+-=`|""#,
         TokenKind::String("~!@#$%^&*()_+-=`|")
     );
-    test_eq!(r#""\r\n\f\\""#, TokenKind::String(r"\r\n\f\\")); // TODO
+    test_eq!(r#""\r\n\f\\""#, TokenKind::String(r"\r\n\f\\")); // TODO: unescape strings
     test_eq!(r#""""#, TokenKind::String(""));
 }
 
@@ -172,7 +172,7 @@ fn test_stringname() {
         r#"&"~!@#$%^&*()_+-=`|""#,
         TokenKind::StringName("~!@#$%^&*()_+-=`|")
     );
-    test_eq!(r#"&"\r\n\f\\""#, TokenKind::StringName(r"\r\n\f\\")); // TODO
+    test_eq!(r#"&"\r\n\f\\""#, TokenKind::StringName(r"\r\n\f\\")); // TODO: unescape strings
     test_eq!(r#"&"""#, TokenKind::StringName(""));
 }
 

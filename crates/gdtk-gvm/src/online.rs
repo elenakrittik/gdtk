@@ -44,7 +44,8 @@ fn map_href_to_arch(href: &str) -> Result<(&'static str, &'static str), crate::E
         return Err(crate::Error::MonoUnsupported);
     }
 
-    // TODO: use a regex instead
+    // TODO: use a regex instead?
+
     // hardcoding :(
     match href {
         href if href.ends_with("android_editor.apk") => Ok(("arm64", "android")),
