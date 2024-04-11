@@ -747,4 +747,21 @@ mod tests {
             assert_eq!(parse_expr(&mut parser), output);
         }
     }
+
+    #[test]
+    fn test_expr_precedence_add_multiply() {
+        let mut parser = create_parser("1 + 2 * 3");
+        let expected = ASTValue::BinaryExpr(
+            Box::new(ASTValue::Number(1)),
+            ASTBinaryOp::Add,
+            Box::new(ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(2)),
+                ASTBinaryOp::Multiply,
+                Box::new(ASTValue::Number(3)),
+            )),
+        );
+        let result = parse_expr(&mut parser);
+
+        assert_eq!(result, expected);
+    }
 }

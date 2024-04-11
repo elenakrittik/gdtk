@@ -73,3 +73,121 @@ pub fn parse_class<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
         body,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use gdtk_ast::poor::*;
+
+    use crate::classes::{parse_class, parse_enum};
+    use crate::test_utils::create_parser;
+
+    #[test]
+    fn test_parse_class() {
+        let mut parser = create_parser("class MyClass:\n    pass");
+        let expected = ASTClass {
+            identifier: "MyClass",
+            extends: None,
+            body: vec![ASTStatement::Pass],
+        };
+        let result = parse_class(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_class_extends() {
+        let mut parser = create_parser("class MyClass extends AnotherClass:\n    pass");
+        let expected = ASTClass {
+            identifier: "MyClass",
+            extends: "AnotherClass",
+            body: vec![ASTStatement::Pass],
+        };
+        let result = parse_class(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_enum_empty_unnamed() {
+        let mut parser = create_parser("enum {}");
+        let expected = ASTEnum {
+            identifier: None,
+            variants: vec![],
+        };
+        let result = parse_enum(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_enum_empty_named() {
+        let mut parser = create_parser("enum State {}");
+        let expected = ASTEnum {
+            identifier: Some("State"),
+            variants: vec![],
+        };
+        let result = parse_enum(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_enum_normal_unnamed() {
+        let mut parser = create_parser("enum { WALKING, JUMPING }");
+        let expected = ASTEnum {
+            identifier: None,
+            variants: vec![
+                ASTEnumVariant { identifier: "WALKING", value: None },
+                ASTEnumVariant { identifier: "JUMPING", value: None },
+            ],
+        };
+        let result = parse_enum(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_enum_normal_named() {
+        let mut parser = create_parser("enum State { WALKING, JUMPING }");
+        let expected = ASTEnum {
+            identifier: Some("State"),
+            variants: vec![
+                ASTEnumVariant { identifier: "WALKING", value: None },
+                ASTEnumVariant { identifier: "JUMPING", value: None },
+            ],
+        };
+        let result = parse_enum(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_enum_with_values_unnamed() {
+        let mut parser = create_parser("enum { WALKING = 1, JUMPING = 'invalid' }");
+        let expected = ASTEnum {
+            identifier: None,
+            variants: vec![
+                ASTEnumVariant { identifier: "WALKING", value: Some(ASTValue::Number(1)) },
+                ASTEnumVariant { identifier: "JUMPING", value: Some(ASTValue::String("invalid")) },
+            ],
+        };
+        let result = parse_enum(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_enum_with_values_named() {
+        let mut parser = create_parser("enum State { WALKING = 1, JUMPING = 'invalid' }");
+        let expected = ASTEnum {
+            identifier: Some("State"),
+            variants: vec![
+                ASTEnumVariant { identifier: "WALKING", value: Some(ASTValue::Number(1)) },
+                ASTEnumVariant { identifier: "JUMPING", value: Some(ASTValue::String("invalid")) },
+            ],
+        };
+        let result = parse_enum(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+}
