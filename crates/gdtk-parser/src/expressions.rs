@@ -21,14 +21,14 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
     while let Some(op) = match iter.peek().map(|t| &t.kind) {
         Some(TokenKind::Plus) => Some(ASTBinaryOp::Add),
         Some(TokenKind::Minus) => Some(ASTBinaryOp::Subtract),
-        Some(TokenKind::Greater) => Some(ASTBinaryOp::Greater),
-        Some(TokenKind::GreaterOrEqual) => Some(ASTBinaryOp::GreaterOrEqual),
-        Some(TokenKind::Less) => Some(ASTBinaryOp::Less),
-        Some(TokenKind::LessOrEqual) => Some(ASTBinaryOp::LessOrEqual),
+        Some(TokenKind::GreaterThan) => Some(ASTBinaryOp::Greater),
+        Some(TokenKind::GreaterThanOrEqual) => Some(ASTBinaryOp::GreaterOrEqual),
+        Some(TokenKind::LessThan) => Some(ASTBinaryOp::LessThan),
+        Some(TokenKind::LessThanOrEqual) => Some(ASTBinaryOp::LessOrEqual),
         Some(TokenKind::Period) => Some(ASTBinaryOp::PropertyAccess),
         Some(TokenKind::Multiply) => Some(ASTBinaryOp::Multiply),
         Some(TokenKind::Divide) => Some(ASTBinaryOp::Divide),
-        Some(TokenKind::Equal) => Some(ASTBinaryOp::Equal),
+        Some(TokenKind::Equal) => Some(ASTBinaryOp::Equals),
         Some(TokenKind::NotEqual) => Some(ASTBinaryOp::NotEqual),
         Some(TokenKind::And | TokenKind::SymbolizedAnd) => Some(ASTBinaryOp::And),
         Some(TokenKind::Or | TokenKind::SymbolizedOr) => Some(ASTBinaryOp::Or),
@@ -80,7 +80,7 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
         }
     }
 
-    dbg!(result)
+    result
 }
 
 /// Parses a value taking into account possible prefix and postfix OPs
@@ -233,13 +233,13 @@ where
             ExprIR::Group(_) => Affix::Nilfix,
 
             ExprIR::Postfix(ASTPostfixOp::Subscript(_)) => Affix::Postfix(Precedence(23)),
-        
+
             ExprIR::Binary(ASTBinaryOp::PropertyAccess) => Affix::Infix(Precedence(22), Associativity::Left),
-        
+
             ExprIR::Postfix(ASTPostfixOp::Call(_)) => Affix::Postfix(Precedence(21)),
-        
+
             ExprIR::Prefix(ASTPrefixOp::Await) => Affix::Prefix(Precedence(20)),
-        
+
             ExprIR::Binary(ASTBinaryOp::TypeCheck) => Affix::Infix(Precedence(19), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::Power) => Affix::Infix(Precedence(18), Associativity::Left),
 
@@ -264,9 +264,9 @@ where
 
             ExprIR::Binary(ASTBinaryOp::BitwiseOr) => Affix::Infix(Precedence(10), Associativity::Left),
 
-            ExprIR::Binary(ASTBinaryOp::Equal) => Affix::Infix(Precedence(9), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::Equals) => Affix::Infix(Precedence(9), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::NotEqual) => Affix::Infix(Precedence(9), Associativity::Left),
-            ExprIR::Binary(ASTBinaryOp::Less) => Affix::Infix(Precedence(9), Associativity::Left),
+            ExprIR::Binary(ASTBinaryOp::LessThan) => Affix::Infix(Precedence(9), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::LessOrEqual) => Affix::Infix(Precedence(9), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::Greater) => Affix::Infix(Precedence(9), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::GreaterOrEqual) => Affix::Infix(Precedence(9), Associativity::Left),
@@ -317,11 +317,11 @@ where
         op: Self::Input,
         rhs: Self::Output,
     ) -> Result<Self::Output, Self::Error> {
-        Ok(dbg!(ASTValue::BinaryExpr(
+        Ok(ASTValue::BinaryExpr(
             Box::new(lhs),
             op.into_binary().unwrap(),
             Box::new(rhs),
-        )))
+        ))
     }
 
     fn prefix(&mut self, op: Self::Input, rhs: Self::Output) -> Result<Self::Output, Self::Error> {
@@ -519,7 +519,7 @@ mod tests {
             ),
             ASTValue::BinaryExpr(
                 Box::new(ASTValue::Number(1)),
-                ASTBinaryOp::Equal,
+                ASTBinaryOp::Equals,
                 Box::new(ASTValue::Number(2)),
             ),
             ASTValue::BinaryExpr(
@@ -539,7 +539,7 @@ mod tests {
             ),
             ASTValue::BinaryExpr(
                 Box::new(ASTValue::Number(1)),
-                ASTBinaryOp::Less,
+                ASTBinaryOp::LessThan,
                 Box::new(ASTValue::Number(2)),
             ),
             ASTValue::BinaryExpr(
@@ -671,7 +671,7 @@ mod tests {
                             Box::new(ASTValue::BinaryExpr(
                                 Box::new(ASTValue::BinaryExpr(
                                     Box::new(ASTValue::Number(1)),
-                                    ASTBinaryOp::Equal,
+                                    ASTBinaryOp::Equals,
                                     Box::new(ASTValue::Number(2)),
                                 )),
                                 ASTBinaryOp::NotEqual,
@@ -683,7 +683,7 @@ mod tests {
                         ASTBinaryOp::GreaterOrEqual,
                         Box::new(ASTValue::Number(5)),
                     )),
-                    ASTBinaryOp::Less,
+                    ASTBinaryOp::LessThan,
                     Box::new(ASTValue::Number(6)),
                 )),
                 ASTBinaryOp::LessOrEqual,
@@ -759,6 +759,86 @@ mod tests {
                 ASTBinaryOp::Multiply,
                 Box::new(ASTValue::Number(3)),
             )),
+        );
+        let result = parse_expr(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_expr_precedence_multiply_add() {
+        let mut parser = create_parser("2 * 3 + 1");
+        let expected = ASTValue::BinaryExpr(
+            Box::new(ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(2)),
+                ASTBinaryOp::Multiply,
+                Box::new(ASTValue::Number(3)),
+            )),
+            ASTBinaryOp::Add,
+            Box::new(ASTValue::Number(1)),
+        );
+        let result = parse_expr(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_expr_precedence_compare_and() {
+        let mut parser = create_parser("1 < 2 && 3 == 4");
+        let expected = ASTValue::BinaryExpr(
+            Box::new(ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::LessThan,
+                Box::new(ASTValue::Number(2)),
+            )),
+            ASTBinaryOp::And,
+            Box::new(ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(3)),
+                ASTBinaryOp::Equals,
+                Box::new(ASTValue::Number(4)),
+            )),
+        );
+        let result = parse_expr(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_expr_precedence_compare_or() {
+        let mut parser = create_parser("1 < 2 || 3 == 4");
+        let expected = ASTValue::BinaryExpr(
+            Box::new(ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(1)),
+                ASTBinaryOp::LessThan,
+                Box::new(ASTValue::Number(2)),
+            )),
+            ASTBinaryOp::Or,
+            Box::new(ASTValue::BinaryExpr(
+                Box::new(ASTValue::Number(3)),
+                ASTBinaryOp::Equals,
+                Box::new(ASTValue::Number(4)),
+            )),
+        );
+        let result = parse_expr(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_expr_precedence_assignment() {
+        let mut parser = create_parser("a = b = c = 42");
+        let expected = ASTValue::BinaryExpr(
+            Box::new(ASTValue::BinaryExpr(
+                Box::new(ASTValue::BinaryExpr(
+                    Box::new(ASTValue::Identifier("a")),
+                    ASTBinaryOp::Assignment,
+                    Box::new(ASTValue::Identifier("b")),
+                )),
+                ASTBinaryOp::Assignment,
+                Box::new(ASTValue::Identifier("c")),
+            )),
+            ASTBinaryOp::Assignment,
+            Box::new(ASTValue::Number(42)),
         );
         let result = parse_expr(&mut parser);
 

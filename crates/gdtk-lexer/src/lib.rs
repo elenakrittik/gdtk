@@ -69,5 +69,17 @@ fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -
         }
     }
 
+    if stack.last().unwrap() > &0 {
+        let token = Token {
+            range: 0..0, // should be fine?
+            kind: TokenKind::Dedent,
+        };
+
+        while stack.last().unwrap() > &0 {
+            stack.pop();
+            out.push(token.clone());
+        }
+    }
+
     out
 }

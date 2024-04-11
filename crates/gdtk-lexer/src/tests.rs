@@ -214,10 +214,10 @@ fn test_null() {
 
 #[test]
 fn test_comparison() {
-    test_eq!("<", TokenKind::Less);
-    test_eq!("<=", TokenKind::LessOrEqual);
-    test_eq!(">", TokenKind::Greater);
-    test_eq!(">=", TokenKind::GreaterOrEqual);
+    test_eq!("<", TokenKind::LessThan);
+    test_eq!("<=", TokenKind::LessThanOrEqual);
+    test_eq!(">", TokenKind::GreaterThan);
+    test_eq!(">=", TokenKind::GreaterThanOrEqual);
     test_eq!("==", TokenKind::Equal);
     test_eq!("!=", TokenKind::NotEqual);
 }
@@ -321,8 +321,44 @@ fn test_punctuation() {
 }
 
 #[test]
-fn test_radt() {
+fn test_reserved_and_deprecated() {
     test_eq!("namespace", TokenKind::Namespace);
     test_eq!("trait", TokenKind::Trait);
     test_eq!("yield", TokenKind::Yield);
+}
+
+#[test]
+fn test_newlines() {
+    test_eq!("\n", TokenKind::Newline);
+    test_eq!("\r\n", TokenKind::Newline);
+}
+
+#[test]
+fn test_indents() {
+    test_eq!(
+        "pass\n    pass",
+        TokenKind::Pass,
+        TokenKind::Newline,
+        TokenKind::Indent,
+        TokenKind::Pass,
+        TokenKind::Dedent
+    );
+    test_eq!(
+        "pass\n    pass\n\n    pass",
+        TokenKind::Pass,
+        TokenKind::Newline,
+        TokenKind::Indent,
+        TokenKind::Pass,
+        TokenKind::Newline,
+        TokenKind::Pass,
+        TokenKind::Dedent
+    );
+
+    // TODO: properly emit indents in these cases (or trim blankets?)
+    // test_eq!("\t\t", TokenKind::Indent);
+    // test_eq!("\t  ", TokenKind::Indent);
+    // test_eq!("  \t", TokenKind::Indent);
+    // test_eq!("    ", TokenKind::Indent);
+    // test_eq!("    pass", TokenKind::Indent, TokenKind::Pass);
+    // test_eq!("    pass\n", TokenKind::Indent, TokenKind::Pass);
 }

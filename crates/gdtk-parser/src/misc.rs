@@ -133,4 +133,43 @@ mod tests {
 
         assert_eq!(result, expected);
     }
+
+    #[test]
+    fn test_parse_signal_basic() {
+        let mut parser = create_parser("signal done");
+        let result = parse_signal(&mut parser);
+        let expected = ASTSignal {
+            identifier: "done",
+            parameters: None,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_signal_with_parameters() {
+        let mut parser = create_parser("signal done(a, b: int)");
+        let result = parse_signal(&mut parser);
+        let expected = ASTSignal {
+            identifier: "done",
+            parameters: Some(vec![
+                ASTVariable {
+                    kind: ASTVariableKind::Binding,
+                    identifier: "a",
+                    infer_type: false,
+                    typehint: None,
+                    value: None,
+                },
+                ASTVariable {
+                    kind: ASTVariableKind::Binding,
+                    identifier: "b",
+                    infer_type: false,
+                    typehint: Some(ASTValue::Identifier("int")),
+                    value: None,
+                },
+            ]),
+        };
+
+        assert_eq!(result, expected);
+    }
 }

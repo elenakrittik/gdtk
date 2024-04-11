@@ -141,7 +141,7 @@ pub enum ASTPostfixOp<'a> {
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTBinaryOp<'a> {
     /// ``a < b``.
-    Less,
+    LessThan,
     /// ``a <= b``.
     LessOrEqual,
     /// ``a > b``.
@@ -149,7 +149,7 @@ pub enum ASTBinaryOp<'a> {
     /// ``a >= b``.
     GreaterOrEqual,
     /// ``a == b``.
-    Equal,
+    Equals,
     /// ``a != b``.
     NotEqual,
     /// ``a and b`` or ``a && b``.
@@ -256,7 +256,7 @@ pub enum ASTStatement<'a> {
     /// A ``pass`` statement.
     Pass,
     /// A ``return`` statement.
-    Return(ASTValue<'a>),
+    Return(Option<ASTValue<'a>>),
     /// A ``signal`` definition statement.
     Signal(ASTSignal<'a>),
     /// A ``match`` statement.

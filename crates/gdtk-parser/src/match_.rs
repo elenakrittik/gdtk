@@ -145,7 +145,7 @@ fn parse_match_dict_pattern<'a>(
 mod tests {
     use gdtk_ast::poor::*;
 
-    use crate::match_::{parse_match_arm, parse_match_pattern};
+    use crate::match_::{parse_match, parse_match_arm, parse_match_pattern};
     use crate::test_utils::create_parser;
 
     #[test]
@@ -235,6 +235,22 @@ mod tests {
                 ASTStatement::Value(ASTValue::Number(2)),
                 ASTStatement::Value(ASTValue::Number(3)),
             ],
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_match() {
+        let mut parser = create_parser("match expr:\n    _: pass");
+        let result = parse_match(&mut parser);
+        let expected = ASTMatchStmt {
+            expr: ASTValue::Identifier("expr"),
+            arms: vec![ASTMatchArm {
+                pattern: ASTMatchPattern::Value(ASTValue::Identifier("_")),
+                guard: None,
+                block: vec![ASTStatement::Pass],
+            }],
         };
 
         assert_eq!(result, expected);

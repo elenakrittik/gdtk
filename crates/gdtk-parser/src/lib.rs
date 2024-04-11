@@ -17,6 +17,7 @@ pub mod match_;
 pub mod misc;
 pub mod statement;
 pub mod statements;
+#[cfg(test)]
 pub mod test_utils;
 pub mod utils;
 pub mod values;

@@ -44,3 +44,7 @@ pub fn parse_statement<'a>(
         _ => ASTStatement::Value(parse_expr(iter)),
     }
 }
+
+// Do we really need tests for `parse_statement`?
+#[cfg(test)]
+mod tests {}

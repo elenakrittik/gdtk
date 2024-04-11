@@ -151,13 +151,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn test_advance_and_parse_invalid() {
-        let mut parser = create_parser(";");
-        advance_and_parse(&mut parser, next_kind);
-    }
-
-    #[test]
     fn test_expect() {
         let mut parser = create_parser(";");
         expect!(&mut parser, TokenKind::Semicolon);

@@ -79,16 +79,16 @@ pub enum TokenKind<'a> {
     /* Comparison */
 
     #[token("<")]
-    Less,
+    LessThan,
 
     #[token("<=")]
-    LessOrEqual,
+    LessThanOrEqual,
 
     #[token(">")]
-    Greater,
+    GreaterThan,
 
     #[token(">=")]
-    GreaterOrEqual,
+    GreaterThanOrEqual,
 
     #[token("==")]
     Equal,
