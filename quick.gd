@@ -1,4 +1,5 @@
-pass
-    pass
+if true: pass; print(2)
 
-    pass
+func():
+	if yes:
+		print(1); print(2)

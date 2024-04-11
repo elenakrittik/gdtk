@@ -26,7 +26,7 @@ pub fn parse_block<'a>(
                     iter.next();
                     break;
                 }
-                TokenKind::Newline => {
+                TokenKind::Newline | TokenKind::Semicolon => {
                     iter.next();
                 }
                 TokenKind::ClosingParenthesis
@@ -77,6 +77,15 @@ mod tests {
     fn test_parse_block_inline() {
         let mut parser = create_parser("pass");
         let expected = vec![ASTStatement::Pass];
+        let result = parse_block(&mut parser, false);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_block_semicolons() {
+        let mut parser = create_parser("\n    pass;pass");
+        let expected = vec![ASTStatement::Pass, ASTStatement::Pass];
         let result = parse_block(&mut parser, false);
 
         assert_eq!(result, expected);
