@@ -2,6 +2,8 @@
 
 #![feature(decl_macro, stmt_expr_attributes)]
 
+use std::iter::Peekable;
+
 use gdtk_ast::poor::{ASTFile, CodeBlock};
 use gdtk_lexer::{token::TokenKind, Token};
 
@@ -22,6 +24,8 @@ pub mod test_utils;
 pub mod utils;
 pub mod values;
 pub mod variables;
+
+pub type Parser<'a> = Peekable<impl Iterator<Item = Token<'a>>>;
 
 /// Parse the result of lexing a GDScript source code file.
 pub fn parse_file<'a>(tokens: impl Iterator<Item = Token<'a>>) -> Result<ASTFile<'a>, Error> {
