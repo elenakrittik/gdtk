@@ -227,7 +227,7 @@ fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>
             return ExprIR::Group(values);
         }
         TokenKind::Null => advance_and_parse(iter, |_| ASTValue::Null),
-        other => panic!("unknown or unsupported expression: {other:?}"),
+        _ => panic!("unknown or unsupported expression: {:#?}", iter.peek()),
     };
 
     ExprIR::Primary(value)

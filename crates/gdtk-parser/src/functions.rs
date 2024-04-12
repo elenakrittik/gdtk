@@ -4,7 +4,7 @@ use gdtk_ast::poor::{ASTFunction, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
-use crate::expressions::parse_expr;
+use crate::misc::parse_type;
 use crate::utils::{delemited_by, expect};
 use crate::variables::parse_variable_body;
 
@@ -41,7 +41,7 @@ pub fn parse_func<'a>(
         .is_some_and(|t| matches!(t.kind, TokenKind::Arrow))
     {
         iter.next();
-        return_type = Some(parse_expr(iter));
+        return_type = Some(parse_type(iter));
     }
 
     expect!(iter, TokenKind::Colon);

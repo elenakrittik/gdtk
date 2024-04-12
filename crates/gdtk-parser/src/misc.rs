@@ -1,6 +1,6 @@
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTAnnotation, ASTSignal, ASTVariableKind};
+use gdtk_ast::poor::{ASTAnnotation, ASTPostfixOp, ASTSignal, ASTValue, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
@@ -64,6 +64,30 @@ pub fn parse_signal<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) ->
     ASTSignal {
         identifier,
         parameters,
+    }
+}
+
+pub fn parse_type<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
+    let base = expect!(iter, TokenKind::Identifier(s), s);
+
+    if iter.peek().is_some_and(|t| t.kind.is_opening_bracket()) {
+        iter.next();
+
+        let type_parameters = delemited_by(
+            iter,
+            TokenKind::Comma,
+            &[TokenKind::ClosingBracket],
+            parse_type,
+        );
+
+        iter.next();
+
+        ASTValue::PostfixExpr(
+            Box::new(ASTValue::Identifier(base)),
+            ASTPostfixOp::Subscript(type_parameters),
+        )
+    } else {
+        ASTValue::Identifier(base)
     }
 }
 

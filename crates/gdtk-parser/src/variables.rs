@@ -4,6 +4,7 @@ use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::expressions::parse_expr;
+use crate::misc::parse_type;
 use crate::utils::expect;
 
 /// Parses variable body, i.e. any variable without preceding keywords.
@@ -34,18 +35,12 @@ pub fn parse_variable_body<'a>(
                     value = Some(parse_expr(iter));
                 }
                 _ => {
-                    let typehint_val = parse_expr(iter);
+                    typehint = Some(parse_type(iter));
 
-                    if typehint_val
-                        .as_binary_expr()
-                        .is_some_and(|(_, op, _)| op.is_assignment())
-                    {
-                        let (lhs, _, rhs) = typehint_val.into_binary_expr().unwrap();
+                    if let Some(TokenKind::Assignment) = iter.peek().map(|t| &t.kind) {
+                        iter.next();
 
-                        typehint = Some(*lhs);
-                        value = Some(*rhs);
-                    } else {
-                        typehint = Some(typehint_val);
+                        value = Some(parse_expr(iter));
                     }
                 }
             };
