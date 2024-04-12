@@ -12,70 +12,83 @@ use crate::{
 
 /// Parse an expression.
 pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
-    ExprParser.parse(parse_expr_impl(iter).into_iter()).unwrap()
+    ExprParser
+        .parse(parse_expr_impl::<false>(iter).into_iter())
+        .unwrap()
 }
 
-fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> Vec<ExprIR<'a>> {
-    let mut result = parse_expr_with_ops(iter);
+fn parse_expr_impl<'a, const IGNORE_BLANKETS: bool>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+) -> Vec<ExprIR<'a>> {
+    let mut result = parse_expr_with_ops::<IGNORE_BLANKETS>(iter);
 
-    while let Some(op) = match iter.peek().map(|t| &t.kind) {
-        Some(TokenKind::Plus) => Some(ASTBinaryOp::Add),
-        Some(TokenKind::Minus) => Some(ASTBinaryOp::Subtract),
-        Some(TokenKind::GreaterThan) => Some(ASTBinaryOp::Greater),
-        Some(TokenKind::GreaterThanOrEqual) => Some(ASTBinaryOp::GreaterOrEqual),
-        Some(TokenKind::LessThan) => Some(ASTBinaryOp::LessThan),
-        Some(TokenKind::LessThanOrEqual) => Some(ASTBinaryOp::LessOrEqual),
-        Some(TokenKind::Period) => Some(ASTBinaryOp::PropertyAccess),
-        Some(TokenKind::Multiply) => Some(ASTBinaryOp::Multiply),
-        Some(TokenKind::Divide) => Some(ASTBinaryOp::Divide),
-        Some(TokenKind::Equal) => Some(ASTBinaryOp::Equals),
-        Some(TokenKind::NotEqual) => Some(ASTBinaryOp::NotEqual),
-        Some(TokenKind::And | TokenKind::SymbolizedAnd) => Some(ASTBinaryOp::And),
-        Some(TokenKind::Or | TokenKind::SymbolizedOr) => Some(ASTBinaryOp::Or),
-        Some(TokenKind::BitwiseAnd) => Some(ASTBinaryOp::BitwiseAnd),
-        Some(TokenKind::BitwiseOr) => Some(ASTBinaryOp::BitwiseOr),
-        Some(TokenKind::BitwiseXor) => Some(ASTBinaryOp::BitwiseXor),
-        Some(TokenKind::BitwiseShiftLeft) => Some(ASTBinaryOp::BitwiseShiftLeft),
-        Some(TokenKind::BitwiseShiftRight) => Some(ASTBinaryOp::BitwiseShiftRight),
-        Some(TokenKind::Power) => Some(ASTBinaryOp::Power),
-        Some(TokenKind::Remainder) => Some(ASTBinaryOp::Remainder),
-        Some(TokenKind::As) => Some(ASTBinaryOp::TypeCast),
-        Some(TokenKind::Is) => Some(ASTBinaryOp::TypeCheck),
-        Some(TokenKind::In) => Some(ASTBinaryOp::Contains),
-        Some(TokenKind::NotIn) => Some(ASTBinaryOp::NotContains),
-        Some(TokenKind::Range) => Some(ASTBinaryOp::Range),
-        Some(TokenKind::Assignment) => Some(ASTBinaryOp::Assignment),
-        Some(TokenKind::PlusAssignment) => Some(ASTBinaryOp::PlusAssignment),
-        Some(TokenKind::MinusAssignment) => Some(ASTBinaryOp::MinusAssignment),
-        Some(TokenKind::MultiplyAssignment) => Some(ASTBinaryOp::MultiplyAssignment),
-        Some(TokenKind::PowerAssignment) => Some(ASTBinaryOp::PowerAssignment),
-        Some(TokenKind::DivideAssignment) => Some(ASTBinaryOp::DivideAssignment),
-        Some(TokenKind::RemainderAssignment) => Some(ASTBinaryOp::RemainderAssignment),
-        Some(TokenKind::BitwiseAndAssignment) => Some(ASTBinaryOp::BitwiseAndAssignment),
-        Some(TokenKind::BitwiseOrAssignment) => Some(ASTBinaryOp::BitwiseNotAssignment),
-        Some(TokenKind::BitwiseNotAssignment) => Some(ASTBinaryOp::BitwiseNotAssignment),
-        Some(TokenKind::BitwiseXorAssignment) => Some(ASTBinaryOp::BitwiseXorAssignment),
-        Some(TokenKind::BitwiseShiftLeftAssignment) => {
-            Some(ASTBinaryOp::BitwiseShiftLeftAssignment)
-        }
-        Some(TokenKind::BitwiseShiftRightAssignment) => {
-            Some(ASTBinaryOp::BitwiseShiftRightAssignment)
-        }
-        Some(TokenKind::If) => Some(ASTBinaryOp::TernaryIfElsePlaceholder),
-        _ => None,
-    } {
-        iter.next();
-
-        match op {
-            ASTBinaryOp::TernaryIfElsePlaceholder => {
-                let op = ASTBinaryOp::TernaryIfElse(Box::new(parse_expr(iter)));
-                result.push(ExprIR::Binary(op));
-                expect!(iter, TokenKind::Else);
-                result.push(ExprIR::Primary(parse_expr(iter)));
+    loop {
+        if let Some(op) = match iter.peek().map(|t| &t.kind) {
+            Some(TokenKind::Plus) => Some(ASTBinaryOp::Add),
+            Some(TokenKind::Minus) => Some(ASTBinaryOp::Subtract),
+            Some(TokenKind::GreaterThan) => Some(ASTBinaryOp::Greater),
+            Some(TokenKind::GreaterThanOrEqual) => Some(ASTBinaryOp::GreaterOrEqual),
+            Some(TokenKind::LessThan) => Some(ASTBinaryOp::LessThan),
+            Some(TokenKind::LessThanOrEqual) => Some(ASTBinaryOp::LessOrEqual),
+            Some(TokenKind::Period) => Some(ASTBinaryOp::PropertyAccess),
+            Some(TokenKind::Multiply) => Some(ASTBinaryOp::Multiply),
+            Some(TokenKind::Divide) => Some(ASTBinaryOp::Divide),
+            Some(TokenKind::Equal) => Some(ASTBinaryOp::Equals),
+            Some(TokenKind::NotEqual) => Some(ASTBinaryOp::NotEqual),
+            Some(TokenKind::And | TokenKind::SymbolizedAnd) => Some(ASTBinaryOp::And),
+            Some(TokenKind::Or | TokenKind::SymbolizedOr) => Some(ASTBinaryOp::Or),
+            Some(TokenKind::BitwiseAnd) => Some(ASTBinaryOp::BitwiseAnd),
+            Some(TokenKind::BitwiseOr) => Some(ASTBinaryOp::BitwiseOr),
+            Some(TokenKind::BitwiseXor) => Some(ASTBinaryOp::BitwiseXor),
+            Some(TokenKind::BitwiseShiftLeft) => Some(ASTBinaryOp::BitwiseShiftLeft),
+            Some(TokenKind::BitwiseShiftRight) => Some(ASTBinaryOp::BitwiseShiftRight),
+            Some(TokenKind::Power) => Some(ASTBinaryOp::Power),
+            Some(TokenKind::Remainder) => Some(ASTBinaryOp::Remainder),
+            Some(TokenKind::As) => Some(ASTBinaryOp::TypeCast),
+            Some(TokenKind::Is) => Some(ASTBinaryOp::TypeCheck),
+            Some(TokenKind::In) => Some(ASTBinaryOp::Contains),
+            Some(TokenKind::NotIn) => Some(ASTBinaryOp::NotContains),
+            Some(TokenKind::Range) => Some(ASTBinaryOp::Range),
+            Some(TokenKind::Assignment) => Some(ASTBinaryOp::Assignment),
+            Some(TokenKind::PlusAssignment) => Some(ASTBinaryOp::PlusAssignment),
+            Some(TokenKind::MinusAssignment) => Some(ASTBinaryOp::MinusAssignment),
+            Some(TokenKind::MultiplyAssignment) => Some(ASTBinaryOp::MultiplyAssignment),
+            Some(TokenKind::PowerAssignment) => Some(ASTBinaryOp::PowerAssignment),
+            Some(TokenKind::DivideAssignment) => Some(ASTBinaryOp::DivideAssignment),
+            Some(TokenKind::RemainderAssignment) => Some(ASTBinaryOp::RemainderAssignment),
+            Some(TokenKind::BitwiseAndAssignment) => Some(ASTBinaryOp::BitwiseAndAssignment),
+            Some(TokenKind::BitwiseOrAssignment) => Some(ASTBinaryOp::BitwiseNotAssignment),
+            Some(TokenKind::BitwiseNotAssignment) => Some(ASTBinaryOp::BitwiseNotAssignment),
+            Some(TokenKind::BitwiseXorAssignment) => Some(ASTBinaryOp::BitwiseXorAssignment),
+            Some(TokenKind::BitwiseShiftLeftAssignment) => {
+                Some(ASTBinaryOp::BitwiseShiftLeftAssignment)
             }
-            other => {
-                result.push(ExprIR::Binary(other));
-                result.extend(parse_expr_with_ops(iter));
+            Some(TokenKind::BitwiseShiftRightAssignment) => {
+                Some(ASTBinaryOp::BitwiseShiftRightAssignment)
+            }
+            Some(TokenKind::If) => Some(ASTBinaryOp::TernaryIfElsePlaceholder),
+
+            _ => None,
+        } {
+            iter.next();
+
+            match op {
+                ASTBinaryOp::TernaryIfElsePlaceholder => {
+                    let op = ASTBinaryOp::TernaryIfElse(Box::new(parse_expr(iter)));
+                    result.push(ExprIR::Binary(op));
+                    expect!(iter, TokenKind::Else);
+                    result.push(ExprIR::Primary(parse_expr(iter)));
+                }
+                other => {
+                    result.push(ExprIR::Binary(other));
+                    result.extend(parse_expr_with_ops::<IGNORE_BLANKETS>(iter));
+                }
+            }
+        } else {
+            if iter.peek().is_some_and(|t| t.kind.is_newline()) && IGNORE_BLANKETS {
+                iter.next();
+            } else {
+                break;
             }
         }
     }
@@ -84,27 +97,40 @@ fn parse_expr_impl<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
 }
 
 /// Parses a value taking into account possible prefix and postfix OPs
-fn parse_expr_with_ops<'a>(
+fn parse_expr_with_ops<'a, const IGNORE_BLANKETS: bool>(
     iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
 ) -> Vec<ExprIR<'a>> {
     let mut result = vec![];
 
-    while let Some(op) = match iter.peek().map(|t| &t.kind) {
-        Some(TokenKind::Plus) => Some(ASTPrefixOp::Identity),
-        Some(TokenKind::Minus) => Some(ASTPrefixOp::Negation),
-        Some(TokenKind::Await) => Some(ASTPrefixOp::Await),
-        Some(TokenKind::BitwiseNot) => Some(ASTPrefixOp::BitwiseNot),
-        Some(TokenKind::Not | TokenKind::SymbolizedNot) => Some(ASTPrefixOp::Not),
-        None => panic!("expected expression"),
-        _ => None,
-    } {
-        iter.next();
-        result.push(ExprIR::Prefix(op));
+    loop {
+        if let Some(op) = match iter.peek().map(|t| &t.kind) {
+            Some(TokenKind::Plus) => Some(ASTPrefixOp::Identity),
+            Some(TokenKind::Minus) => Some(ASTPrefixOp::Negation),
+            Some(TokenKind::Await) => Some(ASTPrefixOp::Await),
+            Some(TokenKind::BitwiseNot) => Some(ASTPrefixOp::BitwiseNot),
+            Some(TokenKind::Not | TokenKind::SymbolizedNot) => Some(ASTPrefixOp::Not),
+            None => panic!("expected expression"),
+            _ => None,
+        } {
+            iter.next();
+            result.push(ExprIR::Prefix(op));
+        } else {
+            if iter.peek().is_some_and(|t| t.kind.is_newline()) && IGNORE_BLANKETS {
+                iter.next();
+            } else {
+                break;
+            }
+        }
     }
 
     result.push(parse_expr_without_ops(iter));
 
     loop {
+        if iter.peek().is_some_and(|t| t.kind.is_newline()) && IGNORE_BLANKETS {
+            iter.next();
+            continue;
+        }
+
         if !matches!(
             iter.peek(),
             Some(Token {
@@ -190,7 +216,7 @@ fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>
                 iter,
                 TokenKind::Comma,
                 &[TokenKind::ClosingParenthesis],
-                parse_expr_impl,
+                parse_expr_impl::<true>,
             )
             .into_iter()
             .flatten()
@@ -839,6 +865,22 @@ mod tests {
             )),
             ASTBinaryOp::Assignment,
             Box::new(ASTValue::Number(42)),
+        );
+        let result = parse_expr(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_expr_group_newlines() {
+        let mut parser = create_parser("(1\n+ fn\n())");
+        let expected = ASTValue::BinaryExpr(
+            Box::new(ASTValue::Number(1)),
+            ASTBinaryOp::Add,
+            Box::new(ASTValue::PostfixExpr(
+                Box::new(ASTValue::Identifier("fn")),
+                ASTPostfixOp::Call(vec![]),
+            )),
         );
         let result = parse_expr(&mut parser);
 
