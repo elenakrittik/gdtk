@@ -331,6 +331,7 @@ fn test_reserved_and_deprecated() {
 fn test_newlines() {
     test_eq!("\n", TokenKind::Newline);
     test_eq!("\r\n", TokenKind::Newline);
+    test_eq!("\\\n",);
 }
 
 #[test]

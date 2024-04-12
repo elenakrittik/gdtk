@@ -30,6 +30,7 @@ impl<'a> Token<'a> {
 #[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
 #[logos(subpattern float = r"(?&int)\.(?&int)")]
 #[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
+#[logos(subpattern newline = "(\r\n)|(\n)")]
 pub enum TokenKind<'a> {
     /* Essentials */
     
@@ -328,7 +329,10 @@ pub enum TokenKind<'a> {
 
     /* Whitespace */
 
-    #[regex("(\r\n)|(\n)")]
+    #[regex("\\\\(?&newline)", logos::skip)]
+    NewlineEscape,
+
+    #[regex("(?&newline)")]
     Newline,
 
     #[regex("([ ]|[\t])+")]
