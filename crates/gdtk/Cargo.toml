@@ -24,3 +24,6 @@ spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
 
 [lib]
 name = "gdtk"
+
+[features]
+dev = []

@@ -3,14 +3,15 @@ use std::iter::Peekable;
 use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::utils::{expect_blank_prefixed, next_non_blank, peek_non_blank};
-use crate::values::parse_value;
+use crate::expressions::parse_expr;
+use crate::utils::expect;
 
-pub fn parse_variable<'a, T>(iter: &mut Peekable<T>, kind: ASTVariableKind) -> ASTVariable<'a>
-where
-    T: Iterator<Item = Token<'a>>,
-{
-    let identifier = expect_blank_prefixed!(iter, TokenKind::Identifier(s), s);
+/// Parses variable body, i.e. any variable without preceding keywords.
+pub fn parse_variable_body<'a>(
+    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    kind: ASTVariableKind,
+) -> ASTVariable<'a> {
+    let identifier = expect!(iter, TokenKind::Identifier(s), s);
     let mut typehint = None;
     let mut infer_type = false;
     let mut value = None;
@@ -22,42 +23,38 @@ where
     // [var] ident: type = val
     // [var] ident: type
 
-    if matches!(
-        peek_non_blank!(iter).kind,
-        TokenKind::Colon | TokenKind::Assignment
-    ) {
-        match next_non_blank!(iter) {
-            Token {
-                kind: TokenKind::Colon,
-                ..
-            } => match next_non_blank!(iter) {
-                Token {
-                    kind: TokenKind::Assignment,
-                    ..
-                } => {
-                    infer_type = true;
-                    value = Some(parse_value(iter, None));
-                }
-                other => {
-                    typehint = Some(parse_value(iter, Some(other)));
+    match iter.peek().map(|t| &t.kind) {
+        Some(TokenKind::Colon) => {
+            iter.next();
 
-                    if matches!(peek_non_blank!(iter).kind, TokenKind::Assignment) {
-                        match next_non_blank!(iter) {
-                            Token {
-                                kind: TokenKind::Assignment,
-                                ..
-                            } => value = Some(parse_value(iter, None)),
-                            _ => unreachable!(),
-                        }
+            match iter.peek().expect("unexpected EOF").kind {
+                TokenKind::Assignment => {
+                    iter.next();
+                    infer_type = true;
+                    value = Some(parse_expr(iter));
+                }
+                _ => {
+                    let typehint_val = parse_expr(iter);
+
+                    if typehint_val
+                        .as_binary_expr()
+                        .is_some_and(|(_, op, _)| op.is_assignment())
+                    {
+                        let (lhs, _, rhs) = typehint_val.into_binary_expr().unwrap();
+
+                        typehint = Some(*lhs);
+                        value = Some(*rhs);
+                    } else {
+                        typehint = Some(typehint_val);
                     }
                 }
-            },
-            Token {
-                kind: TokenKind::Assignment,
-                ..
-            } => value = Some(parse_value(iter, None)),
-            _ => unreachable!(),
+            };
         }
+        Some(TokenKind::Assignment) => {
+            iter.next();
+            value = Some(parse_expr(iter))
+        }
+        _ => (),
     }
 
     ASTVariable {
@@ -66,5 +63,88 @@ where
         typehint,
         value,
         kind,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use gdtk_ast::poor::*;
+
+    use crate::test_utils::create_parser;
+    use crate::variables::parse_variable_body;
+
+    #[test]
+    fn test_variable_empty() {
+        let mut parser = create_parser("ident");
+        let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: false,
+            typehint: None,
+            value: None,
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_variable_with_type() {
+        let mut parser = create_parser("ident: type");
+        let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: false,
+            typehint: Some(ASTValue::Identifier("type")),
+            value: None,
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_variable_with_value() {
+        let mut parser = create_parser("ident = 0");
+        let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: false,
+            typehint: None,
+            value: Some(ASTValue::Number(0)),
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_variable_with_type_inference_and_value() {
+        let mut parser = create_parser("ident := 0");
+        let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: true,
+            typehint: None,
+            value: Some(ASTValue::Number(0)),
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_variable_with_type_and_value() {
+        let mut parser = create_parser("ident: type = 0");
+        let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: "ident",
+            infer_type: false,
+            typehint: Some(ASTValue::Identifier("type")),
+            value: Some(ASTValue::Number(0)),
+            kind: ASTVariableKind::Regular,
+        };
+
+        assert_eq!(result, expected);
     }
 }

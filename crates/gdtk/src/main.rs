@@ -1,5 +1,7 @@
+#[cfg(any(debug_assertions, feature = "dev"))]
+use gdtk::cli::DevCommands;
 use gdtk::{
-    cli::{Commands, DevCommands, GodotCommands},
+    cli::{Commands, GodotCommands},
     commands as cmds,
 };
 
@@ -8,7 +10,7 @@ async fn main() -> anyhow::Result<()> {
     let cli = gdtk::cli::cli();
 
     match cli.command {
-        #[cfg(debug_assertions)]
+        #[cfg(any(debug_assertions, feature = "dev"))]
         Commands::Dev { command } => match command {
             DevCommands::Lex { file } => cmds::dev::lex::run(file)?,
             DevCommands::Parse { file } => cmds::dev::parse::run(file)?,

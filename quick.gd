@@ -1,5 +1,6 @@
-func _ready() -> void:
-	print(func():
-		print("hi from lambda")
-		return 0
-	)
+if true: pass; print(2)
+
+func():
+	1 + \
+	2 + \
+ 	3

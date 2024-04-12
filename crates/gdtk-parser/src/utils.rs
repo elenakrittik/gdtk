@@ -1,157 +1,158 @@
-// TODO: refactor some stuff to utilize new option to .peek()
-
 use std::iter::Peekable;
 
-use gdtk_ast::poor::ASTVariable;
 use gdtk_lexer::{Token, TokenKind};
 
-use crate::variables::parse_variable;
+/// Assert that the next token is of the given variant, and optionally
+/// return it's value.
+pub macro expect {
+    ($iter:expr, $variant:pat) => {
+        $crate::utils::expect!($iter, $variant, ())
+    },
+    ($iter:expr, $variant:pat, $ret:expr) => {{
+        type Token<'a> = ::gdtk_lexer::Token<'a>;
 
-pub fn collect_params<'a, T>(iter: &mut Peekable<T>) -> Vec<ASTVariable<'a>>
+        match $iter.next() {
+            Some(Token { kind: $variant, .. }) => $ret,
+            other => panic!("expected {}, found {other:?}", stringify!($variant)),
+        }
+    }}
+}
+
+/// Parses a list of values (as defined by the passed callback) separated by the specified delimiter.
+/// ``stop_at`` is used to know when to stop looking for new values.
+pub fn delemited_by<'a, I, V>(
+    iter: &mut Peekable<I>,
+    delimiter: TokenKind<'a>,
+    stop_at: &[TokenKind<'a>],
+    mut callback: impl FnMut(&mut Peekable<I>) -> V,
+) -> Vec<V>
 where
-    T: Iterator<Item = Token<'a>>,
+    I: Iterator<Item = Token<'a>>,
 {
-    let mut parameters = vec![];
+    const BLANKETS: &[TokenKind<'static>] =
+        &[TokenKind::Newline, TokenKind::Indent, TokenKind::Dedent];
+    const PARENS: &[TokenKind<'static>] = &[
+        TokenKind::ClosingParenthesis,
+        TokenKind::ClosingBracket,
+        TokenKind::ClosingBrace,
+    ];
 
-    expect_blank_prefixed!(iter, TokenKind::OpeningParenthesis, ());
+    let in_parens = stop_at
+        .iter()
+        .any(|k1| PARENS.iter().any(|k2| k2.same_as(k1)));
+    let mut values = vec![];
 
-    if !matches!(peek_non_blank!(iter).kind, TokenKind::ClosingParenthesis) {
-        loop {
-            if !matches!(peek_non_blank!(iter).kind, TokenKind::Identifier(_)) {
-                panic!("unexpected {:?}, expected function parameter", iter.next());
-            }
-
-            let param = parse_variable(iter, gdtk_ast::poor::ASTVariableKind::FunctionParameter);
-            parameters.push(param);
-
-            match peek_non_blank!(iter) {
-                Token {
-                    kind: TokenKind::Comma,
-                    ..
-                } => {
-                    iter.next();
-                    continue;
-                }
-                Token {
-                    kind: TokenKind::ClosingParenthesis,
-                    ..
-                } => {
-                    iter.next();
-                    break;
-                }
-                other => panic!("unexpected {other:?}, expected a comma or a closing parenthesis"),
-            }
+    while iter
+        .peek()
+        .is_some_and(|t| !(stop_at.iter().any(|k| k.same_as(&t.kind))))
+    {
+        // ignore newlines and in-/de- dents inside parentheses
+        if in_parens
+            && iter
+                .peek()
+                .is_some_and(|t| BLANKETS.iter().any(|k| k.same_as(&t.kind)))
+        {
+            iter.next();
+            continue;
         }
-    } else {
-        iter.next();
+
+        values.push(callback(iter));
+
+        if iter.peek().is_some_and(|t| t.kind.same_as(&delimiter)) {
+            iter.next();
+        }
     }
 
-    parameters
+    values
 }
 
-pub macro any_assignment($enm:ident) {
-    $enm::Assignment
-        | $enm::PlusAssignment
-        | $enm::MinusAssignment
-        | $enm::MultiplyAssignment
-        | $enm::PowerAssignment
-        | $enm::DivideAssignment
-        | $enm::RemainderAssignment
-        | $enm::BitwiseAndAssignment
-        | $enm::BitwiseOrAssignment
-        | $enm::BitwiseNotAssignment
-        | $enm::BitwiseXorAssignment
-        | $enm::BitwiseShiftLeftAssignment
-        | $enm::BitwiseShiftRightAssignment
+/// Calls ``iter.next()``, then ``callback(iter)``.
+pub fn advance_and_parse<'a, I, V>(
+    iter: &mut Peekable<I>,
+    mut callback: impl FnMut(&mut Peekable<I>) -> V,
+) -> V
+where
+    I: Iterator<Item = Token<'a>>,
+{
+    iter.next();
+    callback(iter)
 }
 
-pub macro expect($iter:expr, $variant:pat, $ret:expr) {{
-    type Token<'a> = ::gdtk_lexer::Token<'a>;
+#[cfg(test)]
+mod tests {
+    use gdtk_lexer::TokenKind;
 
-    match $iter.next() {
-        Some(Token { kind: $variant, .. }) => $ret,
-        other => panic!("expected {}, found {other:?}", stringify!($variant)),
-    }
-}}
+    use crate::test_utils::{create_parser, next_kind};
+    use crate::utils::{advance_and_parse, delemited_by, expect};
 
-pub macro expect_blank_prefixed($iter:expr, $variant:pat, $ret:expr) {{
-    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
+    #[test]
+    fn test_delemited_by() {
+        let mut parser = create_parser("1, 2;");
+        let result = delemited_by(
+            &mut parser,
+            TokenKind::Comma,
+            &[TokenKind::Semicolon],
+            next_kind,
+        );
+        let expected = vec![TokenKind::Integer(1), TokenKind::Integer(2)];
 
-    loop {
-        if let Some(token) = $iter.next() {
-            match token.kind {
-                TokenKind::Blank(_) => (),
-                $variant => break $ret,
-                _ => panic!("expected {}, found {token:?}", stringify!($variant)),
-            }
-        } else {
-            panic!("unexpected EOF");
-        }
-    }
-}}
-
-pub macro peek_non_blank($iter:expr) {{
-    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
-
-    loop {
-        if let Some(token) = $iter.peek() {
-            match token.kind {
-                TokenKind::Blank(_) => {
-                    $iter.next();
-                }
-                _ => break token,
-            }
-        } else {
-            panic!("unexpected EOF");
-        }
-    }
-}}
-
-pub macro next_non_blank($iter:expr) {{
-    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
-
-    loop {
-        if let Some(token) = $iter.next() {
-            match token.kind {
-                TokenKind::Blank(_) => (),
-                _ => break token,
-            }
-        } else {
-            panic!("unexpected EOF");
-        }
-    }
-}}
-
-pub macro collect_args($iter:expr, $opening:pat, $closing:pat) {{
-    $crate::utils::expect!($iter, $opening, ());
-    $crate::utils::collect_args_raw!($iter, $closing)
-}}
-
-pub macro collect_args_raw($iter:expr, $closing:pat) {{
-    type TokenKind<'a> = ::gdtk_lexer::TokenKind<'a>;
-
-    let mut args = vec![];
-    let mut expect_comma = false;
-
-    while let Some(token) = $iter.next() {
-        match &token.kind {
-            &TokenKind::Comma => {
-                if !expect_comma {
-                    panic!("unexpected comma, expected a value");
-                }
-                expect_comma = false;
-            }
-            &TokenKind::Blank(_) => (),
-            &$closing => break,
-            other => {
-                if expect_comma {
-                    panic!("expected comma, got {other:?}");
-                }
-                args.push($crate::values::parse_value($iter, Some(token)));
-                expect_comma = true;
-            }
-        }
+        assert_eq!(result, expected);
     }
 
-    args
-}}
+    #[test]
+    fn test_delemited_by_trailing() {
+        let mut parser = create_parser("1, 2,;");
+        let result = delemited_by(
+            &mut parser,
+            TokenKind::Comma,
+            &[TokenKind::Semicolon],
+            next_kind,
+        );
+        let expected = vec![TokenKind::Integer(1), TokenKind::Integer(2)];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_delemited_by_single() {
+        let mut parser = create_parser("1;");
+        let result = delemited_by(
+            &mut parser,
+            TokenKind::Comma,
+            &[TokenKind::Semicolon],
+            next_kind,
+        );
+        let expected = vec![TokenKind::Integer(1)];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_delemited_by_empty() {
+        let mut parser = create_parser(";");
+        let result = delemited_by(
+            &mut parser,
+            TokenKind::Comma,
+            &[TokenKind::Semicolon],
+            next_kind,
+        );
+        let expected = vec![];
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_advance_and_parse() {
+        let mut parser = create_parser(".1");
+        let result = advance_and_parse(&mut parser, next_kind);
+        let expected = TokenKind::Integer(1);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_expect() {
+        let mut parser = create_parser(";");
+        expect!(&mut parser, TokenKind::Semicolon);
+    }
+}
