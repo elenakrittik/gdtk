@@ -35,12 +35,12 @@ pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
         ASTEnumVariant { identifier, value }
     }
 
-    let variants = delemited_by(
+    let variants = parser.with_parens_ctx(true, |parser| delemited_by(
         parser,
         TokenKind::Comma,
         &[TokenKind::ClosingBrace],
         parse_enum_variant,
-    );
+    ));
 
     expect!(parser, TokenKind::ClosingBrace);
 

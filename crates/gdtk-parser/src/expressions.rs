@@ -4,9 +4,8 @@ use gdtk_lexer::{Token, TokenKind};
 use pratt::{Affix, Associativity, PrattParser, Precedence};
 
 use crate::{
-    functions::parse_func,
     utils::{advance_and_parse, delemited_by, expect},
-    values::{parse_array, parse_dictionary}, Parser,
+    values::{parse_array, parse_dictionary, parse_lambda}, Parser,
 };
 
 /// Parse an expression.
@@ -116,24 +115,24 @@ fn parse_expr_with_ops<'a>(
 
         match parser.next().unwrap().kind {
             TokenKind::OpeningParenthesis => {
-                let values = delemited_by(
+                let values = parser.with_parens_ctx(true, |parser| delemited_by(
                     parser,
                     TokenKind::Comma,
                     &[TokenKind::ClosingParenthesis],
                     parse_expr,
-                );
+                ));
 
                 expect!(parser, TokenKind::ClosingParenthesis);
 
                 result.push(ExprIR::Postfix(ASTPostfixOp::Call(values)));
             }
             TokenKind::OpeningBracket => {
-                let values = delemited_by(
+                let values = parser.with_parens_ctx(true, |parser| delemited_by(
                     parser,
                     TokenKind::Comma,
                     &[TokenKind::ClosingBracket],
                     parse_expr,
-                );
+                ));
 
                 expect!(parser, TokenKind::ClosingBracket);
 
@@ -179,18 +178,18 @@ fn parse_expr_without_ops<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>
         TokenKind::Boolean(_) => {
             ASTValue::Boolean(parser.next().unwrap().kind.into_boolean().unwrap())
         }
-        TokenKind::Func => ASTValue::Lambda(parse_func(parser, true)),
+        TokenKind::Func => ASTValue::Lambda(parse_lambda(parser)),
         TokenKind::OpeningBracket => ASTValue::Array(parse_array(parser)),
         TokenKind::OpeningBrace => ASTValue::Dictionary(parse_dictionary(parser)),
         TokenKind::OpeningParenthesis => {
             parser.next();
 
-            let values = delemited_by(
+            let values = parser.with_parens_ctx(true, |parser| delemited_by(
                 parser,
                 TokenKind::Comma,
                 &[TokenKind::ClosingParenthesis],
                 parse_expr_impl,
-            )
+            ))
             .into_iter()
             .flatten()
             .collect();

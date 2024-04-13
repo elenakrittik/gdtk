@@ -16,13 +16,7 @@ pub fn parse_return_stmt<'a>(
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::Return);
 
-    let value = if parser.peek().is_some_and(|t| !{
-        t.kind.is_newline()
-            || t.kind.is_closing_brace()
-            || t.kind.is_closing_bracket()
-            || t.kind.is_closing_parenthesis()
-            || t.kind.is_semicolon()
-    }) {
+    let value = if parser.peek().is_some_and(|t| !t.kind.is_line_end()) {
         Some(parse_expr(parser))
     } else {
         None
