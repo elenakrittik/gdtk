@@ -31,15 +31,15 @@ pub type Parser<'a, I> = crate::parser::Parser<Peekable<I>>;
 /// Parse the result of lexing a GDScript source code file.
 pub fn parse_file<'a>(tokens: impl Iterator<Item = Token<'a>>) -> Result<ASTFile<'a>, Error> {
     let mut body: CodeBlock<'_> = vec![];
-    let mut iter = crate::parser::Parser::new(tokens);
+    let mut parser = crate::parser::Parser::new(tokens);
 
-    while let Some(token) = iter.peek() {
+    while let Some(token) = parser.peek() {
         match token.kind {
             // ignore leftover dedents from parsing parenthesized lambdas
             TokenKind::Newline | TokenKind::Semicolon | TokenKind::Dedent => {
-                iter.next();
+                parser.next();
             }
-            _ => body.push(parse_statement(&mut iter)),
+            _ => body.push(parse_statement(&mut parser)),
         }
     }
 

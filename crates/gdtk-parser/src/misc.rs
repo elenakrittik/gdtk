@@ -9,23 +9,23 @@ use crate::{
 };
 
 pub fn parse_annotation<'a>(
-    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTAnnotation<'a> {
-    expect!(iter, TokenKind::Annotation);
+    expect!(parser, TokenKind::Annotation);
 
-    let identifier = expect!(iter, TokenKind::Identifier(i), i);
+    let identifier = expect!(parser, TokenKind::Identifier(i), i);
 
-    let arguments = if iter.peek().is_some_and(|t| t.kind.is_opening_parenthesis()) {
-        iter.next();
+    let arguments = if parser.peek().is_some_and(|t| t.kind.is_opening_parenthesis()) {
+        parser.next();
 
         let args = delemited_by(
-            iter,
+            parser,
             TokenKind::Comma,
             &[TokenKind::ClosingParenthesis],
             parse_expr,
         );
 
-        expect!(iter, TokenKind::ClosingParenthesis);
+        expect!(parser, TokenKind::ClosingParenthesis);
 
         Some(args)
     } else {
@@ -38,22 +38,22 @@ pub fn parse_annotation<'a>(
     }
 }
 
-pub fn parse_signal<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTSignal<'a> {
-    expect!(iter, TokenKind::Signal);
+pub fn parse_signal<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTSignal<'a> {
+    expect!(parser, TokenKind::Signal);
 
-    let identifier = expect!(iter, TokenKind::Identifier(s), s);
+    let identifier = expect!(parser, TokenKind::Identifier(s), s);
 
-    let parameters = if iter.peek().is_some_and(|t| t.kind.is_opening_parenthesis()) {
-        iter.next();
+    let parameters = if parser.peek().is_some_and(|t| t.kind.is_opening_parenthesis()) {
+        parser.next();
 
         let params = delemited_by(
-            iter,
+            parser,
             TokenKind::Comma,
             &[TokenKind::ClosingParenthesis],
             |iter| parse_variable_body(iter, ASTVariableKind::Binding),
         );
 
-        expect!(iter, TokenKind::ClosingParenthesis);
+        expect!(parser, TokenKind::ClosingParenthesis);
 
         Some(params)
     } else {
@@ -66,20 +66,20 @@ pub fn parse_signal<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
     }
 }
 
-pub fn parse_type<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
-    let base = expect!(iter, TokenKind::Identifier(s), s);
+pub fn parse_type<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
+    let base = expect!(parser, TokenKind::Identifier(s), s);
 
-    if iter.peek().is_some_and(|t| t.kind.is_opening_bracket()) {
-        iter.next();
+    if parser.peek().is_some_and(|t| t.kind.is_opening_bracket()) {
+        parser.next();
 
         let type_parameters = delemited_by(
-            iter,
+            parser,
             TokenKind::Comma,
             &[TokenKind::ClosingBracket],
             parse_type,
         );
 
-        iter.next();
+        parser.next();
 
         ASTValue::PostfixExpr(
             Box::new(ASTValue::Identifier(base)),

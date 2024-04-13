@@ -7,49 +7,49 @@ use crate::{
     utils::{delemited_by, expect}, Parser,
 };
 
-pub fn parse_array<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ASTValue<'a>> {
-    iter.next();
+pub fn parse_array<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ASTValue<'a>> {
+    parser.next();
 
     let value = delemited_by(
-        iter,
+        parser,
         TokenKind::Comma,
         &[TokenKind::ClosingBracket],
         parse_expr,
     );
 
-    expect!(iter, TokenKind::ClosingBracket);
+    expect!(parser, TokenKind::ClosingBracket);
 
     value
 }
 
-pub fn parse_dictionary<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
-    expect!(iter, TokenKind::OpeningBrace);
+pub fn parse_dictionary<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+    expect!(parser, TokenKind::OpeningBrace);
 
-    let value = match iter.peek().expect("unexpected EOF").kind {
+    let value = match parser.peek().expect("unexpected EOF").kind {
         TokenKind::ClosingBrace => vec![], // empty dict
-        TokenKind::Identifier(_) => parse_lua_dict(iter),
-        _ => parse_python_dict(iter),
+        TokenKind::Identifier(_) => parse_lua_dict(parser),
+        _ => parse_python_dict(parser),
     };
 
-    expect!(iter, TokenKind::ClosingBrace);
+    expect!(parser, TokenKind::ClosingBrace);
 
     value
 }
 
 /// Parse a lua-style dictionary body.
-fn parse_lua_dict<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     fn parse_lua_key_value<'a>(
-        iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
+        parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
     ) -> (ASTValue<'a>, ASTValue<'a>) {
-        let key = ASTValue::Identifier(expect!(iter, TokenKind::Identifier(s), s));
-        expect!(iter, TokenKind::Assignment);
-        let value = parse_expr(iter);
+        let key = ASTValue::Identifier(expect!(parser, TokenKind::Identifier(s), s));
+        expect!(parser, TokenKind::Assignment);
+        let value = parse_expr(parser);
 
         (key, value)
     }
 
     delemited_by(
-        iter,
+        parser,
         TokenKind::Comma,
         &[TokenKind::ClosingBrace],
         parse_lua_key_value,
@@ -57,19 +57,19 @@ fn parse_lua_dict<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Dic
 }
 
 /// Parse a python-style dictionary body.
-fn parse_python_dict<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+fn parse_python_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     fn parse_python_key_value<'a>(
-        iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
+        parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
     ) -> (ASTValue<'a>, ASTValue<'a>) {
-        let key = parse_expr(iter);
-        expect!(iter, TokenKind::Colon);
-        let value = parse_expr(iter);
+        let key = parse_expr(parser);
+        expect!(parser, TokenKind::Colon);
+        let value = parse_expr(parser);
 
         (key, value)
     }
 
     delemited_by(
-        iter,
+        parser,
         TokenKind::Comma,
         &[TokenKind::ClosingBrace],
         parse_python_key_value,
