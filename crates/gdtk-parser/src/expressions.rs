@@ -1,4 +1,3 @@
-use std::iter::Peekable;
 
 use gdtk_ast::poor::{ASTBinaryOp, ASTPostfixOp, ASTPrefixOp, ASTValue};
 use gdtk_lexer::{Token, TokenKind};
@@ -7,18 +6,18 @@ use pratt::{Affix, Associativity, PrattParser, Precedence};
 use crate::{
     functions::parse_func,
     utils::{advance_and_parse, delemited_by, expect},
-    values::{parse_array, parse_dictionary},
+    values::{parse_array, parse_dictionary}, Parser,
 };
 
 /// Parse an expression.
-pub fn parse_expr<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
+pub fn parse_expr<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
     ExprParser
         .parse(parse_expr_impl::<false>(iter).into_iter())
         .unwrap()
 }
 
 fn parse_expr_impl<'a, const IGNORE_BLANKETS: bool>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> Vec<ExprIR<'a>> {
     let mut result = parse_expr_with_ops::<IGNORE_BLANKETS>(iter);
 
@@ -84,12 +83,10 @@ fn parse_expr_impl<'a, const IGNORE_BLANKETS: bool>(
                     result.extend(parse_expr_with_ops::<IGNORE_BLANKETS>(iter));
                 }
             }
+        } else if iter.peek().is_some_and(|t| t.kind.is_newline()) && IGNORE_BLANKETS {
+            iter.next();
         } else {
-            if iter.peek().is_some_and(|t| t.kind.is_newline()) && IGNORE_BLANKETS {
-                iter.next();
-            } else {
-                break;
-            }
+            break;
         }
     }
 
@@ -98,7 +95,7 @@ fn parse_expr_impl<'a, const IGNORE_BLANKETS: bool>(
 
 /// Parses a value taking into account possible prefix and postfix OPs
 fn parse_expr_with_ops<'a, const IGNORE_BLANKETS: bool>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> Vec<ExprIR<'a>> {
     let mut result = vec![];
 
@@ -114,12 +111,10 @@ fn parse_expr_with_ops<'a, const IGNORE_BLANKETS: bool>(
         } {
             iter.next();
             result.push(ExprIR::Prefix(op));
+        } else if iter.peek().is_some_and(|t| t.kind.is_newline()) && IGNORE_BLANKETS {
+            iter.next();
         } else {
-            if iter.peek().is_some_and(|t| t.kind.is_newline()) && IGNORE_BLANKETS {
-                iter.next();
-            } else {
-                break;
-            }
+            break;
         }
     }
 
@@ -174,7 +169,7 @@ fn parse_expr_with_ops<'a, const IGNORE_BLANKETS: bool>(
 }
 
 /// Parses a "clean" value, without checking for possible prefix or postfix OPs
-fn parse_expr_without_ops<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ExprIR<'a> {
+fn parse_expr_without_ops<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ExprIR<'a> {
     let value = match &iter.peek().expect("unexpected EOF").kind {
         TokenKind::Identifier(_) => {
             ASTValue::Identifier(iter.next().unwrap().kind.into_identifier().unwrap())

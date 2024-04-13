@@ -1,5 +1,3 @@
-use std::iter::Peekable;
-
 use gdtk_ast::poor::ASTStatement;
 use gdtk_lexer::{Token, TokenKind};
 
@@ -14,9 +12,10 @@ use crate::statements::{
     parse_while_stmt,
 };
 use crate::utils::advance_and_parse;
+use crate::Parser;
 
 pub fn parse_statement<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     match iter.peek().expect("expected a statement, found EOF").kind {
         TokenKind::Annotation => ASTStatement::Annotation(parse_annotation(iter)),

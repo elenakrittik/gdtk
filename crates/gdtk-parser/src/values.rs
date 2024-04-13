@@ -1,14 +1,13 @@
-use std::iter::Peekable;
 
 use gdtk_ast::poor::{ASTValue, DictValue};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
     expressions::parse_expr,
-    utils::{delemited_by, expect},
+    utils::{delemited_by, expect}, Parser,
 };
 
-pub fn parse_array<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> Vec<ASTValue<'a>> {
+pub fn parse_array<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ASTValue<'a>> {
     iter.next();
 
     let value = delemited_by(
@@ -23,7 +22,7 @@ pub fn parse_array<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
     value
 }
 
-pub fn parse_dictionary<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+pub fn parse_dictionary<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     expect!(iter, TokenKind::OpeningBrace);
 
     let value = match iter.peek().expect("unexpected EOF").kind {
@@ -38,9 +37,9 @@ pub fn parse_dictionary<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>
 }
 
 /// Parse a lua-style dictionary body.
-fn parse_lua_dict<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+fn parse_lua_dict<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     fn parse_lua_key_value<'a>(
-        iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+        iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
     ) -> (ASTValue<'a>, ASTValue<'a>) {
         let key = ASTValue::Identifier(expect!(iter, TokenKind::Identifier(s), s));
         expect!(iter, TokenKind::Assignment);
@@ -58,9 +57,9 @@ fn parse_lua_dict<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> D
 }
 
 /// Parse a python-style dictionary body.
-fn parse_python_dict<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+fn parse_python_dict<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     fn parse_python_key_value<'a>(
-        iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+        iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
     ) -> (ASTValue<'a>, ASTValue<'a>) {
         let key = parse_expr(iter);
         expect!(iter, TokenKind::Colon);

@@ -1,6 +1,7 @@
-use std::iter::Peekable;
 
 use gdtk_lexer::{Token, TokenKind};
+
+use crate::Parser;
 
 /// Assert that the next token is of the given variant, and optionally
 /// return it's value.
@@ -21,10 +22,10 @@ pub macro expect {
 /// Parses a list of values (as defined by the passed callback) separated by the specified delimiter.
 /// ``stop_at`` is used to know when to stop looking for new values.
 pub fn delemited_by<'a, I, V>(
-    iter: &mut Peekable<I>,
+    iter: &mut Parser<I>,
     delimiter: TokenKind<'a>,
     stop_at: &[TokenKind<'a>],
-    mut callback: impl FnMut(&mut Peekable<I>) -> V,
+    mut callback: impl FnMut(&mut Parser<I>) -> V,
 ) -> Vec<V>
 where
     I: Iterator<Item = Token<'a>>,
@@ -68,8 +69,8 @@ where
 
 /// Calls ``iter.next()``, then ``callback(iter)``.
 pub fn advance_and_parse<'a, I, V>(
-    iter: &mut Peekable<I>,
-    mut callback: impl FnMut(&mut Peekable<I>) -> V,
+    iter: &mut Parser<I>,
+    mut callback: impl FnMut(&mut Parser<I>) -> V,
 ) -> V
 where
     I: Iterator<Item = Token<'a>>,

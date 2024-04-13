@@ -1,4 +1,3 @@
-use std::iter::Peekable;
 
 use gdtk_ast::poor::{ASTFunction, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
@@ -7,9 +6,10 @@ use crate::block::parse_block;
 use crate::misc::parse_type;
 use crate::utils::{delemited_by, expect};
 use crate::variables::parse_variable_body;
+use crate::Parser;
 
 pub fn parse_func<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
     lambda: bool,
 ) -> ASTFunction<'a> {
     expect!(iter, TokenKind::Func);

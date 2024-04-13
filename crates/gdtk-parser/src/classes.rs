@@ -1,4 +1,3 @@
-use std::iter::Peekable;
 
 use gdtk_ast::poor::{ASTClass, ASTEnum, ASTEnumVariant};
 use gdtk_lexer::{Token, TokenKind};
@@ -6,8 +5,9 @@ use gdtk_lexer::{Token, TokenKind};
 use crate::block::parse_block;
 use crate::expressions::parse_expr;
 use crate::utils::{advance_and_parse, delemited_by, expect};
+use crate::Parser;
 
-pub fn parse_enum<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTEnum<'a> {
+pub fn parse_enum<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTEnum<'a> {
     expect!(iter, TokenKind::Enum);
 
     let identifier = if iter
@@ -22,7 +22,7 @@ pub fn parse_enum<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
     expect!(iter, TokenKind::OpeningBrace);
 
     fn parse_enum_variant<'a>(
-        iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+        iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
     ) -> ASTEnumVariant<'a> {
         let identifier = expect!(iter, TokenKind::Identifier(s), s);
 
@@ -50,7 +50,7 @@ pub fn parse_enum<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
     }
 }
 
-pub fn parse_class<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTClass<'a> {
+pub fn parse_class<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTClass<'a> {
     expect!(iter, TokenKind::Class);
     let identifier = expect!(iter, TokenKind::Identifier(s), s);
     let mut extends = None;

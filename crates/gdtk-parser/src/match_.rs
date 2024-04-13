@@ -1,4 +1,3 @@
-use std::iter::Peekable;
 
 use gdtk_ast::poor::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, DictPattern};
 use gdtk_lexer::{Token, TokenKind};
@@ -6,9 +5,10 @@ use gdtk_lexer::{Token, TokenKind};
 use crate::block::parse_block;
 use crate::expressions::parse_expr;
 use crate::utils::{advance_and_parse, delemited_by, expect};
+use crate::Parser;
 
 /// Parse a match statement.
-pub fn parse_match<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTMatchStmt<'a> {
+pub fn parse_match<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTMatchStmt<'a> {
     expect!(iter, TokenKind::Match);
 
     let expr = parse_expr(iter);
@@ -30,7 +30,7 @@ pub fn parse_match<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> 
 
 /// Parse a match arm.
 pub fn parse_match_arm<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchArm<'a> {
     let pattern = parse_match_pattern(iter);
 
@@ -53,7 +53,7 @@ pub fn parse_match_arm<'a>(
 
 /// Parse a match arm pattern, including alternatives.
 pub fn parse_match_pattern<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchPattern<'a> {
     let pats = delemited_by(
         iter,
@@ -71,7 +71,7 @@ pub fn parse_match_pattern<'a>(
 
 /// Parse a match arm pattern without checking for alternatives.
 fn parse_raw_match_pattern<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchPattern<'a> {
     match iter
         .peek()
@@ -87,7 +87,7 @@ fn parse_raw_match_pattern<'a>(
 }
 
 fn parse_match_binding_pattern<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchPattern<'a> {
     expect!(iter, TokenKind::Var);
 
@@ -97,7 +97,7 @@ fn parse_match_binding_pattern<'a>(
 }
 
 fn parse_match_array_pattern<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchPattern<'a> {
     expect!(iter, TokenKind::OpeningBracket);
 
@@ -114,11 +114,11 @@ fn parse_match_array_pattern<'a>(
 }
 
 fn parse_match_dict_pattern<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchPattern<'a> {
     expect!(iter, TokenKind::OpeningBrace);
 
-    fn callback<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> DictPattern<'a> {
+    fn callback<'a>(iter: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictPattern<'a> {
         let key = parse_expr(iter);
 
         let value = if iter.peek().is_some_and(|t| t.kind == TokenKind::Colon) {

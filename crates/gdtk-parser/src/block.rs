@@ -1,13 +1,13 @@
-use std::iter::Peekable;
 
 use gdtk_ast::poor::CodeBlock;
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::statement::parse_statement;
 use crate::utils::expect;
+use crate::Parser;
 
 pub fn parse_block<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
     value: bool,
 ) -> CodeBlock<'a> {
     let mut stmts = vec![];
