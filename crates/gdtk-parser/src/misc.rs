@@ -1,11 +1,11 @@
-
 use gdtk_ast::poor::{ASTAnnotation, ASTPostfixOp, ASTSignal, ASTValue, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
     expressions::parse_expr,
     utils::{delemited_by, expect},
-    variables::parse_variable_body, Parser,
+    variables::parse_variable_body,
+    Parser,
 };
 
 pub fn parse_annotation<'a>(
@@ -15,7 +15,10 @@ pub fn parse_annotation<'a>(
 
     let identifier = expect!(parser, TokenKind::Identifier(i), i);
 
-    let arguments = if parser.peek().is_some_and(|t| t.kind.is_opening_parenthesis()) {
+    let arguments = if parser
+        .peek()
+        .is_some_and(|t| t.kind.is_opening_parenthesis())
+    {
         parser.next();
 
         let args = delemited_by(
@@ -43,7 +46,10 @@ pub fn parse_signal<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) ->
 
     let identifier = expect!(parser, TokenKind::Identifier(s), s);
 
-    let parameters = if parser.peek().is_some_and(|t| t.kind.is_opening_parenthesis()) {
+    let parameters = if parser
+        .peek()
+        .is_some_and(|t| t.kind.is_opening_parenthesis())
+    {
         parser.next();
 
         let params = delemited_by(

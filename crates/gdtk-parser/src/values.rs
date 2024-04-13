@@ -1,20 +1,24 @@
-
 use gdtk_ast::poor::{ASTFunction, ASTValue, DictValue};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
-    expressions::parse_expr, functions::parse_func, utils::{delemited_by, expect}, Parser
+    expressions::parse_expr,
+    functions::parse_func,
+    utils::{delemited_by, expect},
+    Parser,
 };
 
 pub fn parse_array<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ASTValue<'a>> {
     parser.next();
 
-    let value = parser.with_parens_ctx(true, |parser| delemited_by(
-        parser,
-        TokenKind::Comma,
-        &[TokenKind::ClosingBracket],
-        parse_expr,
-    ));
+    let value = parser.with_parens_ctx(true, |parser| {
+        delemited_by(
+            parser,
+            TokenKind::Comma,
+            &[TokenKind::ClosingBracket],
+            parse_expr,
+        )
+    });
 
     expect!(parser, TokenKind::ClosingBracket);
 
@@ -47,12 +51,14 @@ fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> D
         (key, value)
     }
 
-    parser.with_parens_ctx(true, |parser| delemited_by(
-        parser,
-        TokenKind::Comma,
-        &[TokenKind::ClosingBrace],
-        parse_lua_key_value,
-    ))
+    parser.with_parens_ctx(true, |parser| {
+        delemited_by(
+            parser,
+            TokenKind::Comma,
+            &[TokenKind::ClosingBrace],
+            parse_lua_key_value,
+        )
+    })
 }
 
 /// Parse a python-style dictionary body.
@@ -67,12 +73,14 @@ fn parse_python_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -
         (key, value)
     }
 
-    parser.with_parens_ctx(true, |parser| delemited_by(
-        parser,
-        TokenKind::Comma,
-        &[TokenKind::ClosingBrace],
-        parse_python_key_value,
-    ))
+    parser.with_parens_ctx(true, |parser| {
+        delemited_by(
+            parser,
+            TokenKind::Comma,
+            &[TokenKind::ClosingBrace],
+            parse_python_key_value,
+        )
+    })
 }
 
 /// Parse a lambda function.

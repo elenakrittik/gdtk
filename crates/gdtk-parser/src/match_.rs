@@ -1,4 +1,3 @@
-
 use gdtk_ast::poor::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, DictPattern};
 use gdtk_lexer::{Token, TokenKind};
 
@@ -134,7 +133,12 @@ fn parse_match_dict_pattern<'a>(
         (key, value)
     }
 
-    let pairs = delemited_by(parser, TokenKind::Comma, &[TokenKind::ClosingBrace], callback);
+    let pairs = delemited_by(
+        parser,
+        TokenKind::Comma,
+        &[TokenKind::ClosingBrace],
+        callback,
+    );
 
     expect!(parser, TokenKind::ClosingBrace);
 

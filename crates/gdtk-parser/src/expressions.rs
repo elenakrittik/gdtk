@@ -1,16 +1,18 @@
-
 use gdtk_ast::poor::{ASTBinaryOp, ASTPostfixOp, ASTPrefixOp, ASTValue};
 use gdtk_lexer::{Token, TokenKind};
 use pratt::{Affix, Associativity, PrattParser, Precedence};
 
 use crate::{
     utils::{advance_and_parse, delemited_by, expect},
-    values::{parse_array, parse_dictionary, parse_lambda}, Parser,
+    values::{parse_array, parse_dictionary, parse_lambda},
+    Parser,
 };
 
 /// Parse an expression.
 pub fn parse_expr<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
-    ExprParser.parse(parse_expr_impl(parser).into_iter()).unwrap()
+    ExprParser
+        .parse(parse_expr_impl(parser).into_iter())
+        .unwrap()
 }
 
 fn parse_expr_impl<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ExprIR<'a>> {
@@ -115,24 +117,28 @@ fn parse_expr_with_ops<'a>(
 
         match parser.next().unwrap().kind {
             TokenKind::OpeningParenthesis => {
-                let values = parser.with_parens_ctx(true, |parser| delemited_by(
-                    parser,
-                    TokenKind::Comma,
-                    &[TokenKind::ClosingParenthesis],
-                    parse_expr,
-                ));
+                let values = parser.with_parens_ctx(true, |parser| {
+                    delemited_by(
+                        parser,
+                        TokenKind::Comma,
+                        &[TokenKind::ClosingParenthesis],
+                        parse_expr,
+                    )
+                });
 
                 expect!(parser, TokenKind::ClosingParenthesis);
 
                 result.push(ExprIR::Postfix(ASTPostfixOp::Call(values)));
             }
             TokenKind::OpeningBracket => {
-                let values = parser.with_parens_ctx(true, |parser| delemited_by(
-                    parser,
-                    TokenKind::Comma,
-                    &[TokenKind::ClosingBracket],
-                    parse_expr,
-                ));
+                let values = parser.with_parens_ctx(true, |parser| {
+                    delemited_by(
+                        parser,
+                        TokenKind::Comma,
+                        &[TokenKind::ClosingBracket],
+                        parse_expr,
+                    )
+                });
 
                 expect!(parser, TokenKind::ClosingBracket);
 
@@ -164,7 +170,9 @@ fn parse_expr_without_ops<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>
         TokenKind::ScientificFloat(_) => {
             ASTValue::Float(parser.next().unwrap().kind.into_scientific_float().unwrap())
         }
-        TokenKind::String(_) => ASTValue::String(parser.next().unwrap().kind.into_string().unwrap()),
+        TokenKind::String(_) => {
+            ASTValue::String(parser.next().unwrap().kind.into_string().unwrap())
+        }
         TokenKind::StringName(_) => {
             ASTValue::StringName(parser.next().unwrap().kind.into_string_name().unwrap())
         }
@@ -184,15 +192,18 @@ fn parse_expr_without_ops<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>
         TokenKind::OpeningParenthesis => {
             parser.next();
 
-            let values = parser.with_parens_ctx(true, |parser| delemited_by(
-                parser,
-                TokenKind::Comma,
-                &[TokenKind::ClosingParenthesis],
-                parse_expr_impl,
-            ))
-            .into_iter()
-            .flatten()
-            .collect();
+            let values = parser
+                .with_parens_ctx(true, |parser| {
+                    delemited_by(
+                        parser,
+                        TokenKind::Comma,
+                        &[TokenKind::ClosingParenthesis],
+                        parse_expr_impl,
+                    )
+                })
+                .into_iter()
+                .flatten()
+                .collect();
 
             expect!(parser, TokenKind::ClosingParenthesis);
 

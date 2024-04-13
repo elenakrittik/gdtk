@@ -1,4 +1,3 @@
-
 use gdtk_ast::poor::{ASTClass, ASTEnum, ASTEnumVariant};
 use gdtk_lexer::{Token, TokenKind};
 
@@ -35,12 +34,14 @@ pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
         ASTEnumVariant { identifier, value }
     }
 
-    let variants = parser.with_parens_ctx(true, |parser| delemited_by(
-        parser,
-        TokenKind::Comma,
-        &[TokenKind::ClosingBrace],
-        parse_enum_variant,
-    ));
+    let variants = parser.with_parens_ctx(true, |parser| {
+        delemited_by(
+            parser,
+            TokenKind::Comma,
+            &[TokenKind::ClosingBrace],
+            parse_enum_variant,
+        )
+    });
 
     expect!(parser, TokenKind::ClosingBrace);
 

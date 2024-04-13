@@ -17,11 +17,11 @@ pub mod expressions;
 pub mod functions;
 pub mod match_;
 pub mod misc;
+pub mod parser;
 pub mod statement;
 pub mod statements;
 #[cfg(test)]
 pub mod test_utils;
-pub mod parser;
 pub mod utils;
 pub mod values;
 pub mod variables;
