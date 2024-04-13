@@ -1,5 +1,3 @@
-use std::iter::Peekable;
-
 use gdtk_ast::poor::{ASTFunction, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
@@ -7,46 +5,49 @@ use crate::block::parse_block;
 use crate::misc::parse_type;
 use crate::utils::{delemited_by, expect};
 use crate::variables::parse_variable_body;
+use crate::Parser;
 
 pub fn parse_func<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
     lambda: bool,
 ) -> ASTFunction<'a> {
-    expect!(iter, TokenKind::Func);
+    expect!(parser, TokenKind::Func);
 
     let mut identifier = None;
     let mut return_type = None;
 
     // Intentionally allow no identifier even when `lambda == false`.
-    if iter
+    if parser
         .peek()
         .is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_)))
     {
-        identifier = Some(expect!(iter, TokenKind::Identifier(s), s));
+        identifier = Some(expect!(parser, TokenKind::Identifier(s), s));
     }
 
-    expect!(iter, TokenKind::OpeningParenthesis);
+    expect!(parser, TokenKind::OpeningParenthesis);
 
-    let parameters = delemited_by(
-        iter,
-        TokenKind::Comma,
-        &[TokenKind::ClosingParenthesis],
-        |iter| parse_variable_body(iter, ASTVariableKind::Binding),
-    );
+    let parameters = parser.with_parens_ctx(true, |parser| {
+        delemited_by(
+            parser,
+            TokenKind::Comma,
+            &[TokenKind::ClosingParenthesis],
+            |iter| parse_variable_body(iter, ASTVariableKind::Binding),
+        )
+    });
 
-    expect!(iter, TokenKind::ClosingParenthesis);
+    expect!(parser, TokenKind::ClosingParenthesis);
 
-    if iter
+    if parser
         .peek()
         .is_some_and(|t| matches!(t.kind, TokenKind::Arrow))
     {
-        iter.next();
-        return_type = Some(parse_type(iter));
+        parser.next();
+        return_type = Some(parse_type(parser));
     }
 
-    expect!(iter, TokenKind::Colon);
+    expect!(parser, TokenKind::Colon);
 
-    let body = parse_block(iter, lambda);
+    let body = parse_block(parser, lambda);
 
     ASTFunction {
         identifier,

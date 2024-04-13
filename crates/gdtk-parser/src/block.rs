@@ -1,33 +1,32 @@
-use std::iter::Peekable;
-
 use gdtk_ast::poor::CodeBlock;
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::statement::parse_statement;
 use crate::utils::expect;
+use crate::Parser;
 
 pub fn parse_block<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
     value: bool,
 ) -> CodeBlock<'a> {
     let mut stmts = vec![];
 
     // Check if the block is multiline.
-    if iter
+    if parser
         .peek()
         .is_some_and(|t| matches!(t.kind, TokenKind::Newline))
     {
-        expect!(iter, TokenKind::Newline);
-        expect!(iter, TokenKind::Indent);
+        expect!(parser, TokenKind::Newline);
+        expect!(parser, TokenKind::Indent);
 
-        while let Some(Token { kind, .. }) = iter.peek() {
+        while let Some(Token { kind, .. }) = parser.peek() {
             match kind {
                 TokenKind::Dedent => {
-                    iter.next();
+                    parser.next();
                     break;
                 }
                 TokenKind::Newline | TokenKind::Semicolon => {
-                    iter.next();
+                    parser.next();
                 }
                 TokenKind::ClosingParenthesis
                 | TokenKind::ClosingBracket
@@ -35,14 +34,14 @@ pub fn parse_block<'a>(
                     if value {
                         break;
                     } else {
-                        stmts.push(parse_statement(iter));
+                        stmts.push(parse_statement(parser));
                     }
                 }
-                _ => stmts.push(parse_statement(iter)),
+                _ => stmts.push(parse_statement(parser)),
             }
         }
     } else {
-        stmts.push(parse_statement(iter));
+        stmts.push(parse_statement(parser));
     }
 
     stmts

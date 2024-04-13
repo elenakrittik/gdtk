@@ -1,5 +1,3 @@
-use std::iter::Peekable;
-
 use gdtk_ast::poor::ASTStatement;
 use gdtk_lexer::{Token, TokenKind};
 
@@ -14,34 +12,35 @@ use crate::statements::{
     parse_while_stmt,
 };
 use crate::utils::advance_and_parse;
+use crate::Parser;
 
 pub fn parse_statement<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    match iter.peek().expect("expected a statement, found EOF").kind {
-        TokenKind::Annotation => ASTStatement::Annotation(parse_annotation(iter)),
-        TokenKind::Assert => ASTStatement::Assert(advance_and_parse(iter, parse_expr)),
-        TokenKind::Break => advance_and_parse(iter, |_| ASTStatement::Break),
-        TokenKind::Breakpoint => advance_and_parse(iter, |_| ASTStatement::Breakpoint),
-        TokenKind::Class => ASTStatement::Class(parse_class(iter)),
-        TokenKind::ClassName => parse_classname_stmt(iter),
-        TokenKind::Continue => advance_and_parse(iter, |_| ASTStatement::Continue),
-        TokenKind::If => parse_if_stmt(iter),
-        TokenKind::Elif => parse_elif_stmt(iter),
-        TokenKind::Else => parse_else_stmt(iter),
-        TokenKind::Enum => ASTStatement::Enum(parse_enum(iter)),
-        TokenKind::Extends => parse_extends_stmt(iter),
-        TokenKind::For => parse_for_stmt(iter),
-        TokenKind::Pass => advance_and_parse(iter, |_| ASTStatement::Pass),
-        TokenKind::Func => ASTStatement::Func(parse_func(iter, false)),
-        TokenKind::Return => parse_return_stmt(iter),
-        TokenKind::Signal => ASTStatement::Signal(parse_signal(iter)),
-        TokenKind::Match => ASTStatement::Match(parse_match(iter)),
-        TokenKind::While => parse_while_stmt(iter),
-        TokenKind::Var => parse_var_stmt(iter),
-        TokenKind::Const => parse_const_stmt(iter),
-        TokenKind::Static => parse_static_var_stmt(iter),
-        _ => ASTStatement::Value(parse_expr(iter)),
+    match parser.peek().expect("expected a statement, found EOF").kind {
+        TokenKind::Annotation => ASTStatement::Annotation(parse_annotation(parser)),
+        TokenKind::Assert => ASTStatement::Assert(advance_and_parse(parser, parse_expr)),
+        TokenKind::Break => advance_and_parse(parser, |_| ASTStatement::Break),
+        TokenKind::Breakpoint => advance_and_parse(parser, |_| ASTStatement::Breakpoint),
+        TokenKind::Class => ASTStatement::Class(parse_class(parser)),
+        TokenKind::ClassName => parse_classname_stmt(parser),
+        TokenKind::Continue => advance_and_parse(parser, |_| ASTStatement::Continue),
+        TokenKind::If => parse_if_stmt(parser),
+        TokenKind::Elif => parse_elif_stmt(parser),
+        TokenKind::Else => parse_else_stmt(parser),
+        TokenKind::Enum => ASTStatement::Enum(parse_enum(parser)),
+        TokenKind::Extends => parse_extends_stmt(parser),
+        TokenKind::For => parse_for_stmt(parser),
+        TokenKind::Pass => advance_and_parse(parser, |_| ASTStatement::Pass),
+        TokenKind::Func => ASTStatement::Func(parse_func(parser, false)),
+        TokenKind::Return => parse_return_stmt(parser),
+        TokenKind::Signal => ASTStatement::Signal(parse_signal(parser)),
+        TokenKind::Match => ASTStatement::Match(parse_match(parser)),
+        TokenKind::While => parse_while_stmt(parser),
+        TokenKind::Var => parse_var_stmt(parser),
+        TokenKind::Const => parse_const_stmt(parser),
+        TokenKind::Static => parse_static_var_stmt(parser),
+        _ => ASTStatement::Value(parse_expr(parser)),
     }
 }
 

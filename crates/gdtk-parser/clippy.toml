@@ -1,0 +1,6 @@
+disallowed-macros = [
+    { path = "std::println", reason = "Formatting is slow." },
+    { path = "std::eprintln", reason = "Formatting is slow." },
+    { path = "std::print", reason = "Formatting is slow." },
+    { path = "std::eprint", reason = "Formatting is slow." },
+]

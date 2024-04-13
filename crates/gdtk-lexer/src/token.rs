@@ -373,23 +373,36 @@ pub enum TokenKind<'a> {
     // Void,
 }
 
+// In my humble opinion, a matches! here is less readable.
+#[allow(clippy::match_like_matches_macro)]
 impl TokenKind<'_> {
     pub fn is_any_assignment(&self) -> bool {
-        matches!(
-            self,
+        match self {
             TokenKind::PlusAssignment
-                | TokenKind::MinusAssignment
-                | TokenKind::MultiplyAssignment
-                | TokenKind::PowerAssignment
-                | TokenKind::DivideAssignment
-                | TokenKind::RemainderAssignment
-                | TokenKind::BitwiseAndAssignment
-                | TokenKind::BitwiseOrAssignment
-                | TokenKind::BitwiseNotAssignment
-                | TokenKind::BitwiseXorAssignment
-                | TokenKind::BitwiseShiftLeftAssignment
-                | TokenKind::BitwiseShiftRightAssignment
-        )
+            | TokenKind::MinusAssignment
+            | TokenKind::MultiplyAssignment
+            | TokenKind::PowerAssignment
+            | TokenKind::DivideAssignment
+            | TokenKind::RemainderAssignment
+            | TokenKind::BitwiseAndAssignment
+            | TokenKind::BitwiseOrAssignment
+            | TokenKind::BitwiseNotAssignment
+            | TokenKind::BitwiseXorAssignment
+            | TokenKind::BitwiseShiftLeftAssignment
+            | TokenKind::BitwiseShiftRightAssignment => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_line_end(&self) -> bool {
+        match self {
+            TokenKind::Newline
+            | TokenKind::ClosingBrace
+            | TokenKind::ClosingBracket
+            | TokenKind::ClosingParenthesis
+            | TokenKind::Semicolon => true,
+            _ => false,
+        }
     }
 
     pub fn same_as(&self, other: &TokenKind<'_>) -> bool {

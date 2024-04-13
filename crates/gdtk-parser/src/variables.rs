@@ -1,15 +1,14 @@
-use std::iter::Peekable;
-
 use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::expressions::parse_expr;
 use crate::misc::parse_type;
 use crate::utils::expect;
+use crate::Parser;
 
 /// Parses variable body, i.e. any variable without preceding keywords.
 pub fn parse_variable_body<'a>(
-    iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
     kind: ASTVariableKind,
 ) -> ASTVariable<'a> {
     let identifier = expect!(iter, TokenKind::Identifier(s), s);

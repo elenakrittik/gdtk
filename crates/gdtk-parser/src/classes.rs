@@ -1,33 +1,32 @@
-use std::iter::Peekable;
-
 use gdtk_ast::poor::{ASTClass, ASTEnum, ASTEnumVariant};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::expressions::parse_expr;
 use crate::utils::{advance_and_parse, delemited_by, expect};
+use crate::Parser;
 
-pub fn parse_enum<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTEnum<'a> {
-    expect!(iter, TokenKind::Enum);
+pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTEnum<'a> {
+    expect!(parser, TokenKind::Enum);
 
-    let identifier = if iter
+    let identifier = if parser
         .peek()
         .is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_)))
     {
-        Some(iter.next().unwrap().kind.into_identifier().unwrap())
+        Some(parser.next().unwrap().kind.into_identifier().unwrap())
     } else {
         None
     };
 
-    expect!(iter, TokenKind::OpeningBrace);
+    expect!(parser, TokenKind::OpeningBrace);
 
     fn parse_enum_variant<'a>(
-        iter: &mut Peekable<impl Iterator<Item = Token<'a>>>,
+        parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
     ) -> ASTEnumVariant<'a> {
-        let identifier = expect!(iter, TokenKind::Identifier(s), s);
+        let identifier = expect!(parser, TokenKind::Identifier(s), s);
 
-        let value = if iter.peek().is_some_and(|t| t.kind.is_assignment()) {
-            Some(advance_and_parse(iter, parse_expr))
+        let value = if parser.peek().is_some_and(|t| t.kind.is_assignment()) {
+            Some(advance_and_parse(parser, parse_expr))
         } else {
             None
         };
@@ -35,14 +34,16 @@ pub fn parse_enum<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
         ASTEnumVariant { identifier, value }
     }
 
-    let variants = delemited_by(
-        iter,
-        TokenKind::Comma,
-        &[TokenKind::ClosingBrace],
-        parse_enum_variant,
-    );
+    let variants = parser.with_parens_ctx(true, |parser| {
+        delemited_by(
+            parser,
+            TokenKind::Comma,
+            &[TokenKind::ClosingBrace],
+            parse_enum_variant,
+        )
+    });
 
-    expect!(iter, TokenKind::ClosingBrace);
+    expect!(parser, TokenKind::ClosingBrace);
 
     ASTEnum {
         identifier,
@@ -50,22 +51,22 @@ pub fn parse_enum<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> A
     }
 }
 
-pub fn parse_class<'a>(iter: &mut Peekable<impl Iterator<Item = Token<'a>>>) -> ASTClass<'a> {
-    expect!(iter, TokenKind::Class);
-    let identifier = expect!(iter, TokenKind::Identifier(s), s);
+pub fn parse_class<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTClass<'a> {
+    expect!(parser, TokenKind::Class);
+    let identifier = expect!(parser, TokenKind::Identifier(s), s);
     let mut extends = None;
 
-    if iter
+    if parser
         .peek()
         .is_some_and(|t| matches!(t.kind, TokenKind::Extends))
     {
-        iter.next();
-        extends = Some(expect!(iter, TokenKind::Identifier(s), s));
+        parser.next();
+        extends = Some(expect!(parser, TokenKind::Identifier(s), s));
     }
 
-    expect!(iter, TokenKind::Colon);
+    expect!(parser, TokenKind::Colon);
 
-    let body = parse_block(iter, false);
+    let body = parse_block(parser, false);
 
     ASTClass {
         identifier,

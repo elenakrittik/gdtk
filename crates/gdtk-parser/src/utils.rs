@@ -1,6 +1,6 @@
-use std::iter::Peekable;
-
 use gdtk_lexer::{Token, TokenKind};
+
+use crate::Parser;
 
 /// Assert that the next token is of the given variant, and optionally
 /// return it's value.
@@ -21,45 +21,24 @@ pub macro expect {
 /// Parses a list of values (as defined by the passed callback) separated by the specified delimiter.
 /// ``stop_at`` is used to know when to stop looking for new values.
 pub fn delemited_by<'a, I, V>(
-    iter: &mut Peekable<I>,
+    parser: &mut Parser<I>,
     delimiter: TokenKind<'a>,
     stop_at: &[TokenKind<'a>],
-    mut callback: impl FnMut(&mut Peekable<I>) -> V,
+    mut callback: impl FnMut(&mut Parser<I>) -> V,
 ) -> Vec<V>
 where
     I: Iterator<Item = Token<'a>>,
 {
-    const BLANKETS: &[TokenKind<'static>] =
-        &[TokenKind::Newline, TokenKind::Indent, TokenKind::Dedent];
-    const PARENS: &[TokenKind<'static>] = &[
-        TokenKind::ClosingParenthesis,
-        TokenKind::ClosingBracket,
-        TokenKind::ClosingBrace,
-    ];
-
-    let in_parens = stop_at
-        .iter()
-        .any(|k1| PARENS.iter().any(|k2| k2.same_as(k1)));
     let mut values = vec![];
 
-    while iter
+    while parser
         .peek()
         .is_some_and(|t| !(stop_at.iter().any(|k| k.same_as(&t.kind))))
     {
-        // ignore newlines and in-/de- dents inside parentheses
-        if in_parens
-            && iter
-                .peek()
-                .is_some_and(|t| BLANKETS.iter().any(|k| k.same_as(&t.kind)))
-        {
-            iter.next();
-            continue;
-        }
+        values.push(callback(parser));
 
-        values.push(callback(iter));
-
-        if iter.peek().is_some_and(|t| t.kind.same_as(&delimiter)) {
-            iter.next();
+        if parser.peek().is_some_and(|t| t.kind.same_as(&delimiter)) {
+            parser.next();
         }
     }
 
@@ -68,14 +47,14 @@ where
 
 /// Calls ``iter.next()``, then ``callback(iter)``.
 pub fn advance_and_parse<'a, I, V>(
-    iter: &mut Peekable<I>,
-    mut callback: impl FnMut(&mut Peekable<I>) -> V,
+    parser: &mut Parser<I>,
+    mut callback: impl FnMut(&mut Parser<I>) -> V,
 ) -> V
 where
     I: Iterator<Item = Token<'a>>,
 {
-    iter.next();
-    callback(iter)
+    parser.next();
+    callback(parser)
 }
 
 #[cfg(test)]
