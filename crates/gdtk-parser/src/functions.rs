@@ -27,12 +27,12 @@ pub fn parse_func<'a>(
 
     expect!(parser, TokenKind::OpeningParenthesis);
 
-    let parameters = delemited_by(
+    let parameters = parser.with_parens_ctx(true, |parser| delemited_by(
         parser,
         TokenKind::Comma,
         &[TokenKind::ClosingParenthesis],
         |iter| parse_variable_body(iter, ASTVariableKind::Binding),
-    );
+    ));
 
     expect!(parser, TokenKind::ClosingParenthesis);
 
