@@ -56,10 +56,30 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
 
     fn resolve_coercion<V: trustfall::provider::AsVertex<Self::Vertex> + 'a>(
         &self,
-        _contexts: trustfall::provider::ContextIterator<'a, V>,
-        _type_name: &str,
-        _coerce_to_type: &str,
+        contexts: trustfall::provider::ContextIterator<'a, V>,
+        type_name: &str,
+        coerce_to_type: &str,
     ) -> trustfall::provider::ContextOutcomeIterator<'a, V, bool> {
-        todo!()
+        let (type_name, coerce_to_type) = (type_name.to_owned(), coerce_to_type.to_owned());
+
+        let iterator = contexts.map(move |ctx| {
+            let vertex = match ctx.active_vertex() {
+                Some(t) => t,
+                None => return (ctx, false),
+            };
+
+            // Possible optimization here:
+            // This "match" is loop-invariant, and can be hoisted outside the map() call
+            // at the cost of a bit of code repetition.
+
+            let can_coerce = match (type_name.as_ref(), coerce_to_type.as_ref()) {
+                ("Statement", "ClassNameStmt") => vertex.is_class_name_stmt(),
+                unhandled => unreachable!("{:?}", unhandled),
+            };
+
+            (ctx, can_coerce)
+        });
+
+        Box::new(iterator)
     }
 }

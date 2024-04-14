@@ -3,11 +3,9 @@ LintQuery (
     query: r#"{
         Statement {
             ... on ClassNameStmt {
-                identifier @filter(op: "regex", values: ["$pascalcase_regex"]) @output
+                identifier @output
             }
         }
     }"#,
-    args: {
-        "pascalcase_regex": String("[A-Z].*")
-    }
+    args: {}
 )
