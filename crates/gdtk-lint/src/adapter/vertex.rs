@@ -9,6 +9,9 @@ pub enum Vertex<'a> {
 
 impl Vertex<'_> {
     pub fn is_class_name_stmt(&self) -> bool {
-        matches!(self, Vertex::ClassNameStmt(_) | Vertex::Statement(ASTStatement::ClassName(_)))
+        matches!(
+            self,
+            Vertex::ClassNameStmt(_) | Vertex::Statement(ASTStatement::ClassName(_))
+        )
     }
 }

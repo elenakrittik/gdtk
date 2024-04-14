@@ -37,9 +37,10 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
     ) -> trustfall::provider::ContextOutcomeIterator<'a, V, trustfall::FieldValue> {
         match (type_name, property_name) {
             ("ClassNameStmt", "identifier") => {
-                let resolver = |v: &Vertex| v.as_statement().unwrap().as_class_name().copied().into();
+                let resolver =
+                    |v: &Vertex| v.as_statement().unwrap().as_class_name().copied().into();
                 resolve_property_with(contexts, resolver)
-            },
+            }
             _ => unreachable!(),
         }
     }
@@ -50,7 +51,11 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
         _type_name: &str,
         _edge_name: &str,
         _parameters: &trustfall::provider::EdgeParameters,
-    ) -> trustfall::provider::ContextOutcomeIterator<'a, V, trustfall::provider::VertexIterator<'a, Self::Vertex>> {
+    ) -> trustfall::provider::ContextOutcomeIterator<
+        'a,
+        V,
+        trustfall::provider::VertexIterator<'a, Self::Vertex>,
+    > {
         todo!()
     }
 
