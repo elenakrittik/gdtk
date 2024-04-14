@@ -23,6 +23,10 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
 
     std::fs::remove_dir_all(previous.path)?;
 
+    if matches!(version_manager.versions.default, Some(ref default) if default == &version) {
+        version_manager.versions.default = None;
+    }
+
     version_manager.save()?;
 
     println!("Godot {version} uninstalled!");
