@@ -9,3 +9,5 @@ updates:
       - "elenakrittik"
     commit-message:
       prefix: "deps"
+    labels:
+      - "a: deps"

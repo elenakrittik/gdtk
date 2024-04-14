@@ -12,3 +12,7 @@ codegen-units = 1
 inherits = "release"
 strip = false
 debug = true
+
+[patch.crates-io]
+# Contains unstable fixes that we need.
+logos = { git = "https://github.com/elenakrittik/logos", rev = "148b6a0" }

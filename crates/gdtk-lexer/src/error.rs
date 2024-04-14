@@ -1,5 +1,3 @@
-use gdtk_diag::{Diagnostic, Span};
-
 #[derive(Debug, thiserror::Error, Default, PartialEq, Clone)]
 pub enum Error {
     #[error("Mixed use of tabs and spaces for indentation.")]
@@ -20,19 +18,4 @@ pub enum Error {
     #[error("Unknown character sequence.")]
     #[default]
     UnknownCharacterSequence,
-}
-
-pub(crate) trait IntoDiag {
-    fn into_diag(self, span: Span) -> Diagnostic;
-}
-
-impl IntoDiag for Error {
-    fn into_diag(self, span: Span) -> Diagnostic {
-        Diagnostic {
-            kind: gdtk_diag::DiagnosticKind::Error,
-            message: self.to_string(),
-            hint: None,
-            span,
-        }
-    }
 }

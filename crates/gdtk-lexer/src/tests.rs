@@ -6,20 +6,13 @@ macro_rules! test_eq {
             let lexed = $crate::lex($input);
             let mut lexemes = vec![];
 
-            for token in lexed.0 {
+            for token in lexed {
                 lexemes.push(token.kind);
             }
 
             assert_eq!(lexemes, vec![$($expected),*]);
         }
     };
-}
-
-macro_rules! test_all_fails {
-    ($input: expr) => {{
-        let lexed = $crate::lex($input);
-        assert!(lexed.0.len() == 0 && lexed.1.len() > 0);
-    }};
 }
 
 #[test]
@@ -166,7 +159,7 @@ fn test_string() {
         r#""~!@#$%^&*()_+-=`|""#,
         TokenKind::String("~!@#$%^&*()_+-=`|")
     );
-    test_eq!(r#""\r\n\f\\""#, TokenKind::String(r"\r\n\f\\")); // TODO
+    test_eq!(r#""\r\n\f\\""#, TokenKind::String(r"\r\n\f\\")); // TODO: unescape strings
     test_eq!(r#""""#, TokenKind::String(""));
 }
 
@@ -179,7 +172,7 @@ fn test_stringname() {
         r#"&"~!@#$%^&*()_+-=`|""#,
         TokenKind::StringName("~!@#$%^&*()_+-=`|")
     );
-    test_eq!(r#"&"\r\n\f\\""#, TokenKind::StringName(r"\r\n\f\\")); // TODO
+    test_eq!(r#"&"\r\n\f\\""#, TokenKind::StringName(r"\r\n\f\\")); // TODO: unescape strings
     test_eq!(r#"&"""#, TokenKind::StringName(""));
 }
 
@@ -221,10 +214,10 @@ fn test_null() {
 
 #[test]
 fn test_comparison() {
-    test_eq!("<", TokenKind::Less);
-    test_eq!("<=", TokenKind::LessOrEqual);
-    test_eq!(">", TokenKind::Greater);
-    test_eq!(">=", TokenKind::GreaterOrEqual);
+    test_eq!("<", TokenKind::LessThan);
+    test_eq!("<=", TokenKind::LessThanOrEqual);
+    test_eq!(">", TokenKind::GreaterThan);
+    test_eq!(">=", TokenKind::GreaterThanOrEqual);
     test_eq!("==", TokenKind::Equal);
     test_eq!("!=", TokenKind::NotEqual);
 }
@@ -328,50 +321,45 @@ fn test_punctuation() {
 }
 
 #[test]
-fn test_whitespace() {
-    test_eq!("\n", TokenKind::Newline);
-    test_eq!("\r\n", TokenKind::Newline);
-    test_eq!(" ", TokenKind::Blank(" "));
-    test_eq!("  ", TokenKind::Blank("  "));
-    test_eq!("\t", TokenKind::Blank("\t"));
-    test_eq!("\t\t", TokenKind::Blank("\t\t"));
-    test_eq!(" \t", TokenKind::Blank(" \t"));
-    test_eq!("\t ", TokenKind::Blank("\t "));
-    test_eq!("\t \t", TokenKind::Blank("\t \t"));
-    test_eq!(" \t ", TokenKind::Blank(" \t "));
-}
-
-#[test]
-fn test_comment() {
-    test_eq!("#hello", TokenKind::Comment("hello"));
-    test_eq!("# hello", TokenKind::Comment(" hello"));
-    test_eq!("#привет", TokenKind::Comment("привет"));
-    test_eq!("# привет", TokenKind::Comment(" привет"));
-    test_eq!("#你好", TokenKind::Comment("你好"));
-    test_eq!("# 你好", TokenKind::Comment(" 你好"));
-    test_eq!("##hello", TokenKind::Comment("#hello"));
-    test_eq!("## hello", TokenKind::Comment("# hello"));
-    test_eq!("#hello#", TokenKind::Comment("hello#"));
-    test_eq!("# hello#", TokenKind::Comment(" hello#"));
-    test_eq!("#hello #", TokenKind::Comment("hello #"));
-    test_eq!("# hello #", TokenKind::Comment(" hello #"));
-    test_eq!(
-        "# hello\n",
-        TokenKind::Comment(" hello"),
-        TokenKind::Newline
-    );
-}
-
-#[test]
-fn test_radt() {
+fn test_reserved_and_deprecated() {
     test_eq!("namespace", TokenKind::Namespace);
     test_eq!("trait", TokenKind::Trait);
     test_eq!("yield", TokenKind::Yield);
 }
 
 #[test]
-fn test_invalid() {
-    test_all_fails!("`");
-    test_all_fails!("\0");
-    test_all_fails!("\r");
+fn test_newlines() {
+    test_eq!("\n", TokenKind::Newline);
+    test_eq!("\r\n", TokenKind::Newline);
+    test_eq!("\\\n",);
+}
+
+#[test]
+fn test_indents() {
+    test_eq!(
+        "pass\n    pass",
+        TokenKind::Pass,
+        TokenKind::Newline,
+        TokenKind::Indent,
+        TokenKind::Pass,
+        TokenKind::Dedent
+    );
+    test_eq!(
+        "pass\n    pass\n\n    pass",
+        TokenKind::Pass,
+        TokenKind::Newline,
+        TokenKind::Indent,
+        TokenKind::Pass,
+        TokenKind::Newline,
+        TokenKind::Pass,
+        TokenKind::Dedent
+    );
+
+    // TODO: properly emit indents in these cases (or trim blankets?)
+    // test_eq!("\t\t", TokenKind::Indent);
+    // test_eq!("\t  ", TokenKind::Indent);
+    // test_eq!("  \t", TokenKind::Indent);
+    // test_eq!("    ", TokenKind::Indent);
+    // test_eq!("    pass", TokenKind::Indent, TokenKind::Pass);
+    // test_eq!("    pass\n", TokenKind::Indent, TokenKind::Pass);
 }

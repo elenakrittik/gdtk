@@ -1,12 +1,12 @@
-/debug
-/target
-
 **/*.rs.bk
+**/*.pdb
 
-.pdb
 
-.git
-
-**/Cargo.lock
+Cargo.lock
+target/
 
 out.txt
+flamegraph.svg
+
+.idea/
+.vscode/

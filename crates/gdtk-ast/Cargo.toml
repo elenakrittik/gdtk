@@ -7,8 +7,3 @@ edition = "2021"
 
 [dependencies]
 enum-as-inner = "0.6.0"
-gdtk-diag = { path = "../gdtk-diag" }
-trustfall = { version = "0.7.1", optional = true }
-
-[features]
-trustfall = ["dep:trustfall"]

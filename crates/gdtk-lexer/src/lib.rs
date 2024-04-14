@@ -4,111 +4,80 @@ pub mod error;
 mod tests;
 pub mod token;
 
-use gdtk_diag::Diagnostic;
+use std::iter::Peekable;
+
 use logos::Logos;
 
-use crate::error::IntoDiag;
 pub use crate::token::{Token, TokenKind};
 
-pub type LexOutput<'a> = (Vec<Token<'a>>, Vec<Diagnostic>);
+pub fn lex(input: &str) -> impl Iterator<Item = Token<'_>> {
+    let tokens = TokenKind::lexer(input)
+        .spanned()
+        .filter_map(|(result, range)| result.ok().map(|kind| Token { range, kind }))
+        .peekable();
 
-pub fn lex(input: &str) -> LexOutput {
-    preprocess(TokenKind::lexer(input))
+    generate_indents(tokens).into_iter()
 }
 
-/// Combines tokens with their spans into a list of token structs,
-/// as well as handles in-/de- dents.
-fn preprocess<'a>(lexer: logos::Lexer<'a, TokenKind<'a>>) -> LexOutput<'a> {
-    let mut tokens: Vec<Token<'a>> = vec![];
-    let mut diags: Vec<Diagnostic> = vec![];
-
-    for (result, span) in lexer.spanned() {
-        match result {
-            Ok(token) => {
-                tokens.push(Token {
-                    kind: token,
-                    range: span,
-                });
-            }
-            Err(err) => diags.push(err.into_diag(span)),
-        }
-    }
-
-    tokens = generate_indents(tokens);
-
-    (tokens, diags)
-}
-
-fn generate_indents(tokens: Vec<Token<'_>>) -> Vec<Token<'_>> {
-    let mut stack: Vec<u64> = vec![0];
+// I wish there was a way to make it 100% iterator-based, but last time i tried it turned out
+// clunky and even slower. Help appreciated
+fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -> Vec<Token<'a>> {
+    let mut stack: Vec<usize> = vec![0];
     let mut out = vec![];
-    let mut new_line = false;
-
-    let mut tokens = tokens.into_iter().peekable();
 
     while let Some(token) = tokens.next() {
         match token.kind {
-            TokenKind::Blank(b) => {
-                if !new_line {
-                    out.push(token);
+            TokenKind::Newline => {
+                if tokens.peek().is_some_and(|t| t.kind.is_newline()) {
                     continue;
                 }
 
-                new_line = false;
+                let (range, indent_len) = if tokens.peek().is_some_and(|t| t.kind.is_blank()) {
+                    let token = tokens.next().unwrap();
+                    let len = token.kind.as_blank().unwrap().len();
 
-                let len = &(b.len() as u64);
+                    (token.range, len)
+                } else {
+                    (token.range.start..token.range.end, 0)
+                };
 
-                match len.cmp(stack.last().unwrap()) {
-                    std::cmp::Ordering::Less => {
-                        while len < stack.last().unwrap() {
-                            stack.pop();
-                            out.push(Token {
-                                range: token.range.clone(),
-                                kind: TokenKind::Dedent,
-                            });
-                        }
-
-                        if len > stack.last().unwrap() {
-                            out.push(Token {
-                                range: token.range.clone(),
-                                kind: TokenKind::Indent,
-                            });
-                        }
-                    }
-                    std::cmp::Ordering::Equal => (),
+                match indent_len.cmp(stack.last().unwrap()) {
                     std::cmp::Ordering::Greater => {
-                        stack.push(b.len() as u64);
-                        out.push(token.transmute(TokenKind::Indent));
-                    }
-                }
-            }
-            TokenKind::Newline => {
-                // eprintln!("found newline");
-                if !matches!(
-                    tokens.peek(),
-                    Some(Token {
-                        kind: TokenKind::Blank(_) | TokenKind::Newline | TokenKind::Comment(_),
-                        ..
-                    })
-                ) {
-                    // eprintln!("next token is not a blank or a newline (meaning we are now at the top-most level)");
-                    while stack.last().unwrap() != &0 {
-                        stack.pop();
+                        stack.push(indent_len);
+                        out.push(token);
                         out.push(Token {
-                            range: token.range.clone(),
-                            kind: TokenKind::Dedent,
+                            range,
+                            kind: TokenKind::Indent,
                         });
                     }
-                }
+                    std::cmp::Ordering::Equal => out.push(token),
+                    std::cmp::Ordering::Less => {
+                        let token = Token {
+                            range,
+                            kind: TokenKind::Dedent,
+                        };
 
-                // eprintln!("next token is a blank or a newline, continue trying to match block");
-                new_line = true;
-                out.push(token);
+                        while stack.last().unwrap() > &indent_len {
+                            stack.pop();
+                            out.push(token.clone());
+                        }
+                    }
+                }
             }
-            _ => {
-                out.push(token);
-                new_line = false;
-            }
+            TokenKind::Blank(_) | TokenKind::Comment(_) => (),
+            _ => out.push(token),
+        }
+    }
+
+    if stack.last().unwrap() > &0 {
+        let token = Token {
+            range: 0..0, // should be fine?
+            kind: TokenKind::Dedent,
+        };
+
+        while stack.last().unwrap() > &0 {
+            stack.pop();
+            out.push(token.clone());
         }
     }
 
