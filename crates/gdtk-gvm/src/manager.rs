@@ -6,7 +6,7 @@ pub struct VersionManager {
 
 impl VersionManager {
     pub fn load() -> Result<Self, crate::Error> {
-        let content = std::fs::read_to_string(crate::utils::versions_toml_path()?)?;
+        let content = std::fs::read_to_string(gdtk_paths::versions_toml_path()?)?;
         let versions = crate::types::Versions::deserialize(toml::Deserializer::new(&content))?;
 
         Ok(Self { versions })
@@ -14,7 +14,7 @@ impl VersionManager {
 
     pub fn save(&self) -> Result<(), crate::Error> {
         let contents = toml::to_string_pretty(&self.versions)?;
-        let path = crate::utils::versions_toml_path()?;
+        let path = gdtk_paths::versions_toml_path()?;
 
         std::fs::write(path, contents)?;
 
