@@ -1,26 +1,29 @@
 use serde::Deserialize;
 
 pub struct VersionManager {
-    pub versions: crate::types::Versions,
+    pub versions: crate::types::VersionsToml,
 }
 
 impl VersionManager {
+    /// Load the `versions.toml` file.
     pub fn load() -> Result<Self, crate::Error> {
-        let content = std::fs::read_to_string(crate::utils::versions_toml_path()?)?;
-        let versions = crate::types::Versions::deserialize(toml::Deserializer::new(&content))?;
+        let content = std::fs::read_to_string(gdtk_paths::versions_toml_path()?)?;
+        let versions = crate::types::VersionsToml::deserialize(toml::Deserializer::new(&content))?;
 
         Ok(Self { versions })
     }
 
+    /// Save the `versions.toml` file.
     pub fn save(&self) -> Result<(), crate::Error> {
         let contents = toml::to_string_pretty(&self.versions)?;
-        let path = crate::utils::versions_toml_path()?;
+        let path = gdtk_paths::versions_toml_path()?;
 
         std::fs::write(path, contents)?;
 
         Ok(())
     }
 
+    /// Get all installed versions.
     pub fn versionings(&self) -> Vec<versions::Versioning> {
         self.versions
             .versions

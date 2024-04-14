@@ -1,8 +1,10 @@
 use std::path::PathBuf;
 
+/// Represents a `versions.toml` file.
 #[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct Versions {
+pub struct VersionsToml {
     pub versions: ahash::AHashMap<String, Version>,
+    pub default: Option<String>,
 }
 
 #[derive(Debug, serde::Deserialize, serde::Serialize, tabled::Tabled)]

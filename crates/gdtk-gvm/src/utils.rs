@@ -1,5 +1,3 @@
-use std::{io::Error as IOError, path::PathBuf};
-
 use versions::{Release, SemVer, Version, Versioning};
 
 fn get_stable_chunk() -> versions::Chunk {
@@ -23,28 +21,7 @@ pub fn is_stable(ver: &Versioning) -> bool {
     }
 }
 
-pub fn versions_toml_path() -> Result<PathBuf, IOError> {
-    let mut conf_dir = gdtk_utils::base_conf_dir()?;
-
-    conf_dir.push("versions.toml");
-
-    if gdtk_utils::ensure_path(&conf_dir, false)? {
-        std::fs::write(&conf_dir, "[versions]")?;
-    }
-
-    Ok(conf_dir)
-}
-
-pub fn godots_path() -> Result<PathBuf, IOError> {
-    let mut data_dir = gdtk_utils::base_data_dir()?;
-
-    data_dir.push("godots");
-
-    gdtk_utils::ensure_path(&data_dir, true)?;
-
-    Ok(data_dir)
-}
-
+/// Pick the best match for a given ``version`` from ``vers``.
 pub fn coerce_version(
     version: Versioning,
     vers: Vec<Versioning>,

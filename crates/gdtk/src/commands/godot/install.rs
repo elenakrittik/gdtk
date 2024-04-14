@@ -28,7 +28,8 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     };
 
     let mut version_manager = gdtk_gvm::VersionManager::load()?;
-    let target_dir = gdtk_gvm::utils::godots_path()?.join(&version);
+    let set_as_default = version_manager.is_empty();
+    let target_dir = gdtk_paths::godots_path()?.join(&version);
 
     let already_installed = version_manager.add_version(
         version.clone(),
@@ -69,6 +70,10 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
 
     // Enable self-contained mode.
     std::fs::File::create(target_dir.join("._sc_"))?;
+
+    if set_as_default {
+        version_manager.versions.default = Some(version.clone());
+    }
 
     version_manager.save()?;
 

@@ -46,7 +46,7 @@ pub enum GodotCommands {
     /// Run the specified Godot version.
     Run {
         /// The Godot version to run.
-        version: String,
+        version: Option<String>,
     },
 
     /// Install the specified Godot version.
