@@ -11,12 +11,8 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
         let idx = crate::commands::godot::select_version(&versions, "Select version to run")?;
 
         versions.swap_remove(idx)
-    
-    // Case 2. No version was specified, but there is a default set
-    } else if let Some(ref version) = version_manager.versions.default {
-        gdtk_gvm::versions::Versioning::new(version).unwrap()
-    
-    // Case 3. No version was specified, and there is no default
+
+    // Case 2. No version was specified, and there is no default
     } else {
         let mut versions = version_manager.versionings();
         let idx = crate::commands::godot::select_version(&versions, "Select version to run")?;
