@@ -28,13 +28,12 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     };
 
     let mut version_manager = gdtk_gvm::VersionManager::load()?;
+    let set_as_default = version_manager.is_empty();
     let target_dir = gdtk_paths::godots_path()?.join(&version);
 
     let already_installed = version_manager.add_version(
         version.clone(),
-        gdtk_gvm::types::Version {
-            path: target_dir.clone(),
-        },
+        gdtk_gvm::types::Version { path: target_dir.clone() },
     );
 
     if already_installed {
@@ -70,8 +69,12 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     // Enable self-contained mode.
     std::fs::File::create(target_dir.join("._sc_"))?;
 
-    version_manager.save()?;
+    if set_as_default {
+        version_manager.versions.default = Some(version.clone());
+    }
 
+    version_manager.save()?;
+    
     spinner.success(&format!("Installed Godot {version}!"));
 
     Ok(())
