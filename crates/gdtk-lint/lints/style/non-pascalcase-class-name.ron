@@ -1,0 +1,13 @@
+LintQuery (
+    identifier: "S000",
+    query: r#"{
+        Statement {
+            ... on ClassNameStmt {
+                identifier @filter(op: "regex", values: ["$pascalcase_regex"]) @output
+            }
+        }
+    }"#,
+    args: {
+        "pascalcase_regex": String("[A-Z].*")
+    }
+)

@@ -5,7 +5,15 @@ edition = "2021"
 
 [dependencies]
 trustfall = "0.7.1"
-gdtk-gdscript-trustfall-adapter = { path = "../gdtk-gdscript-trustfall-adapter", version = "0.1.0" }
 gdtk-ast = { path = "../gdtk-ast", version = "0.1.0" }
 ron = "0.8.1"
 serde = { version = "1.0.197", features = ["derive"] }
+ahash = "0.8.11"
+enum-as-inner = "0.6.0"
+
+[build-dependencies]
+ron = "0.8.1"
+quote = "1.0.36"
+syn = "2.0.58"
+jwalk = "0.8.1"
+prettyplease = "0.2.17"

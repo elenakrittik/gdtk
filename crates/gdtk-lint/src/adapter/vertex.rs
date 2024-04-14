@@ -1,6 +1,7 @@
+use gdtk_ast::poor::ASTStatement;
 use trustfall::provider::TrustfallEnumVertex;
 
 #[derive(Debug, Clone, TrustfallEnumVertex)]
 pub enum Vertex<'a> {
-    ClassName(&'a str),
+    Statement(&'a ASTStatement<'a>),
 }

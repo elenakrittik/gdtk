@@ -39,9 +39,11 @@ directive @transform(
 ) on FIELD
 
 type RootSchemaQuery {
-    ClassName: [ClassName!]!
+    Statement: [Statement!]
 }
 
-type ClassName {
+interface Statement
+
+type ClassNameStmt implements Statement {
     identifier: String!
 }

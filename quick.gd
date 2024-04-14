@@ -1,6 +1,1 @@
-if (
-	a
-	and b
-	and c
-):
-	pass
+class_name Hello

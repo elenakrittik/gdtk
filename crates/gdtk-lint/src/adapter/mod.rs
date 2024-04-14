@@ -1,7 +1,9 @@
+mod vertex;
+
 use gdtk_ast::poor::ASTFile;
 use trustfall::provider::{resolve_property_with, BasicAdapter};
 
-use crate::vertex::Vertex;
+use crate::adapter::vertex::Vertex;
 
 pub struct GDScriptAdapter<'a> {
     file: &'a ASTFile<'a>,
@@ -22,10 +24,7 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
         _parameters: &trustfall::provider::EdgeParameters,
     ) -> trustfall::provider::VertexIterator<'a, Self::Vertex> {
         match edge_name {
-            "ClassName" => Box::new(
-                self.file.body.iter()
-                .filter_map(|s| s.as_class_name().map(|c| Vertex::ClassName(*c)))
-            ),
+            "Statement" => Box::new(self.file.body.iter().map(Vertex::Statement)),
             _ => unreachable!(),
         }
     }
@@ -37,8 +36,8 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
         property_name: &str,
     ) -> trustfall::provider::ContextOutcomeIterator<'a, V, trustfall::FieldValue> {
         match (type_name, property_name) {
-            ("ClassName", "identifier") => {
-                let resolver = |v: &Vertex| (*v.as_class_name().unwrap()).into();
+            ("ClassNameStmt", "identifier") => {
+                let resolver = |v: &Vertex| v.as_statement().unwrap().as_class_name().copied().into();
                 resolve_property_with(contexts, resolver)
             },
             _ => unreachable!(),

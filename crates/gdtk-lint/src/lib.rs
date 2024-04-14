@@ -1,20 +1,21 @@
-use std::{collections::BTreeMap, sync::Arc};
+use std::sync::Arc;
 
-use gdtk_gdscript_trustfall_adapter::GDScriptAdapter;
-use trustfall::{execute_query, FieldValue, Schema};
-use gdtk_ast::poor::ASTFile;
+mod adapter;
+mod types;
+mod builtin;
 
-const QUERIES: &[&str] = &[
-    include_str!("lints/non-pascalcase-class-name.ron"),
-];
+pub fn run_builtin_lints(file: gdtk_ast::poor::ASTFile<'_>) {
+    let builtins = dbg!(crate::builtin::get_builtin_lints());
 
-pub fn run_lints(file: &ASTFile) {
-    let adapter = Arc::new(GDScriptAdapter::new(file));
-    let schema = Schema::parse(include_str!("schema.graphql")).unwrap();
-    let mut variables: BTreeMap<Arc<str>, FieldValue> = BTreeMap::new();
-    variables.insert("regex".into(), "^[A-Z].*".into());
-    let result = execute_query(&schema, adapter, query, variables).unwrap();
-    let result = result.collect::<Vec<_>>();
+    let adapter = Arc::new(crate::adapter::GDScriptAdapter::new(&file));
+    let schema = trustfall::Schema::parse(include_str!("../schema.graphql")).unwrap();
 
-    println!("{:#?}", result);
+
+    for lint in builtins {
+        let result = trustfall::execute_query(
+            &schema, adapter.clone(), lint.query, lint.args
+        ).unwrap().collect::<Vec<_>>();
+
+        eprintln!("Result of running {}: {:?}", lint.identifier, result);
+    }
 }
