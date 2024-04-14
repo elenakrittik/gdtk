@@ -33,7 +33,9 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
 
     let already_installed = version_manager.add_version(
         version.clone(),
-        gdtk_gvm::types::Version { path: target_dir.clone() },
+        gdtk_gvm::types::Version {
+            path: target_dir.clone(),
+        },
     );
 
     if already_installed {
@@ -74,7 +76,7 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     }
 
     version_manager.save()?;
-    
+
     spinner.success(&format!("Installed Godot {version}!"));
 
     Ok(())

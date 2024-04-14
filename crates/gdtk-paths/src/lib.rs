@@ -1,4 +1,7 @@
-use std::{io::{Error, ErrorKind}, path::PathBuf};
+use std::{
+    io::{Error, ErrorKind},
+    path::PathBuf,
+};
 
 pub fn ensure_path(path: &PathBuf, dir: bool) -> Result<bool, Error> {
     if path.exists() {

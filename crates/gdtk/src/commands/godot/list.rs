@@ -10,7 +10,10 @@ pub fn run() -> anyhow::Result<()> {
 
     if let Some(default) = version_manager.versions.default {
         let def_ver = version_manager.versions.versions.remove(&default).unwrap();
-        version_manager.versions.versions.insert(default + " (default)", def_ver);
+        version_manager
+            .versions
+            .versions
+            .insert(default + " (default)", def_ver);
     }
 
     let mut table = tabled::Table::new(version_manager.versions.versions);
