@@ -100,12 +100,14 @@ fn parse_match_array_pattern<'a>(
 ) -> ASTMatchPattern<'a> {
     expect!(parser, TokenKind::OpeningBracket);
 
-    let patterns = delemited_by(
-        parser,
-        TokenKind::Comma,
-        &[TokenKind::ClosingBracket],
-        parse_raw_match_pattern,
-    );
+    let patterns = parser.with_parens_ctx(true, |parser| {
+        delemited_by(
+            parser,
+            TokenKind::Comma,
+            &[TokenKind::ClosingBracket],
+            parse_raw_match_pattern,
+        )
+    });
 
     expect!(parser, TokenKind::ClosingBracket);
 
@@ -133,12 +135,14 @@ fn parse_match_dict_pattern<'a>(
         (key, value)
     }
 
-    let pairs = delemited_by(
-        parser,
-        TokenKind::Comma,
-        &[TokenKind::ClosingBrace],
-        callback,
-    );
+    let pairs = parser.with_parens_ctx(true, |parser| {
+        delemited_by(
+            parser,
+            TokenKind::Comma,
+            &[TokenKind::ClosingBrace],
+            callback,
+        )
+    });
 
     expect!(parser, TokenKind::ClosingBrace);
 
