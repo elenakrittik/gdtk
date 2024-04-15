@@ -38,7 +38,22 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
         match (type_name, property_name) {
             ("ClassNameStmt", "identifier") => {
                 let resolver =
-                    |v: &Vertex| v.as_statement().unwrap().as_class_name().copied().into();
+                    |v: &Self::Vertex| v.as_statement().unwrap().as_class_name().copied().into();
+                resolve_property_with(contexts, resolver)
+            },
+            ("IdentifierValue", "inner") => {
+                let resolver = |v: &Self::Vertex| v.as_statement().unwrap().as_value().unwrap().as_identifier().copied().into();
+                resolve_property_with(contexts, resolver)
+            },
+            ("BinaryExprValue", field) => {
+                let idx = match field {
+                    "left" => 0,
+                    "op" => 1,
+                    "right" => 2,
+                    _ => unreachable!(),
+                };
+
+                let resolver = |v: &Self::Vertex| v.as_statement().unwrap().as_value().unwrap().as_binary_expr().map(|tuple_| tuple[idx]).into();
                 resolve_property_with(contexts, resolver)
             }
             _ => unreachable!(),
@@ -79,6 +94,8 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
 
             let can_coerce = match (type_name.as_ref(), coerce_to_type.as_ref()) {
                 ("Statement", "ClassNameStmt") => vertex.is_class_name_stmt(),
+                ("Statement", "IdentifierValue") => vertex.is_identifier_value(),
+                ("Statement", "BinaryExprValue") => vertex.is_binary_expr_value(),
                 unhandled => unreachable!("{:?}", unhandled),
             };
 

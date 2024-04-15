@@ -47,3 +47,11 @@ interface Statement
 type ClassNameStmt implements Statement {
     identifier: String!
 }
+
+type IdentifierValue implements Statement {
+    inner: String!
+}
+
+type BinaryExprValue implements Statement {
+    left: 
+}

@@ -3,7 +3,7 @@ LintQuery (
     query: r#"{
         Statement {
             ... on ClassNameStmt {
-                identifier @filter(op: "regex", values: ["$pascalcase_regex"]) @output
+                identifier @filter(op: "not_regex", value: ["$pascalcase_regex"]) @output
             }
         }
     }"#,

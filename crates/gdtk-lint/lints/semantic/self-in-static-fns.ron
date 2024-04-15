@@ -1,0 +1,17 @@
+LintQuery (
+    identifier: "E001",
+    query: r#"{
+        Statement {
+            ... on IdentifierValue {
+                inner @filter(op: "!=", value: ["$self_ident"]) @output
+            }
+            ... on BinaryExprValue {
+                left @recurse
+                right @recurse
+            }
+        }
+    }"#,
+    args: {
+        "self_ident": String("self"),
+    },
+)
