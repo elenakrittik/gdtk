@@ -6,8 +6,8 @@ LintQuery (
                 inner @filter(op: "!=", value: ["$self_ident"]) @output
             }
             ... on BinaryExprValue {
-                left @recurse
-                right @recurse
+                left @recurse(depth: 10)
+                right @recurse(depth: 10)
             }
         }
     }"#,
