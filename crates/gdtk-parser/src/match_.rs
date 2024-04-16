@@ -88,9 +88,13 @@ fn parse_raw_match_pattern<'a>(
 fn parse_match_binding_pattern<'a>(
     parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTMatchPattern<'a> {
-    expect!(parser, TokenKind::Var);
+    // Apparently, even in multiline patterns, binding subpatterns do not allow newlines between
+    // "var" and the identifier.
+    let identifier = parser.with_parens_ctx(false, |parser| {
+        expect!(parser, TokenKind::Var);
 
-    let identifier = expect!(parser, TokenKind::Identifier(s), s);
+        expect!(parser, TokenKind::Identifier(s), s)
+    });
 
     ASTMatchPattern::Binding(ASTVariable::new_binding(identifier))
 }
@@ -166,11 +170,37 @@ mod tests {
     }
 
     #[test]
+    fn test_binding_pattern() {
+        let mut parser = create_parser("var x");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Binding(ASTVariable::new_binding("x"));
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
     fn test_array_pattern() {
         let mut parser = create_parser("[literal]");
         let result = parse_match_pattern(&mut parser);
         let expected =
             ASTMatchPattern::Array(vec![ASTMatchPattern::Value(ASTExpr::Identifier("literal"))]);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_dictionary_pattern() {
+        let mut parser = create_parser("{ x: var y, z }");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Dictionary(vec![
+            (
+                ASTExpr::Identifier("x"),
+                Some(Box::new(ASTMatchPattern::Binding(
+                    ASTVariable::new_binding("y"),
+                ))),
+            ),
+            (ASTExpr::Identifier("z"), None),
+        ]);
 
         assert_eq!(result, expected);
     }
@@ -259,6 +289,23 @@ mod tests {
                 block: vec![ASTStatement::Pass],
             }],
         };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_multiline_dict_and_array_patterns() {
+        let mut parser = create_parser("{ x:\n var y }, [\nz\n]");
+        let result = parse_match_pattern(&mut parser);
+        let expected = ASTMatchPattern::Alternative(vec![
+            ASTMatchPattern::Dictionary(vec![(
+                ASTExpr::Identifier("x"),
+                Some(Box::new(ASTMatchPattern::Binding(
+                    ASTVariable::new_binding("y"),
+                ))),
+            )]),
+            ASTMatchPattern::Array(vec![ASTMatchPattern::Value(ASTExpr::Identifier("z"))]),
+        ]);
 
         assert_eq!(result, expected);
     }

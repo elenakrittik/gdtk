@@ -190,18 +190,14 @@ fn parse_expr_without_ops<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>
         TokenKind::OpeningParenthesis => {
             parser.next();
 
-            let values = parser
-                .with_parens_ctx(true, |parser| {
-                    delemited_by(
-                        parser,
-                        TokenKind::Comma,
-                        &[TokenKind::ClosingParenthesis],
-                        parse_expr_impl,
-                    )
-                })
-                .into_iter()
-                .flatten()
-                .collect();
+            let values = parser.with_parens_ctx(true, |parser| {
+                delemited_by(
+                    parser,
+                    TokenKind::Comma,
+                    &[TokenKind::ClosingParenthesis],
+                    parse_expr,
+                )
+            });
 
             expect!(parser, TokenKind::ClosingParenthesis);
 
@@ -219,7 +215,7 @@ enum ExprIR<'a> {
     Prefix(ASTPrefixOp),
     Postfix(ASTPostfixOp<'a>),
     Binary(ASTBinaryOp<'a>),
-    Group(Vec<ExprIR<'a>>),
+    Group(Vec<ASTExpr<'a>>),
     Primary(ASTExpr<'a>),
 }
 
@@ -312,8 +308,8 @@ where
 
     fn primary(&mut self, input: Self::Input) -> Result<Self::Output, Self::Error> {
         Ok(match input {
-            ExprIR::Primary(v) => v,
-            ExprIR::Group(inner) => self.parse(&mut inner.into_iter()).unwrap(),
+            ExprIR::Primary(val) => val,
+            ExprIR::Group(vals) => ASTExpr::Group(vals),
             _ => unreachable!(),
         })
     }
@@ -855,14 +851,23 @@ mod tests {
     #[test]
     fn test_expr_group_newlines() {
         let mut parser = create_parser("(1\n+ fn\n())");
-        let expected = ASTExpr::BinaryExpr(
+        let expected = ASTExpr::Group(vec![ASTExpr::BinaryExpr(
             Box::new(ASTExpr::Number(1)),
             ASTBinaryOp::Add,
             Box::new(ASTExpr::PostfixExpr(
                 Box::new(ASTExpr::Identifier("fn")),
                 ASTPostfixOp::Call(vec![]),
             )),
-        );
+        )]);
+        let result = parse_expr(&mut parser);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_expr_group_multiple() {
+        let mut parser = create_parser("(1, 2)");
+        let expected = ASTExpr::Group(vec![ASTExpr::Number(1), ASTExpr::Number(2)]);
         let result = parse_expr(&mut parser);
 
         assert_eq!(result, expected);
