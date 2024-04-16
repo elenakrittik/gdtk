@@ -25,7 +25,7 @@ pub fn parse_array<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> 
     value
 }
 
-pub fn parse_dictionary<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+pub fn parse_dictionary<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<DictValue<'a>> {
     expect!(parser, TokenKind::OpeningBrace);
 
     let value = match parser.peek().expect("unexpected EOF").kind {
@@ -40,7 +40,7 @@ pub fn parse_dictionary<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>
 }
 
 /// Parse a lua-style dictionary body.
-fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<DictValue<'a>> {
     fn parse_lua_key_value<'a>(
         parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
     ) -> (ASTExpr<'a>, ASTExpr<'a>) {
@@ -62,7 +62,7 @@ fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> D
 }
 
 /// Parse a python-style dictionary body.
-fn parse_python_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+fn parse_python_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<DictValue<'a>> {
     fn parse_python_key_value<'a>(
         parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
     ) -> (ASTExpr<'a>, ASTExpr<'a>) {

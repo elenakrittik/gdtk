@@ -271,22 +271,69 @@ pub trait Visitor {
         }
     }
 
-    fn visit_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_group_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_identifier_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_number_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_float_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_string_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_string_name_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_node_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_unique_node_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_node_path_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_boolean_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_null_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_array_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_dictionary_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_lambda_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_prefix_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_postfix_expr(&mut self, expr: &ast::ASTExpr) {}
-    fn visit_binary_expr(&mut self, expr: &ast::ASTExpr) {}
+    #[rustfmt::skip]
+    fn visit_expr(&mut self, expr: &ast::ASTExpr) {
+        match expr {
+            ast::ASTExpr::Group(exprs) => self.visit_group_expr(exprs),
+            ast::ASTExpr::Identifier(identifier) => self.visit_identifier_expr(identifier),
+            ast::ASTExpr::Number(number) => self.visit_number_expr(*number),
+            ast::ASTExpr::Float(float) => self.visit_float_expr(*float),
+            ast::ASTExpr::String(string) => self.visit_string_expr(string),
+            ast::ASTExpr::StringName(string) => self.visit_string_name_expr(string),
+            ast::ASTExpr::Node(path) => self.visit_node_expr(path),
+            ast::ASTExpr::UniqueNode(path) => self.visit_unique_node_expr(path),
+            ast::ASTExpr::NodePath(path) => self.visit_node_path_expr(path),
+            ast::ASTExpr::Boolean(boolean) => self.visit_boolean_expr(*boolean),
+            ast::ASTExpr::Null => self.visit_null_expr(),
+            ast::ASTExpr::Array(exprs) => self.visit_array_expr(exprs),
+            ast::ASTExpr::Dictionary(pairs) => self.visit_dictionary_expr(pairs.as_slice()),
+            ast::ASTExpr::Lambda(func) => self.visit_lambda_expr(func),
+            ast::ASTExpr::PrefixExpr(op, expr) => self.visit_prefix_expr(op, expr),
+            ast::ASTExpr::PostfixExpr(expr, op) => self.visit_postfix_expr(expr, op),
+            ast::ASTExpr::BinaryExpr(lhs, op, rhs) => self.visit_binary_expr(lhs, op, rhs),
+        }
+    }
+
+    fn visit_group_expr(&mut self, exprs: &[ast::ASTExpr]) {
+        self.visit_exprs(exprs);
+    }
+
+    fn visit_identifier_expr(&mut self, _identifier: &str) {}
+    fn visit_number_expr(&mut self, _number: u64) {}
+    fn visit_float_expr(&mut self, _float: f64) {}
+    fn visit_string_expr(&mut self, _string: &str) {}
+    fn visit_string_name_expr(&mut self, _string: &str) {}
+    fn visit_node_expr(&mut self, _path: &str) {}
+    fn visit_unique_node_expr(&mut self, _path: &str) {}
+    fn visit_node_path_expr(&mut self, _path: &str) {}
+    fn visit_boolean_expr(&mut self, _boolean: bool) {}
+    fn visit_null_expr(&mut self) {}
+
+    fn visit_array_expr(&mut self, exprs: &[ast::ASTExpr]) {
+        self.visit_exprs(exprs);
+    }
+
+    fn visit_dictionary_expr(&mut self, pairs: &[ast::DictValue]) {
+        for (key, value) in pairs {
+            self.visit_expr(key);
+            self.visit_expr(value)
+        }
+    }
+
+    fn visit_lambda_expr(&mut self, func: &ast::ASTFunction) {
+        self.visit_func(func);
+    }
+
+    fn visit_prefix_expr(&mut self, _op: &ast::ASTPrefixOp, expr: &ast::ASTExpr) {
+        self.visit_expr(expr);
+    }
+
+    fn visit_postfix_expr(&mut self, expr: &ast::ASTExpr, _op: &ast::ASTPostfixOp) {
+        self.visit_expr(expr);
+    }
+
+    fn visit_binary_expr(&mut self, lhs: &ast::ASTExpr, _op: &ast::ASTBinaryOp, rhs: &ast::ASTExpr) {
+        self.visit_expr(lhs);
+        self.visit_expr(rhs);
+    }
 }

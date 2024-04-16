@@ -3,7 +3,7 @@
 
 /// A block of statements.
 pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
-pub type DictValue<'a> = Vec<(ASTExpr<'a>, ASTExpr<'a>)>;
+pub type DictValue<'a> = (ASTExpr<'a>, ASTExpr<'a>);
 pub type DictPattern<'a> = (ASTExpr<'a>, Option<Box<ASTMatchPattern<'a>>>);
 
 #[derive(Debug, Clone, PartialEq)]
@@ -105,7 +105,7 @@ pub enum ASTExpr<'a> {
     /// An array literal.
     Array(Vec<ASTExpr<'a>>),
     /// A dictionary literal.
-    Dictionary(DictValue<'a>),
+    Dictionary(Vec<DictValue<'a>>),
     /// A lambda function expression.
     Lambda(ASTFunction<'a>),
     /// An unary prefix expression.
