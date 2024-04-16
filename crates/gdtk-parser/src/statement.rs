@@ -40,7 +40,7 @@ pub fn parse_statement<'a>(
         TokenKind::Var => parse_var_stmt(parser),
         TokenKind::Const => parse_const_stmt(parser),
         TokenKind::Static => parse_static_var_stmt(parser),
-        _ => ASTStatement::Value(parse_expr(parser)),
+        _ => ASTStatement::Expr(parse_expr(parser)),
     }
 }
 

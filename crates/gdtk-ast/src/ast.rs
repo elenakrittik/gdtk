@@ -266,7 +266,7 @@ pub enum ASTStatement<'a> {
     /// A variable definition statement.
     Variable(ASTVariable<'a>),
     /// A standalone expression.
-    Value(ASTExpr<'a>),
+    Expr(ASTExpr<'a>),
 }
 
 /// A ``for`` loop statement.

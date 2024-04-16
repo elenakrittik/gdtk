@@ -221,9 +221,9 @@ mod tests {
             pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
             guard: None,
             block: vec![
-                ASTStatement::Value(ASTExpr::Number(1)),
-                ASTStatement::Value(ASTExpr::Number(2)),
-                ASTStatement::Value(ASTExpr::Number(3)),
+                ASTStatement::Expr(ASTExpr::Number(1)),
+                ASTStatement::Expr(ASTExpr::Number(2)),
+                ASTStatement::Expr(ASTExpr::Number(3)),
             ],
         };
 
@@ -238,9 +238,9 @@ mod tests {
             pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
             guard: Some(ASTExpr::Identifier("expr")),
             block: vec![
-                ASTStatement::Value(ASTExpr::Number(1)),
-                ASTStatement::Value(ASTExpr::Number(2)),
-                ASTStatement::Value(ASTExpr::Number(3)),
+                ASTStatement::Expr(ASTExpr::Number(1)),
+                ASTStatement::Expr(ASTExpr::Number(2)),
+                ASTStatement::Expr(ASTExpr::Number(3)),
             ],
         };
 

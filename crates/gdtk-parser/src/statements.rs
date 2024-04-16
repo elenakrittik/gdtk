@@ -250,7 +250,7 @@ mod tests {
         let mut parser = create_parser("elif 1:\n    2");
         let expected = ASTStatement::Elif(ASTElifStmt {
             expr: ASTExpr::Number(1),
-            block: vec![ASTStatement::Value(ASTExpr::Number(2))],
+            block: vec![ASTStatement::Expr(ASTExpr::Number(2))],
         });
         let result = parse_elif_stmt(&mut parser);
 
@@ -261,7 +261,7 @@ mod tests {
     fn test_else_stmt() {
         let mut parser = create_parser("else:\n    2");
         let expected = ASTStatement::Else(ASTElseStmt {
-            block: vec![ASTStatement::Value(ASTExpr::Number(2))],
+            block: vec![ASTStatement::Expr(ASTExpr::Number(2))],
         });
         let result = parse_else_stmt(&mut parser);
 
@@ -280,7 +280,7 @@ mod tests {
                 value: None,
             },
             container: ASTExpr::Array(vec![ASTExpr::Number(1), ASTExpr::Number(2)]),
-            block: vec![ASTStatement::Value(ASTExpr::Number(3))],
+            block: vec![ASTStatement::Expr(ASTExpr::Number(3))],
         });
         let result = parse_for_stmt(&mut parser);
 
@@ -292,7 +292,7 @@ mod tests {
         let mut parser = create_parser("if 1:\n    2");
         let expected = ASTStatement::If(ASTIfStmt {
             expr: ASTExpr::Number(1),
-            block: vec![ASTStatement::Value(ASTExpr::Number(2))],
+            block: vec![ASTStatement::Expr(ASTExpr::Number(2))],
         });
         let result = parse_if_stmt(&mut parser);
 
@@ -304,7 +304,7 @@ mod tests {
         let mut parser = create_parser("while 1:\n    2");
         let expected = ASTStatement::While(ASTWhileStmt {
             expr: ASTExpr::Number(1),
-            block: vec![ASTStatement::Value(ASTExpr::Number(2))],
+            block: vec![ASTStatement::Expr(ASTExpr::Number(2))],
         });
         let result = parse_while_stmt(&mut parser);
 
