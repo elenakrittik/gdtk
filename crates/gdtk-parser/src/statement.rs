@@ -1,4 +1,4 @@
-use gdtk_ast::poor::ASTStatement;
+use gdtk_ast::ASTStatement;
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::classes::{parse_class, parse_enum};

@@ -1,4 +1,4 @@
-use gdtk_ast::poor::{ASTFunction, ASTVariableKind};
+use gdtk_ast::{ASTFunction, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
@@ -59,7 +59,7 @@ pub fn parse_func<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::poor::*;
+    use gdtk_ast::*;
 
     use crate::functions::parse_func;
     use crate::test_utils::create_parser;
@@ -84,7 +84,7 @@ mod tests {
         let expected = ASTFunction {
             identifier: Some("foo"),
             parameters: vec![],
-            return_type: Some(Box::new(ASTValue::Identifier("int"))),
+            return_type: Some(Box::new(ASTExpr::Identifier("int"))),
             body: vec![ASTStatement::Pass],
         };
         let result = parse_func(&mut parser, false);
@@ -112,7 +112,7 @@ mod tests {
         let expected = ASTFunction {
             identifier: None,
             parameters: vec![],
-            return_type: Some(Box::new(ASTValue::Identifier("int"))),
+            return_type: Some(Box::new(ASTExpr::Identifier("int"))),
             body: vec![ASTStatement::Pass],
         };
         let result = parse_func(&mut parser, false);
@@ -137,7 +137,7 @@ mod tests {
                     identifier: "b",
                     kind: ASTVariableKind::Binding,
                     infer_type: false,
-                    typehint: Some(ASTValue::Identifier("int")),
+                    typehint: Some(ASTExpr::Identifier("int")),
                     value: None,
                 },
                 ASTVariable {
@@ -145,14 +145,14 @@ mod tests {
                     kind: ASTVariableKind::Binding,
                     infer_type: true,
                     typehint: None,
-                    value: Some(ASTValue::Number(0)),
+                    value: Some(ASTExpr::Number(0)),
                 },
                 ASTVariable {
                     identifier: "d",
                     kind: ASTVariableKind::Binding,
                     infer_type: false,
-                    typehint: Some(ASTValue::Identifier("int")),
-                    value: Some(ASTValue::Number(0)),
+                    typehint: Some(ASTExpr::Identifier("int")),
+                    value: Some(ASTExpr::Number(0)),
                 },
             ],
             return_type: None,

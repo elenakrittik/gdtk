@@ -1,4 +1,4 @@
-use gdtk_ast::poor::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, DictPattern};
+use gdtk_ast::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, DictPattern};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
@@ -151,7 +151,7 @@ fn parse_match_dict_pattern<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::poor::*;
+    use gdtk_ast::*;
 
     use crate::match_::{parse_match, parse_match_arm, parse_match_pattern};
     use crate::test_utils::create_parser;
@@ -160,7 +160,7 @@ mod tests {
     fn test_value_pattern() {
         let mut parser = create_parser("literal");
         let result = parse_match_pattern(&mut parser);
-        let expected = ASTMatchPattern::Value(ASTValue::Identifier("literal"));
+        let expected = ASTMatchPattern::Value(ASTExpr::Identifier("literal"));
 
         assert_eq!(result, expected);
     }
@@ -169,9 +169,8 @@ mod tests {
     fn test_array_pattern() {
         let mut parser = create_parser("[literal]");
         let result = parse_match_pattern(&mut parser);
-        let expected = ASTMatchPattern::Array(vec![ASTMatchPattern::Value(ASTValue::Identifier(
-            "literal",
-        ))]);
+        let expected =
+            ASTMatchPattern::Array(vec![ASTMatchPattern::Value(ASTExpr::Identifier("literal"))]);
 
         assert_eq!(result, expected);
     }
@@ -181,8 +180,8 @@ mod tests {
         let mut parser = create_parser("literal1, literal2");
         let result = parse_match_pattern(&mut parser);
         let expected = ASTMatchPattern::Alternative(vec![
-            ASTMatchPattern::Value(ASTValue::Identifier("literal1")),
-            ASTMatchPattern::Value(ASTValue::Identifier("literal2")),
+            ASTMatchPattern::Value(ASTExpr::Identifier("literal1")),
+            ASTMatchPattern::Value(ASTExpr::Identifier("literal2")),
         ]);
 
         assert_eq!(result, expected);
@@ -193,7 +192,7 @@ mod tests {
         let mut parser = create_parser("literal:\n    pass");
         let result = parse_match_arm(&mut parser);
         let expected = ASTMatchArm {
-            pattern: ASTMatchPattern::Value(ASTValue::Identifier("literal")),
+            pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
             guard: None,
             block: vec![ASTStatement::Pass],
         };
@@ -206,8 +205,8 @@ mod tests {
         let mut parser = create_parser("literal when expr:\n    pass");
         let result = parse_match_arm(&mut parser);
         let expected = ASTMatchArm {
-            pattern: ASTMatchPattern::Value(ASTValue::Identifier("literal")),
-            guard: Some(ASTValue::Identifier("expr")),
+            pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
+            guard: Some(ASTExpr::Identifier("expr")),
             block: vec![ASTStatement::Pass],
         };
 
@@ -219,12 +218,12 @@ mod tests {
         let mut parser = create_parser("literal:\n    1\n    2\n    3");
         let result = parse_match_arm(&mut parser);
         let expected = ASTMatchArm {
-            pattern: ASTMatchPattern::Value(ASTValue::Identifier("literal")),
+            pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
             guard: None,
             block: vec![
-                ASTStatement::Value(ASTValue::Number(1)),
-                ASTStatement::Value(ASTValue::Number(2)),
-                ASTStatement::Value(ASTValue::Number(3)),
+                ASTStatement::Value(ASTExpr::Number(1)),
+                ASTStatement::Value(ASTExpr::Number(2)),
+                ASTStatement::Value(ASTExpr::Number(3)),
             ],
         };
 
@@ -236,12 +235,12 @@ mod tests {
         let mut parser = create_parser("literal when expr:\n    1\n    2\n    3");
         let result = parse_match_arm(&mut parser);
         let expected = ASTMatchArm {
-            pattern: ASTMatchPattern::Value(ASTValue::Identifier("literal")),
-            guard: Some(ASTValue::Identifier("expr")),
+            pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
+            guard: Some(ASTExpr::Identifier("expr")),
             block: vec![
-                ASTStatement::Value(ASTValue::Number(1)),
-                ASTStatement::Value(ASTValue::Number(2)),
-                ASTStatement::Value(ASTValue::Number(3)),
+                ASTStatement::Value(ASTExpr::Number(1)),
+                ASTStatement::Value(ASTExpr::Number(2)),
+                ASTStatement::Value(ASTExpr::Number(3)),
             ],
         };
 
@@ -253,9 +252,9 @@ mod tests {
         let mut parser = create_parser("match expr:\n    _: pass");
         let result = parse_match(&mut parser);
         let expected = ASTMatchStmt {
-            expr: ASTValue::Identifier("expr"),
+            expr: ASTExpr::Identifier("expr"),
             arms: vec![ASTMatchArm {
-                pattern: ASTMatchPattern::Value(ASTValue::Identifier("_")),
+                pattern: ASTMatchPattern::Value(ASTExpr::Identifier("_")),
                 guard: None,
                 block: vec![ASTStatement::Pass],
             }],

@@ -1,4 +1,4 @@
-use gdtk_ast::poor::{ASTAnnotation, ASTPostfixOp, ASTSignal, ASTValue, ASTVariableKind};
+use gdtk_ast::{ASTAnnotation, ASTExpr, ASTPostfixOp, ASTSignal, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
@@ -72,7 +72,7 @@ pub fn parse_signal<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) ->
     }
 }
 
-pub fn parse_type<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTValue<'a> {
+pub fn parse_type<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTExpr<'a> {
     let base = expect!(parser, TokenKind::Identifier(s), s);
 
     if parser.peek().is_some_and(|t| t.kind.is_opening_bracket()) {
@@ -87,18 +87,18 @@ pub fn parse_type<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
 
         parser.next();
 
-        ASTValue::PostfixExpr(
-            Box::new(ASTValue::Identifier(base)),
+        ASTExpr::PostfixExpr(
+            Box::new(ASTExpr::Identifier(base)),
             ASTPostfixOp::Subscript(type_parameters),
         )
     } else {
-        ASTValue::Identifier(base)
+        ASTExpr::Identifier(base)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::poor::*;
+    use gdtk_ast::*;
 
     use super::*;
     use crate::test_utils::create_parser;
@@ -133,7 +133,7 @@ mod tests {
         let result = parse_annotation(&mut parser);
         let expected = ASTAnnotation {
             identifier: "annotation",
-            arguments: Some(vec![ASTValue::Number(0)]),
+            arguments: Some(vec![ASTExpr::Number(0)]),
         };
 
         assert_eq!(result, expected);
@@ -145,7 +145,7 @@ mod tests {
         let result = parse_annotation(&mut parser);
         let expected = ASTAnnotation {
             identifier: "annotation",
-            arguments: Some(vec![ASTValue::Number(0), ASTValue::Number(1)]),
+            arguments: Some(vec![ASTExpr::Number(0), ASTExpr::Number(1)]),
         };
 
         assert_eq!(result, expected);
@@ -157,7 +157,7 @@ mod tests {
         let result = parse_annotation(&mut parser);
         let expected = ASTAnnotation {
             identifier: "annotation",
-            arguments: Some(vec![ASTValue::Number(0)]),
+            arguments: Some(vec![ASTExpr::Number(0)]),
         };
 
         assert_eq!(result, expected);
@@ -193,7 +193,7 @@ mod tests {
                     kind: ASTVariableKind::Binding,
                     identifier: "b",
                     infer_type: false,
-                    typehint: Some(ASTValue::Identifier("int")),
+                    typehint: Some(ASTExpr::Identifier("int")),
                     value: None,
                 },
             ]),

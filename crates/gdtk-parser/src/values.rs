@@ -1,4 +1,4 @@
-use gdtk_ast::poor::{ASTFunction, ASTValue, DictValue};
+use gdtk_ast::{ASTExpr, ASTFunction, DictValue};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
@@ -8,7 +8,7 @@ use crate::{
     Parser,
 };
 
-pub fn parse_array<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ASTValue<'a>> {
+pub fn parse_array<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ASTExpr<'a>> {
     parser.next();
 
     let value = parser.with_parens_ctx(true, |parser| {
@@ -43,8 +43,8 @@ pub fn parse_dictionary<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>
 fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     fn parse_lua_key_value<'a>(
         parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
-    ) -> (ASTValue<'a>, ASTValue<'a>) {
-        let key = ASTValue::Identifier(expect!(parser, TokenKind::Identifier(s), s));
+    ) -> (ASTExpr<'a>, ASTExpr<'a>) {
+        let key = ASTExpr::Identifier(expect!(parser, TokenKind::Identifier(s), s));
         expect!(parser, TokenKind::Assignment);
         let value = parse_expr(parser);
 
@@ -65,7 +65,7 @@ fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> D
 fn parse_python_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
     fn parse_python_key_value<'a>(
         parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
-    ) -> (ASTValue<'a>, ASTValue<'a>) {
+    ) -> (ASTExpr<'a>, ASTExpr<'a>) {
         let key = parse_expr(parser);
         expect!(parser, TokenKind::Colon);
         let value = parse_expr(parser);
@@ -90,7 +90,7 @@ pub fn parse_lambda<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) ->
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::poor::*;
+    use gdtk_ast::*;
 
     use crate::test_utils::create_parser;
     use crate::values::{parse_array, parse_dictionary};
@@ -108,11 +108,7 @@ mod tests {
     fn test_parse_array() {
         let mut parser = create_parser("[1, 2, 3]");
         let result = parse_array(&mut parser);
-        let expected = vec![
-            ASTValue::Number(1),
-            ASTValue::Number(2),
-            ASTValue::Number(3),
-        ];
+        let expected = vec![ASTExpr::Number(1), ASTExpr::Number(2), ASTExpr::Number(3)];
 
         assert_eq!(result, expected);
     }
@@ -131,8 +127,8 @@ mod tests {
         let mut parser = create_parser("{'a': 1, 'b': 2}");
         let result = parse_dictionary(&mut parser);
         let expected = vec![
-            (ASTValue::String("a"), ASTValue::Number(1)),
-            (ASTValue::String("b"), ASTValue::Number(2)),
+            (ASTExpr::String("a"), ASTExpr::Number(1)),
+            (ASTExpr::String("b"), ASTExpr::Number(2)),
         ];
 
         assert_eq!(result, expected);
@@ -143,8 +139,8 @@ mod tests {
         let mut parser = create_parser("{a = 1, b = 2}");
         let result = parse_dictionary(&mut parser);
         let expected = vec![
-            (ASTValue::Identifier("a"), ASTValue::Number(1)),
-            (ASTValue::Identifier("b"), ASTValue::Number(2)),
+            (ASTExpr::Identifier("a"), ASTExpr::Number(1)),
+            (ASTExpr::Identifier("b"), ASTExpr::Number(2)),
         ];
 
         assert_eq!(result, expected);

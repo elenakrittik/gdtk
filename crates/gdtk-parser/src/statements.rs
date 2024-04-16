@@ -1,5 +1,5 @@
-use gdtk_ast::poor::{
-    ASTElifStmt, ASTElseStmt, ASTForStmt, ASTIfStmt, ASTStatement, ASTValue, ASTVariable,
+use gdtk_ast::{
+    ASTElifStmt, ASTElseStmt, ASTExpr, ASTForStmt, ASTIfStmt, ASTStatement, ASTVariable,
     ASTVariableKind, ASTWhileStmt, CodeBlock,
 };
 use gdtk_lexer::{Token, TokenKind};
@@ -145,7 +145,7 @@ pub fn parse_while_stmt<'a>(
 /// Parse a
 fn parse_iflike<'a>(
     parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
-) -> (ASTValue<'a>, CodeBlock<'a>) {
+) -> (ASTExpr<'a>, CodeBlock<'a>) {
     let cond = parse_expr(parser);
     expect!(parser, TokenKind::Colon);
     let block = parse_block(parser, false);
@@ -155,7 +155,7 @@ fn parse_iflike<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::poor::*;
+    use gdtk_ast::*;
 
     use crate::statements::{
         parse_classname_stmt, parse_const_stmt, parse_elif_stmt, parse_else_stmt,
@@ -172,7 +172,7 @@ mod tests {
             identifier: "a",
             infer_type: false,
             typehint: None,
-            value: Some(ASTValue::Number(1)),
+            value: Some(ASTExpr::Number(1)),
         });
         let result = parse_var_stmt(&mut parser);
 
@@ -187,7 +187,7 @@ mod tests {
             identifier: "a",
             infer_type: false,
             typehint: None,
-            value: Some(ASTValue::Number(1)),
+            value: Some(ASTExpr::Number(1)),
         });
         let result = parse_const_stmt(&mut parser);
 
@@ -202,7 +202,7 @@ mod tests {
             identifier: "a",
             infer_type: false,
             typehint: None,
-            value: Some(ASTValue::Number(1)),
+            value: Some(ASTExpr::Number(1)),
         });
         let result = parse_static_var_stmt(&mut parser);
 
@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn test_return_stmt() {
         let mut parser = create_parser("return 1");
-        let expected = ASTStatement::Return(Some(ASTValue::Number(1)));
+        let expected = ASTStatement::Return(Some(ASTExpr::Number(1)));
         let result = parse_return_stmt(&mut parser);
 
         assert_eq!(result, expected);
@@ -249,8 +249,8 @@ mod tests {
     fn test_elif_stmt() {
         let mut parser = create_parser("elif 1:\n    2");
         let expected = ASTStatement::Elif(ASTElifStmt {
-            expr: ASTValue::Number(1),
-            block: vec![ASTStatement::Value(ASTValue::Number(2))],
+            expr: ASTExpr::Number(1),
+            block: vec![ASTStatement::Value(ASTExpr::Number(2))],
         });
         let result = parse_elif_stmt(&mut parser);
 
@@ -261,7 +261,7 @@ mod tests {
     fn test_else_stmt() {
         let mut parser = create_parser("else:\n    2");
         let expected = ASTStatement::Else(ASTElseStmt {
-            block: vec![ASTStatement::Value(ASTValue::Number(2))],
+            block: vec![ASTStatement::Value(ASTExpr::Number(2))],
         });
         let result = parse_else_stmt(&mut parser);
 
@@ -279,8 +279,8 @@ mod tests {
                 typehint: None,
                 value: None,
             },
-            container: ASTValue::Array(vec![ASTValue::Number(1), ASTValue::Number(2)]),
-            block: vec![ASTStatement::Value(ASTValue::Number(3))],
+            container: ASTExpr::Array(vec![ASTExpr::Number(1), ASTExpr::Number(2)]),
+            block: vec![ASTStatement::Value(ASTExpr::Number(3))],
         });
         let result = parse_for_stmt(&mut parser);
 
@@ -291,8 +291,8 @@ mod tests {
     fn test_if_stmt() {
         let mut parser = create_parser("if 1:\n    2");
         let expected = ASTStatement::If(ASTIfStmt {
-            expr: ASTValue::Number(1),
-            block: vec![ASTStatement::Value(ASTValue::Number(2))],
+            expr: ASTExpr::Number(1),
+            block: vec![ASTStatement::Value(ASTExpr::Number(2))],
         });
         let result = parse_if_stmt(&mut parser);
 
@@ -303,8 +303,8 @@ mod tests {
     fn test_while_stmt() {
         let mut parser = create_parser("while 1:\n    2");
         let expected = ASTStatement::While(ASTWhileStmt {
-            expr: ASTValue::Number(1),
-            block: vec![ASTStatement::Value(ASTValue::Number(2))],
+            expr: ASTExpr::Number(1),
+            block: vec![ASTStatement::Value(ASTExpr::Number(2))],
         });
         let result = parse_while_stmt(&mut parser);
 

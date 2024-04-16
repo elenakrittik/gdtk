@@ -4,7 +4,7 @@
 
 use std::iter::Peekable;
 
-use gdtk_ast::poor::{ASTFile, CodeBlock};
+use gdtk_ast::{ASTFile, CodeBlock};
 use gdtk_lexer::{token::TokenKind, Token};
 
 pub use crate::error::Error;

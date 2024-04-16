@@ -3,8 +3,8 @@
 
 /// A block of statements.
 pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
-pub type DictValue<'a> = Vec<(ASTValue<'a>, ASTValue<'a>)>;
-pub type DictPattern<'a> = (ASTValue<'a>, Option<Box<ASTMatchPattern<'a>>>);
+pub type DictValue<'a> = Vec<(ASTExpr<'a>, ASTExpr<'a>)>;
+pub type DictPattern<'a> = (ASTExpr<'a>, Option<Box<ASTMatchPattern<'a>>>);
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTFile<'a> {
@@ -22,8 +22,8 @@ pub struct ASTClass<'a> {
 pub struct ASTVariable<'a> {
     pub identifier: &'a str,
     pub infer_type: bool,
-    pub typehint: Option<ASTValue<'a>>,
-    pub value: Option<ASTValue<'a>>,
+    pub typehint: Option<ASTExpr<'a>>,
+    pub value: Option<ASTExpr<'a>>,
     pub kind: ASTVariableKind,
 }
 
@@ -65,7 +65,7 @@ pub struct ASTEnum<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTEnumVariant<'a> {
     pub identifier: &'a str,
-    pub value: Option<ASTValue<'a>>,
+    pub value: Option<ASTExpr<'a>>,
 }
 
 /// A function.
@@ -73,15 +73,15 @@ pub struct ASTEnumVariant<'a> {
 pub struct ASTFunction<'a> {
     pub identifier: Option<&'a str>,
     pub parameters: Vec<ASTVariable<'a>>,
-    pub return_type: Option<Box<ASTValue<'a>>>,
+    pub return_type: Option<Box<ASTExpr<'a>>>,
     pub body: CodeBlock<'a>,
 }
 
 /// An expression.
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
-pub enum ASTValue<'a> {
+pub enum ASTExpr<'a> {
     /// A parenthesized expression.
-    Group(Box<ASTValue<'a>>),
+    Group(Box<ASTExpr<'a>>),
     /// An identifier literal.
     Identifier(&'a str),
     /// An integer number literal.
@@ -103,17 +103,17 @@ pub enum ASTValue<'a> {
     /// A null literal.
     Null,
     /// An array literal.
-    Array(Vec<ASTValue<'a>>),
+    Array(Vec<ASTExpr<'a>>),
     /// A dictionary literal.
     Dictionary(DictValue<'a>),
     /// A lambda function expression.
     Lambda(ASTFunction<'a>),
     /// An unary prefix expression.
-    PrefixExpr(ASTPrefixOp, Box<ASTValue<'a>>),
+    PrefixExpr(ASTPrefixOp, Box<ASTExpr<'a>>),
     /// An unary postfix expression.
-    PostfixExpr(Box<ASTValue<'a>>, ASTPostfixOp<'a>),
+    PostfixExpr(Box<ASTExpr<'a>>, ASTPostfixOp<'a>),
     /// A binary expression.
-    BinaryExpr(Box<ASTValue<'a>>, ASTBinaryOp<'a>, Box<ASTValue<'a>>),
+    BinaryExpr(Box<ASTExpr<'a>>, ASTBinaryOp<'a>, Box<ASTExpr<'a>>),
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
@@ -133,9 +133,9 @@ pub enum ASTPrefixOp {
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTPostfixOp<'a> {
     /// ``a(b)``.
-    Call(Vec<ASTValue<'a>>),
+    Call(Vec<ASTExpr<'a>>),
     /// ``a[b]``.
-    Subscript(Vec<ASTValue<'a>>),
+    Subscript(Vec<ASTExpr<'a>>),
 }
 
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
@@ -191,7 +191,7 @@ pub enum ASTBinaryOp<'a> {
     /// ``a..b``. **UNOFFICIAL EXTENSION**.
     Range,
     /// ``a if c else b``.
-    TernaryIfElse(Box<ASTValue<'a>>),
+    TernaryIfElse(Box<ASTExpr<'a>>),
     /// A placeholder for [ASTBinaryOp::TernaryIfElse].
     TernaryIfElsePlaceholder,
     /// ``a = b``.
@@ -228,7 +228,7 @@ pub enum ASTStatement<'a> {
     /// An annotation in form of a statement.
     Annotation(ASTAnnotation<'a>),
     /// An ``assert`` statement.
-    Assert(ASTValue<'a>),
+    Assert(ASTExpr<'a>),
     /// A ``break`` statement.
     Break,
     /// A ``breakpoint`` statement.
@@ -256,7 +256,7 @@ pub enum ASTStatement<'a> {
     /// A ``pass`` statement.
     Pass,
     /// A ``return`` statement.
-    Return(Option<ASTValue<'a>>),
+    Return(Option<ASTExpr<'a>>),
     /// A ``signal`` definition statement.
     Signal(ASTSignal<'a>),
     /// A ``match`` statement.
@@ -266,35 +266,35 @@ pub enum ASTStatement<'a> {
     /// A variable definition statement.
     Variable(ASTVariable<'a>),
     /// A standalone expression.
-    Value(ASTValue<'a>),
+    Value(ASTExpr<'a>),
 }
 
 /// A ``for`` loop statement.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTForStmt<'a> {
     pub binding: ASTVariable<'a>,
-    pub container: ASTValue<'a>,
+    pub container: ASTExpr<'a>,
     pub block: CodeBlock<'a>,
 }
 
 /// A ``while`` loop statement.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTWhileStmt<'a> {
-    pub expr: ASTValue<'a>,
+    pub expr: ASTExpr<'a>,
     pub block: CodeBlock<'a>,
 }
 
 /// An ``if`` statement.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTIfStmt<'a> {
-    pub expr: ASTValue<'a>,
+    pub expr: ASTExpr<'a>,
     pub block: CodeBlock<'a>,
 }
 
 /// An ``elif`` statement.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTElifStmt<'a> {
-    pub expr: ASTValue<'a>,
+    pub expr: ASTExpr<'a>,
     pub block: CodeBlock<'a>,
 }
 
@@ -307,7 +307,7 @@ pub struct ASTElseStmt<'a> {
 /// A ``match`` statement.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTMatchStmt<'a> {
-    pub expr: ASTValue<'a>,
+    pub expr: ASTExpr<'a>,
     pub arms: Vec<ASTMatchArm<'a>>,
 }
 
@@ -315,14 +315,14 @@ pub struct ASTMatchStmt<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTMatchArm<'a> {
     pub pattern: ASTMatchPattern<'a>,
-    pub guard: Option<ASTValue<'a>>,
+    pub guard: Option<ASTExpr<'a>>,
     pub block: CodeBlock<'a>,
 }
 
 /// A pattern of an [ASTMatchArm].
 #[derive(Debug, Clone, PartialEq)]
 pub enum ASTMatchPattern<'a> {
-    Value(ASTValue<'a>),
+    Value(ASTExpr<'a>),
     Binding(ASTVariable<'a>),
     Array(Vec<ASTMatchPattern<'a>>),
     Alternative(Vec<ASTMatchPattern<'a>>),
@@ -335,7 +335,7 @@ pub enum ASTMatchPattern<'a> {
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTAnnotation<'a> {
     pub identifier: &'a str,
-    pub arguments: Option<Vec<ASTValue<'a>>>,
+    pub arguments: Option<Vec<ASTExpr<'a>>>,
 }
 
 /// A ``signal`` definition.

@@ -1,4 +1,4 @@
-use gdtk_ast::poor::CodeBlock;
+use gdtk_ast::CodeBlock;
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::statement::parse_statement;
@@ -49,7 +49,7 @@ pub fn parse_block<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::poor::*;
+    use gdtk_ast::*;
 
     use crate::block::parse_block;
     use crate::test_utils::create_parser;

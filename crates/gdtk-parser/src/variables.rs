@@ -1,4 +1,4 @@
-use gdtk_ast::poor::{ASTVariable, ASTVariableKind};
+use gdtk_ast::{ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::expressions::parse_expr;
@@ -62,7 +62,7 @@ pub fn parse_variable_body<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::poor::*;
+    use gdtk_ast::*;
 
     use crate::test_utils::create_parser;
     use crate::variables::parse_variable_body;
@@ -89,7 +89,7 @@ mod tests {
         let expected = ASTVariable {
             identifier: "ident",
             infer_type: false,
-            typehint: Some(ASTValue::Identifier("type")),
+            typehint: Some(ASTExpr::Identifier("type")),
             value: None,
             kind: ASTVariableKind::Regular,
         };
@@ -105,7 +105,7 @@ mod tests {
             identifier: "ident",
             infer_type: false,
             typehint: None,
-            value: Some(ASTValue::Number(0)),
+            value: Some(ASTExpr::Number(0)),
             kind: ASTVariableKind::Regular,
         };
 
@@ -120,7 +120,7 @@ mod tests {
             identifier: "ident",
             infer_type: true,
             typehint: None,
-            value: Some(ASTValue::Number(0)),
+            value: Some(ASTExpr::Number(0)),
             kind: ASTVariableKind::Regular,
         };
 
@@ -134,8 +134,8 @@ mod tests {
         let expected = ASTVariable {
             identifier: "ident",
             infer_type: false,
-            typehint: Some(ASTValue::Identifier("type")),
-            value: Some(ASTValue::Number(0)),
+            typehint: Some(ASTExpr::Identifier("type")),
+            value: Some(ASTExpr::Number(0)),
             kind: ASTVariableKind::Regular,
         };
 

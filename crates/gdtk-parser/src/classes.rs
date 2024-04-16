@@ -1,4 +1,4 @@
-use gdtk_ast::poor::{ASTClass, ASTEnum, ASTEnumVariant};
+use gdtk_ast::{ASTClass, ASTEnum, ASTEnumVariant};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
@@ -77,7 +77,7 @@ pub fn parse_class<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> 
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::poor::*;
+    use gdtk_ast::*;
 
     use crate::classes::{parse_class, parse_enum};
     use crate::test_utils::create_parser;
@@ -182,11 +182,11 @@ mod tests {
             variants: vec![
                 ASTEnumVariant {
                     identifier: "WALKING",
-                    value: Some(ASTValue::Number(1)),
+                    value: Some(ASTExpr::Number(1)),
                 },
                 ASTEnumVariant {
                     identifier: "JUMPING",
-                    value: Some(ASTValue::String("invalid")),
+                    value: Some(ASTExpr::String("invalid")),
                 },
             ],
         };
@@ -203,11 +203,11 @@ mod tests {
             variants: vec![
                 ASTEnumVariant {
                     identifier: "WALKING",
-                    value: Some(ASTValue::Number(1)),
+                    value: Some(ASTExpr::Number(1)),
                 },
                 ASTEnumVariant {
                     identifier: "JUMPING",
-                    value: Some(ASTValue::String("invalid")),
+                    value: Some(ASTExpr::String("invalid")),
                 },
             ],
         };
