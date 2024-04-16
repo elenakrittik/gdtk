@@ -81,7 +81,7 @@ pub struct ASTFunction<'a> {
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTExpr<'a> {
     /// A parenthesized expression.
-    Group(Box<ASTExpr<'a>>),
+    Group(Vec<ASTExpr<'a>>),
     /// An identifier literal.
     Identifier(&'a str),
     /// An integer number literal.
