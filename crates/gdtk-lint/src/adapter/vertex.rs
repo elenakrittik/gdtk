@@ -4,7 +4,8 @@ use trustfall::provider::TrustfallEnumVertex;
 #[derive(Debug, Clone, TrustfallEnumVertex)]
 pub enum Vertex<'a> {
     Statement(&'a ASTStatement<'a>),
-    Value(&'a Box<ASTValue<'a>>)
+    #[allow(clippy::borrowed_box)]
+    Value(&'a Box<ASTValue<'a>>),
 }
 
 impl Vertex<'_> {
@@ -17,10 +18,10 @@ impl Vertex<'_> {
     }
 
     pub fn is_identifier_value(&self) -> bool {
-        matches!(self, Vertex::Value(ASTValue::Identifier(_)))
+        matches!(self, Vertex::Value(deref!(ASTValue::Identifier(_))))
     }
 
     pub fn is_binary_expr_value(&self) -> bool {
-        matches!(self, Vertex::Value(ASTValue::BinaryExpr(_, _, _)))
+        matches!(self, Vertex::Value(deref!(ASTValue::BinaryExpr(_, _, _))))
     }
 }

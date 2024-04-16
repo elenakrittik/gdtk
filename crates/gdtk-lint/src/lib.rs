@@ -1,3 +1,6 @@
+#![allow(incomplete_features)]
+#![feature(deref_patterns)]
+
 use std::sync::Arc;
 
 mod adapter;

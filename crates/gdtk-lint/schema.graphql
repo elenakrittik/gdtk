@@ -48,10 +48,13 @@ type ClassNameStmt implements Statement {
     identifier: String!
 }
 
-type IdentifierValue implements Statement {
+interface Value implements Statement
+
+type IdentifierValue implements Value {
     inner: String!
 }
 
-type BinaryExprValue implements Statement {
-    left: 
+type BinaryExprValue implements Value {
+    left: Value!
+    right: Value!
 }

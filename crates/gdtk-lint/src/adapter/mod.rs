@@ -1,7 +1,7 @@
 mod vertex;
 
-use gdtk_ast::poor::{ASTFile, ASTValue, ASTBinaryOp};
-use trustfall::provider::{resolve_property_with, resolve_neighbors_with, BasicAdapter};
+use gdtk_ast::poor::ASTFile;
+use trustfall::provider::{resolve_neighbors_with, resolve_property_with, BasicAdapter};
 
 use crate::adapter::vertex::Vertex;
 
@@ -40,11 +40,19 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
                 let resolver =
                     |v: &Self::Vertex| v.as_statement().unwrap().as_class_name().copied().into();
                 resolve_property_with(contexts, resolver)
-            },
+            }
             ("IdentifierValue", "inner") => {
-                let resolver = |v: &Self::Vertex| v.as_statement().unwrap().as_value().unwrap().as_identifier().copied().into();
+                let resolver = |v: &Self::Vertex| {
+                    v.as_statement()
+                        .unwrap()
+                        .as_value()
+                        .unwrap()
+                        .as_identifier()
+                        .copied()
+                        .into()
+                };
                 resolve_property_with(contexts, resolver)
-            },
+            }
             _ => unreachable!(),
         }
     }
@@ -61,12 +69,19 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
         trustfall::provider::VertexIterator<'a, Self::Vertex>,
     > {
         let resolver = match (type_name, edge_name) {
-            ("BinaryExprValue", "left") => |vertex: &Self::Vertex| {
-                std::iter::once(vertex.as_value().unwrap().as_binary_expr().unwrap().0.into())
+            ("BinaryExprValue", "left") => |vertex: &Self::Vertex| -> Box<dyn Iterator<Item = _>> {
+                Box::new(std::iter::once(Vertex::Value(
+                    vertex.as_value().unwrap().as_binary_expr().unwrap().0,
+                )))
             },
-            ("BinaryExprValue", "right") => |vertex: &Self::Vertex| {
-                std::iter::once(vertex.as_value().unwrap().as_binary_expr().unwrap().2.into())
-            },
+            ("BinaryExprValue", "right") => {
+                |vertex: &Self::Vertex| -> Box<dyn Iterator<Item = _>> {
+                    Box::new(std::iter::once(Vertex::Value(
+                        vertex.as_value().unwrap().as_binary_expr().unwrap().2,
+                    )))
+                }
+            }
+            _ => unreachable!(),
         };
 
         resolve_neighbors_with(contexts, resolver)
@@ -90,17 +105,15 @@ impl<'a> BasicAdapter<'a> for GDScriptAdapter<'a> {
             // This "match" is loop-invariant, and can be hoisted outside the map() call
             // at the cost of a bit of code repetition.
 
-            match (type_name.as_ref(), coerce_to_type.as_ref()) {
-                ("Statement", "ClassNameStmt") => (ctx, vertex.is_class_name_stmt()),
-                ("Statement", "Value") => if vertex.is_value() {
-                    (ctx.map(&mut |vertex: Self::Vertex| Self::Vertex::Value(&Box::new(*vertex.as_statement().unwrap().as_value().unwrap()))), true)
-                } else {
-                    (ctx, false)
-                },
-                ("Value", "BinaryExprValue") => (ctx, vertex.is_binary_expr_value()),
-                ("Value", "IdentifierValue") => (ctx, vertex.is_identifier_value()),
+            let can = match (type_name.as_ref(), coerce_to_type.as_ref()) {
+                ("Statement", "ClassNameStmt") => vertex.is_class_name_stmt(),
+                ("Statement", "Value") => vertex.is_value(),
+                ("Value", "BinaryExprValue") => vertex.is_binary_expr_value(),
+                ("Value", "IdentifierValue") => vertex.is_identifier_value(),
                 unhandled => unreachable!("{:?}", unhandled),
-            }
+            };
+
+            (ctx, can)
         });
 
         Box::new(iterator)
