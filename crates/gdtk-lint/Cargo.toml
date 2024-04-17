@@ -5,5 +5,7 @@ edition = "2021"
 
 [dependencies]
 heck = "0.5.0"
+miette = "7.2.0"
+thiserror = "1.0.58"
 gdtk-ast = { version = "0.1.0", path = "../gdtk-ast" }
 gdtk-diag = { version = "0.1.0", path = "../gdtk-diag" }

@@ -1,17 +1,44 @@
 use gdtk_ast::Visitor;
-use gdtk_diag::{Diagnostic, DiagnosticKind};
 use heck::{ToTitleCase, ToSnakeCase, ToShoutySnakeCase};
 
-pub struct IdentifierCasing(pub Vec<Diagnostic>);
+#[derive(Debug, thiserror::Error)]
+pub enum IdentifierCasingErrorKind {
+    #[error("Class name is not in title case.")]
+    ClassName,
+    #[error("Enum name is not in title case.")]
+    EnumName,
+    #[error("Enum variant name is not in screaming snake case.")]
+    EnumVariantName,
+    #[error("Function name is not in snake case.")]
+    FunctionName,
+    #[error("Signal name is not in snake case.")]
+    SignalName,
+    #[error("Variable name is not in snake case.")]
+    VariableName,
+    #[error("Constant name is not in screaming snake case.")]
+    ConstName,
+    #[error("Binding name is not in snake case.")]
+    BindingName,
+}
+
+#[derive(Debug, thiserror::Error, miette::Diagnostic)]
+#[error("{error_kind}")]
+pub struct IdentifierCasingError {
+    pub error_kind: IdentifierCasingErrorKind,
+}
+
+pub struct IdentifierCasing {
+    pub diagnostics: Vec<Box<dyn miette::Diagnostic>>,
+}
 
 impl IdentifierCasing {
-    pub fn report(&mut self, message: &'static str) {
-        self.0.push(Diagnostic {
-            code: "S001",
-            message,
-            range: 0..0, // TODO
-            kind: DiagnosticKind::Warning,
-        });
+    #[allow(clippy::new_without_default)]
+    pub fn new() -> Self {
+        Self { diagnostics: vec![] }
+    }
+
+    fn report(&mut self, kind: IdentifierCasingErrorKind) {
+        self.diagnostics.push(Box::new(IdentifierCasingError { error_kind: kind }));
     }
 }
 
@@ -20,7 +47,7 @@ impl Visitor for IdentifierCasing {
         let cased = class.identifier.to_title_case();
 
         if cased != class.identifier {
-            self.report("Class name is not in title case.");
+            self.report(IdentifierCasingErrorKind::ClassName);
         }
 
         self.visit_block(class.body.as_slice());
@@ -30,7 +57,7 @@ impl Visitor for IdentifierCasing {
         let cased = identifier.to_title_case();
 
         if cased != identifier {
-            self.report("Class name is not in title case.");
+            self.report(IdentifierCasingErrorKind::ClassName);
         }
     }
 
@@ -39,7 +66,7 @@ impl Visitor for IdentifierCasing {
             let cased = identifier.to_title_case();
 
             if cased != identifier {
-                self.report("Enum name is not in title case.");
+                self.report(IdentifierCasingErrorKind::EnumName);
             }
         }
 
@@ -50,7 +77,7 @@ impl Visitor for IdentifierCasing {
         let cased = variant.identifier.to_shouty_snake_case();
 
         if cased != variant.identifier {
-            self.report("Enum variant name is not in screaming snake case.");
+            self.report(IdentifierCasingErrorKind::EnumVariantName);
         }
     }
 
@@ -59,7 +86,7 @@ impl Visitor for IdentifierCasing {
             let cased = identifier.to_snake_case();
 
             if cased != identifier {
-                self.report("Function name is not in snake case.");
+                self.report(IdentifierCasingErrorKind::FunctionName);
             }
         }
 
@@ -71,7 +98,7 @@ impl Visitor for IdentifierCasing {
         let cased = signal.identifier.to_snake_case();
 
         if cased != signal.identifier {
-            self.report("Signal name is not in snake case.");
+            self.report(IdentifierCasingErrorKind::SignalName);
         }
 
         if let Some(params) = &signal.parameters {
@@ -83,7 +110,15 @@ impl Visitor for IdentifierCasing {
         let cased = variable.identifier.to_snake_case();
 
         if cased != variable.identifier {
-            self.report("Binding name is not in snake case.");
+            self.report(IdentifierCasingErrorKind::BindingName);
+        }
+    }
+
+    fn visit_const_variable(&mut self, variable: &gdtk_ast::ast::ASTVariable) {
+        let cased = variable.identifier.to_shouty_snake_case();
+
+        if cased != variable.identifier {
+            self.report(IdentifierCasingErrorKind::ConstName);
         }
     }
 
@@ -91,7 +126,7 @@ impl Visitor for IdentifierCasing {
         let cased = variable.identifier.to_snake_case();
 
         if cased != variable.identifier {
-            self.report("Variable name is not in snake case.");
+            self.report(IdentifierCasingErrorKind::VariableName);
         }
     }
 }
