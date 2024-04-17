@@ -2,7 +2,7 @@ pub mod lints;
 
 use gdtk_ast::Visitor;
 
-pub fn run_builtin_lints(file: &gdtk_ast::ASTFile) -> Vec<gdtk_diag::Diagnostic> {
+pub fn run_builtin_lints(file: &gdtk_ast::ASTFile) -> Vec<miette::MietteDiagnostic> {
     let mut diagnostics = vec![];
 
     // Construct lints.

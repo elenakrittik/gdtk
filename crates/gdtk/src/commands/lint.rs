@@ -9,7 +9,11 @@ pub fn run(file: PathBuf) -> anyhow::Result<()> {
 
     let diagnostics = gdtk_lint::run_builtin_lints(&parsed);
 
-    dbg!(diagnostics);
+    for diagnostic in diagnostics {
+        let report = miette::Report::new(diagnostic);
+
+        eprintln!("{:?}", report);
+    }
 
     Ok(())
 }

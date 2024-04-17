@@ -1,17 +1,16 @@
 use gdtk_ast::Visitor;
-use gdtk_diag::{Diagnostic, DiagnosticKind};
 use heck::{ToTitleCase, ToSnakeCase, ToShoutySnakeCase};
+use miette::MietteDiagnostic;
 
-pub struct IdentifierCasing(pub Vec<Diagnostic>);
+pub struct IdentifierCasing(pub Vec<MietteDiagnostic>);
 
 impl IdentifierCasing {
     pub fn report(&mut self, message: &'static str) {
-        self.0.push(Diagnostic {
-            code: "S001",
-            message,
-            range: 0..0, // TODO
-            kind: DiagnosticKind::Warning,
-        });
+        let diagnostic = miette::MietteDiagnostic::new(message)
+            .with_code("gdtk::style::identifier_casing")
+            .with_severity(miette::Severity::Advice);
+
+        self.0.push(diagnostic);
     }
 }
 
