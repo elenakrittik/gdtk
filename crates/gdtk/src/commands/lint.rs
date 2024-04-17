@@ -9,9 +9,7 @@ pub fn run(file: PathBuf) -> anyhow::Result<()> {
 
     let diagnostics = gdtk_lint::run_builtin_lints(&parsed);
 
-    for diagnostic in diagnostics {
-        eprintln!("{}", diagnostic);
-    }
+    dbg!(diagnostics);
 
     Ok(())
 }
