@@ -13,14 +13,14 @@ pub struct ASTFile<'a> {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTClass<'a> {
-    pub identifier: &'a str,
-    pub extends: Option<&'a str>,
+    pub identifier: ASTExpr<'a>,
+    pub extends: Option<ASTExpr<'a>>,
     pub body: CodeBlock<'a>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTVariable<'a> {
-    pub identifier: &'a str,
+    pub identifier: ASTExpr<'a>,
     pub infer_type: bool,
     pub typehint: Option<ASTExpr<'a>>,
     pub value: Option<ASTExpr<'a>>,
@@ -29,7 +29,7 @@ pub struct ASTVariable<'a> {
 
 impl<'a> ASTVariable<'a> {
     /// Creates a [ASTVariableKind::Binding] variable with ``infer_type: true``.
-    pub fn new_binding(identifier: &'a str) -> Self {
+    pub fn new_binding(identifier: ASTExpr<'a>) -> Self {
         Self {
             identifier,
             infer_type: true,
@@ -58,20 +58,20 @@ pub enum ASTVariableKind {
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTEnum<'a> {
-    pub identifier: Option<&'a str>,
+    pub identifier: Option<ASTExpr<'a>>,
     pub variants: Vec<ASTEnumVariant<'a>>,
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTEnumVariant<'a> {
-    pub identifier: &'a str,
+    pub identifier: ASTExpr<'a>,
     pub value: Option<ASTExpr<'a>>,
 }
 
 /// A function.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTFunction<'a> {
-    pub identifier: Option<&'a str>,
+    pub identifier: Option<Box<ASTExpr<'a>>>,
     pub parameters: Vec<ASTVariable<'a>>,
     pub return_type: Option<Box<ASTExpr<'a>>>,
     pub body: CodeBlock<'a>,
@@ -236,7 +236,7 @@ pub enum ASTStatement<'a> {
     /// An inner class statement.
     Class(ASTClass<'a>),
     /// A ``class_name`` statement.
-    ClassName(&'a str),
+    ClassName(ASTExpr<'a>),
     /// A ``continue`` statement.
     Continue,
     /// An ``if`` statement.
@@ -248,7 +248,7 @@ pub enum ASTStatement<'a> {
     /// A enum definition statement.
     Enum(ASTEnum<'a>),
     /// An ``extends`` statement.
-    Extends(&'a str),
+    Extends(ASTExpr<'a>),
     /// A ``for`` loop statement.
     For(ASTForStmt<'a>),
     /// A function definition statement.
@@ -334,13 +334,13 @@ pub enum ASTMatchPattern<'a> {
 /// An ``@annotation`` attached to an item.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTAnnotation<'a> {
-    pub identifier: &'a str,
+    pub identifier: ASTExpr<'a>,
     pub arguments: Option<Vec<ASTExpr<'a>>>,
 }
 
 /// A ``signal`` definition.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTSignal<'a> {
-    pub identifier: &'a str,
+    pub identifier: ASTExpr<'a>,
     pub parameters: Option<Vec<ASTVariable<'a>>>,
 }

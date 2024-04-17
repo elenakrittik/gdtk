@@ -39,7 +39,7 @@ pub trait Visitor {
     }
 
     fn visit_annotation(&mut self, ann: &ast::ASTAnnotation) {
-        self.visit_expr(&ast::ASTExpr::Identifier(ann.identifier));
+        self.visit_expr(&ann.identifier);
 
         if let Some(args) = &ann.arguments {
             self.visit_exprs(args.as_slice());
@@ -54,17 +54,17 @@ pub trait Visitor {
     fn visit_breakpoint_statement(&mut self) {}
 
     fn visit_class(&mut self, class: &ast::ASTClass) {
-        self.visit_expr(&ast::ASTExpr::Identifier(class.identifier));
+        self.visit_expr(&class.identifier);
 
-        if let Some(extends) = class.extends {
-            self.visit_expr(&ast::ASTExpr::Identifier(extends));
+        if let Some(extends) = &class.extends {
+            self.visit_expr(extends);
         }
 
         self.visit_block(class.body.as_slice());
     }
 
-    fn visit_class_name_statement(&mut self, identifier: &str) {
-        self.visit_expr(&ast::ASTExpr::Identifier(identifier));
+    fn visit_class_name_statement(&mut self, identifier: &ast::ASTExpr) {
+        self.visit_expr(identifier);
     }
 
     fn visit_continue_statement(&mut self) {}
@@ -84,8 +84,8 @@ pub trait Visitor {
     }
 
     fn visit_enum_statement(&mut self, enum_: &ast::ASTEnum) {
-        if let Some(identfier) = enum_.identifier {
-            self.visit_expr(&ast::ASTExpr::Identifier(identfier));
+        if let Some(identfier) = &enum_.identifier {
+            self.visit_expr(identfier)
         }
 
         self.visit_enum_variants(enum_.variants.as_slice());
@@ -98,15 +98,15 @@ pub trait Visitor {
     }
 
     fn visit_enum_variant(&mut self, variant: &ast::ASTEnumVariant) {
-        self.visit_expr(&ast::ASTExpr::Identifier(variant.identifier));
+        self.visit_expr(&variant.identifier);
 
         if let Some(expr) = &variant.value {
             self.visit_expr(expr);
         }
     }
 
-    fn visit_extends_statement(&mut self, identifier: &str) {
-        self.visit_expr(&ast::ASTExpr::Identifier(identifier));
+    fn visit_extends_statement(&mut self, identifier: &ast::ASTExpr) {
+        self.visit_expr(identifier)
     }
 
     fn visit_for_statement(&mut self, stmt: &ast::ASTForStmt) {
@@ -116,8 +116,8 @@ pub trait Visitor {
     }
 
     fn visit_func(&mut self, func: &ast::ASTFunction) {
-        if let Some(identifier) = func.identifier {
-            self.visit_expr(&ast::ASTExpr::Identifier(identifier));
+        if let Some(identifier) = &func.identifier {
+            self.visit_expr(identifier)
         }
 
         self.visit_parameters(func.parameters.as_slice());
@@ -144,7 +144,7 @@ pub trait Visitor {
     }
 
     fn visit_signal_statement(&mut self, signal: &ast::ASTSignal) {
-        self.visit_expr(&ast::ASTExpr::Identifier(signal.identifier));
+        self.visit_expr(&signal.identifier);
 
         if let Some(params) = &signal.parameters {
             self.visit_parameters(params.as_slice());
@@ -254,7 +254,7 @@ pub trait Visitor {
     }
 
     fn visit_any_variable(&mut self, variable: &ast::ASTVariable) {
-        self.visit_expr(&ast::ASTExpr::Identifier(variable.identifier));
+        self.visit_expr(&variable.identifier);
 
         if let Some(expr) = &variable.typehint {
             self.visit_expr(expr);
