@@ -83,12 +83,12 @@ pub trait Visitor {
         self.visit_block(stmt.block.as_slice());
     }
 
-    fn visit_enum_statement(&mut self, stmt: &ast::ASTEnum) {
-        if let Some(identfier) = stmt.identifier {
+    fn visit_enum_statement(&mut self, enum_: &ast::ASTEnum) {
+        if let Some(identfier) = enum_.identifier {
             self.visit_expr(&ast::ASTExpr::Identifier(identfier));
         }
 
-        self.visit_enum_variants(stmt.variants.as_slice());
+        self.visit_enum_variants(enum_.variants.as_slice());
     }
 
     fn visit_enum_variants(&mut self, variants: &[ast::ASTEnumVariant]) {

@@ -1,14 +1,7 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+mod lints;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use gdtk_ast::Visitor;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub fn run_builtin_lints(file: &gdtk_ast::ASTFile) {
+    crate::lints::style::identifier_casing::IdentifierCasing.visit_file(file);
 }

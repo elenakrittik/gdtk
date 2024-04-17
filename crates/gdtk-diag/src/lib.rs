@@ -1,11 +1,9 @@
-pub type Span = std::ops::Range<usize>;
-
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
+    pub code: &'static str,
+    pub message: &'static str,
+    pub range: std::ops::Range<usize>,
     pub kind: DiagnosticKind,
-    pub message: String,
-    pub hint: Option<String>,
-    pub span: Span,
 }
 
 #[derive(Debug, Clone)]

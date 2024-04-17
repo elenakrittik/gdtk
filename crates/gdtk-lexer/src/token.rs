@@ -1,4 +1,3 @@
-use gdtk_diag::Span;
 use logos::Logos;
 
 use crate::callbacks::{convert, convert_radix, mut_open_paren, trim_quotes, State};
@@ -6,7 +5,7 @@ use crate::error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {
-    pub range: Span,
+    pub range: std::ops::Range<usize>,
     pub kind: TokenKind<'a>,
 }
 

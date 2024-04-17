@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::commands::dev::get_content;
+use crate::commands::get_content;
 
 pub fn run(file: PathBuf) -> anyhow::Result<()> {
     let content = get_content(file)?;

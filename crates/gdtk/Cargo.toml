@@ -9,6 +9,7 @@ ariadne = "0.4.0"
 clap = { version = "4.3.11", features = ["derive"] }
 gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm" }
 gdtk-lexer = { version = "0.1.0", path = "../gdtk-lexer" }
+gdtk-lint = { version = "0.1.0", path = "../gdtk-lint" }
 gdtk-parser = { version = "0.1.0", path = "../gdtk-parser" }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
 lazy_static = "1.4.0"
