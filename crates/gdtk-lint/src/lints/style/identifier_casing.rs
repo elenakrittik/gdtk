@@ -2,7 +2,7 @@ use gdtk_ast::Visitor;
 use gdtk_diag::{Diagnostic, DiagnosticKind};
 use heck::{ToTitleCase, ToSnakeCase, ToShoutySnakeCase};
 
-pub struct IdentifierCasing(Vec<Diagnostic>);
+pub struct IdentifierCasing(pub Vec<Diagnostic>);
 
 impl IdentifierCasing {
     pub fn report(&mut self, message: &'static str) {
@@ -19,7 +19,7 @@ impl Visitor for IdentifierCasing {
     fn visit_class(&mut self, class: &gdtk_ast::ASTClass) {
         let cased = class.identifier.to_title_case();
 
-        if &cased != class.identifier {
+        if cased != class.identifier {
             self.report("Class name is not in title case.");
         }
 
@@ -29,8 +29,8 @@ impl Visitor for IdentifierCasing {
     fn visit_class_name_statement(&mut self, identifier: &str) {
         let cased = identifier.to_title_case();
 
-        if &cased != identifier {
-            eprintln!("S001: Class name is not in title case.");
+        if cased != identifier {
+            self.report("Class name is not in title case.");
         }
     }
 
@@ -38,8 +38,8 @@ impl Visitor for IdentifierCasing {
         if let Some(identifier) = enum_.identifier {
             let cased = identifier.to_title_case();
 
-            if &cased != identifier {
-                eprintln!("S001: Enum name is not in title case.");
+            if cased != identifier {
+                self.report("Enum name is not in title case.");
             }
         }
 
@@ -49,8 +49,8 @@ impl Visitor for IdentifierCasing {
     fn visit_enum_variant(&mut self, variant: &gdtk_ast::ASTEnumVariant) {
         let cased = variant.identifier.to_shouty_snake_case();
 
-        if &cased != variant.identifier {
-            eprintln!("S001: Enum variant name is not in screaming snake case.");
+        if cased != variant.identifier {
+            self.report("Enum variant name is not in screaming snake case.");
         }
     }
 
@@ -58,8 +58,8 @@ impl Visitor for IdentifierCasing {
         if let Some(identifier) = func.identifier {
             let cased = identifier.to_snake_case();
 
-            if &cased != identifier {
-                eprintln!("S001: Function name is not in snake case.");
+            if cased != identifier {
+                self.report("Function name is not in snake case.");
             }
         }
 
@@ -70,8 +70,8 @@ impl Visitor for IdentifierCasing {
     fn visit_signal_statement(&mut self, signal: &gdtk_ast::ASTSignal) {
         let cased = signal.identifier.to_snake_case();
 
-        if &cased != signal.identifier {
-            eprintln!("S001: Signal name is not in snake case.");
+        if cased != signal.identifier {
+            self.report("Signal name is not in snake case.");
         }
 
         if let Some(params) = &signal.parameters {
@@ -82,16 +82,16 @@ impl Visitor for IdentifierCasing {
     fn visit_binding_variable(&mut self, variable: &gdtk_ast::ASTVariable) {
         let cased = variable.identifier.to_snake_case();
 
-        if &cased != variable.identifier {
-            eprintln!("S001: Binding name is not in snake case.");
+        if cased != variable.identifier {
+            self.report("Binding name is not in snake case.");
         }
     }
 
     fn visit_any_variable(&mut self, variable: &gdtk_ast::ASTVariable) {
         let cased = variable.identifier.to_snake_case();
 
-        if &cased != variable.identifier {
-            eprintln!("S001: Variable name is not in snake case.");
+        if cased != variable.identifier {
+            self.report("Variable name is not in snake case.");
         }
     }
 }
