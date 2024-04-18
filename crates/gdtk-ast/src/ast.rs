@@ -6,6 +6,8 @@ pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
 pub type DictValue<'a> = (ASTExpr<'a>, ASTExpr<'a>);
 pub type DictPattern<'a> = (ASTExpr<'a>, Option<Box<ASTMatchPattern<'a>>>);
 
+type Range = std::ops::Range<usize>;
+
 #[derive(Debug, Clone, PartialEq)]
 pub struct ASTFile<'a> {
     pub body: CodeBlock<'a>,
@@ -29,9 +31,12 @@ pub struct ASTVariable<'a> {
 
 impl<'a> ASTVariable<'a> {
     /// Creates a [ASTVariableKind::Binding] variable with ``infer_type: true``.
-    pub fn new_binding(identifier: ASTExpr<'a>) -> Self {
+    pub fn new_binding(identifier: &'a str, range: Range) -> Self {
         Self {
-            identifier,
+            identifier: ASTExpr {
+                range,
+                kind: ASTExprKind::Identifier(identifier),
+            },
             infer_type: true,
             typehint: None,
             value: None,
@@ -78,8 +83,15 @@ pub struct ASTFunction<'a> {
 }
 
 /// An expression.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ASTExpr<'a> {
+    pub kind: ASTExprKind<'a>,
+    pub range: Range,
+}
+
+/// An expression's kind.
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
-pub enum ASTExpr<'a> {
+pub enum ASTExprKind<'a> {
     /// A parenthesized expression.
     Group(Vec<ASTExpr<'a>>),
     /// An identifier literal.
@@ -223,8 +235,15 @@ pub enum ASTBinaryOp<'a> {
 }
 
 /// A statement.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ASTStatement<'a> {
+    pub kind: ASTStatementKind<'a>,
+    pub range: Range,
+}
+
+/// A statement kind.
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
-pub enum ASTStatement<'a> {
+pub enum ASTStatementKind<'a> {
     /// An annotation in form of a statement.
     Annotation(ASTAnnotation<'a>),
     /// An ``assert`` statement.

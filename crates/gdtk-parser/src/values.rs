@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTExpr, ASTFunction, DictValue};
+use gdtk_ast::{ASTExprKind, ASTFunction, DictValue};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
@@ -8,7 +8,9 @@ use crate::{
     Parser,
 };
 
-pub fn parse_array<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ASTExpr<'a>> {
+pub fn parse_array<'a>(
+    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+) -> Vec<ASTExprKind<'a>> {
     parser.next();
 
     let value = parser.with_parens_ctx(true, |parser| {
@@ -25,7 +27,9 @@ pub fn parse_array<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> 
     value
 }
 
-pub fn parse_dictionary<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<DictValue<'a>> {
+pub fn parse_dictionary<'a>(
+    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+) -> Vec<DictValue<'a>> {
     expect!(parser, TokenKind::OpeningBrace);
 
     let value = match parser.peek().expect("unexpected EOF").kind {
@@ -43,8 +47,8 @@ pub fn parse_dictionary<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>
 fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<DictValue<'a>> {
     fn parse_lua_key_value<'a>(
         parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
-    ) -> (ASTExpr<'a>, ASTExpr<'a>) {
-        let key = ASTExpr::Identifier(expect!(parser, TokenKind::Identifier(s), s));
+    ) -> (ASTExprKind<'a>, ASTExprKind<'a>) {
+        let key = ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s));
         expect!(parser, TokenKind::Assignment);
         let value = parse_expr(parser);
 
@@ -62,10 +66,12 @@ fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> V
 }
 
 /// Parse a python-style dictionary body.
-fn parse_python_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<DictValue<'a>> {
+fn parse_python_dict<'a>(
+    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+) -> Vec<DictValue<'a>> {
     fn parse_python_key_value<'a>(
         parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
-    ) -> (ASTExpr<'a>, ASTExpr<'a>) {
+    ) -> (ASTExprKind<'a>, ASTExprKind<'a>) {
         let key = parse_expr(parser);
         expect!(parser, TokenKind::Colon);
         let value = parse_expr(parser);
@@ -108,7 +114,11 @@ mod tests {
     fn test_parse_array() {
         let mut parser = create_parser("[1, 2, 3]");
         let result = parse_array(&mut parser);
-        let expected = vec![ASTExpr::Number(1), ASTExpr::Number(2), ASTExpr::Number(3)];
+        let expected = vec![
+            ASTExprKind::Number(1),
+            ASTExprKind::Number(2),
+            ASTExprKind::Number(3),
+        ];
 
         assert_eq!(result, expected);
     }
@@ -127,8 +137,8 @@ mod tests {
         let mut parser = create_parser("{'a': 1, 'b': 2}");
         let result = parse_dictionary(&mut parser);
         let expected = vec![
-            (ASTExpr::String("a"), ASTExpr::Number(1)),
-            (ASTExpr::String("b"), ASTExpr::Number(2)),
+            (ASTExprKind::String("a"), ASTExprKind::Number(1)),
+            (ASTExprKind::String("b"), ASTExprKind::Number(2)),
         ];
 
         assert_eq!(result, expected);
@@ -139,8 +149,8 @@ mod tests {
         let mut parser = create_parser("{a = 1, b = 2}");
         let result = parse_dictionary(&mut parser);
         let expected = vec![
-            (ASTExpr::Identifier("a"), ASTExpr::Number(1)),
-            (ASTExpr::Identifier("b"), ASTExpr::Number(2)),
+            (ASTExprKind::Identifier("a"), ASTExprKind::Number(1)),
+            (ASTExprKind::Identifier("b"), ASTExprKind::Number(2)),
         ];
 
         assert_eq!(result, expected);

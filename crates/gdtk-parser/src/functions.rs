@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTFunction, ASTVariableKind};
+use gdtk_ast::{ASTExprKind, ASTFunction, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
@@ -21,7 +21,11 @@ pub fn parse_func<'a>(
         .peek()
         .is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_)))
     {
-        identifier = Some(expect!(parser, TokenKind::Identifier(s), s));
+        identifier = Some(Box::new(ASTExprKind::Identifier(expect!(
+            parser,
+            TokenKind::Identifier(s),
+            s
+        ))));
     }
 
     expect!(parser, TokenKind::OpeningParenthesis);
@@ -68,7 +72,7 @@ mod tests {
     fn test_parse_func_simple() {
         let mut parser = create_parser("func foo(): pass");
         let expected = ASTFunction {
-            identifier: Some("foo"),
+            identifier: Some(Box::new(ASTExprKind::Identifier("foo"))),
             parameters: vec![],
             return_type: None,
             body: vec![ASTStatement::Pass],
@@ -82,9 +86,9 @@ mod tests {
     fn test_parse_func_simple_with_return_type() {
         let mut parser = create_parser("func foo() -> int: pass");
         let expected = ASTFunction {
-            identifier: Some("foo"),
+            identifier: Some(Box::new(ASTExprKind::Identifier("foo"))),
             parameters: vec![],
-            return_type: Some(Box::new(ASTExpr::Identifier("int"))),
+            return_type: Some(Box::new(ASTExprKind::Identifier("int"))),
             body: vec![ASTStatement::Pass],
         };
         let result = parse_func(&mut parser, false);
@@ -112,7 +116,7 @@ mod tests {
         let expected = ASTFunction {
             identifier: None,
             parameters: vec![],
-            return_type: Some(Box::new(ASTExpr::Identifier("int"))),
+            return_type: Some(Box::new(ASTExprKind::Identifier("int"))),
             body: vec![ASTStatement::Pass],
         };
         let result = parse_func(&mut parser, false);
@@ -124,35 +128,35 @@ mod tests {
     fn test_parse_func_with_parameters() {
         let mut parser = create_parser("func foo(a, b: int, c := 0, d: int = 0): pass");
         let expected = ASTFunction {
-            identifier: Some("foo"),
+            identifier: Some(Box::new(ASTExprKind::Identifier("foo"))),
             parameters: vec![
                 ASTVariable {
-                    identifier: "a",
+                    identifier: ASTExprKind::Identifier("a"),
                     kind: ASTVariableKind::Binding,
                     infer_type: false,
                     typehint: None,
                     value: None,
                 },
                 ASTVariable {
-                    identifier: "b",
+                    identifier: ASTExprKind::Identifier("b"),
                     kind: ASTVariableKind::Binding,
                     infer_type: false,
-                    typehint: Some(ASTExpr::Identifier("int")),
+                    typehint: Some(ASTExprKind::Identifier("int")),
                     value: None,
                 },
                 ASTVariable {
-                    identifier: "c",
+                    identifier: ASTExprKind::Identifier("c"),
                     kind: ASTVariableKind::Binding,
                     infer_type: true,
                     typehint: None,
-                    value: Some(ASTExpr::Number(0)),
+                    value: Some(ASTExprKind::Number(0)),
                 },
                 ASTVariable {
-                    identifier: "d",
+                    identifier: ASTExprKind::Identifier("d"),
                     kind: ASTVariableKind::Binding,
                     infer_type: false,
-                    typehint: Some(ASTExpr::Identifier("int")),
-                    value: Some(ASTExpr::Number(0)),
+                    typehint: Some(ASTExprKind::Identifier("int")),
+                    value: Some(ASTExprKind::Number(0)),
                 },
             ],
             return_type: None,

@@ -90,13 +90,15 @@ fn parse_match_binding_pattern<'a>(
 ) -> ASTMatchPattern<'a> {
     // Apparently, even in multiline patterns, binding subpatterns do not allow newlines between
     // "var" and the identifier.
-    let identifier = parser.with_parens_ctx(false, |parser| {
-        expect!(parser, TokenKind::Var);
+    let (identifier, range) = parser.track(|parser| {
+        parser.with_parens_ctx(false, |parser| {
+            expect!(parser, TokenKind::Var);
 
-        expect!(parser, TokenKind::Identifier(s), s)
+            expect!(parser, TokenKind::Identifier(s), s)
+        })
     });
 
-    ASTMatchPattern::Binding(ASTVariable::new_binding(identifier))
+    ASTMatchPattern::Binding(ASTVariable::new_binding(identifier, range))
 }
 
 fn parse_match_array_pattern<'a>(
@@ -164,7 +166,7 @@ mod tests {
     fn test_value_pattern() {
         let mut parser = create_parser("literal");
         let result = parse_match_pattern(&mut parser);
-        let expected = ASTMatchPattern::Value(ASTExpr::Identifier("literal"));
+        let expected = ASTMatchPattern::Value(ASTExprKind::Identifier("literal"));
 
         assert_eq!(result, expected);
     }
@@ -173,7 +175,7 @@ mod tests {
     fn test_binding_pattern() {
         let mut parser = create_parser("var x");
         let result = parse_match_pattern(&mut parser);
-        let expected = ASTMatchPattern::Binding(ASTVariable::new_binding("x"));
+        let expected = ASTMatchPattern::Binding(ASTVariable::new_binding("x", 4..5));
 
         assert_eq!(result, expected);
     }
@@ -182,8 +184,9 @@ mod tests {
     fn test_array_pattern() {
         let mut parser = create_parser("[literal]");
         let result = parse_match_pattern(&mut parser);
-        let expected =
-            ASTMatchPattern::Array(vec![ASTMatchPattern::Value(ASTExpr::Identifier("literal"))]);
+        let expected = ASTMatchPattern::Array(vec![ASTMatchPattern::Value(
+            ASTExprKind::Identifier("literal"),
+        )]);
 
         assert_eq!(result, expected);
     }
@@ -194,12 +197,12 @@ mod tests {
         let result = parse_match_pattern(&mut parser);
         let expected = ASTMatchPattern::Dictionary(vec![
             (
-                ASTExpr::Identifier("x"),
+                ASTExprKind::Identifier("x"),
                 Some(Box::new(ASTMatchPattern::Binding(
-                    ASTVariable::new_binding("y"),
+                    ASTVariable::new_binding("y", 9..10),
                 ))),
             ),
-            (ASTExpr::Identifier("z"), None),
+            (ASTExprKind::Identifier("z"), None),
         ]);
 
         assert_eq!(result, expected);
@@ -210,8 +213,8 @@ mod tests {
         let mut parser = create_parser("literal1, literal2");
         let result = parse_match_pattern(&mut parser);
         let expected = ASTMatchPattern::Alternative(vec![
-            ASTMatchPattern::Value(ASTExpr::Identifier("literal1")),
-            ASTMatchPattern::Value(ASTExpr::Identifier("literal2")),
+            ASTMatchPattern::Value(ASTExprKind::Identifier("literal1")),
+            ASTMatchPattern::Value(ASTExprKind::Identifier("literal2")),
         ]);
 
         assert_eq!(result, expected);
@@ -222,7 +225,7 @@ mod tests {
         let mut parser = create_parser("literal:\n    pass");
         let result = parse_match_arm(&mut parser);
         let expected = ASTMatchArm {
-            pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
+            pattern: ASTMatchPattern::Value(ASTExprKind::Identifier("literal")),
             guard: None,
             block: vec![ASTStatement::Pass],
         };
@@ -235,8 +238,8 @@ mod tests {
         let mut parser = create_parser("literal when expr:\n    pass");
         let result = parse_match_arm(&mut parser);
         let expected = ASTMatchArm {
-            pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
-            guard: Some(ASTExpr::Identifier("expr")),
+            pattern: ASTMatchPattern::Value(ASTExprKind::Identifier("literal")),
+            guard: Some(ASTExprKind::Identifier("expr")),
             block: vec![ASTStatement::Pass],
         };
 
@@ -248,12 +251,12 @@ mod tests {
         let mut parser = create_parser("literal:\n    1\n    2\n    3");
         let result = parse_match_arm(&mut parser);
         let expected = ASTMatchArm {
-            pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
+            pattern: ASTMatchPattern::Value(ASTExprKind::Identifier("literal")),
             guard: None,
             block: vec![
-                ASTStatement::Expr(ASTExpr::Number(1)),
-                ASTStatement::Expr(ASTExpr::Number(2)),
-                ASTStatement::Expr(ASTExpr::Number(3)),
+                ASTStatement::Expr(ASTExprKind::Number(1)),
+                ASTStatement::Expr(ASTExprKind::Number(2)),
+                ASTStatement::Expr(ASTExprKind::Number(3)),
             ],
         };
 
@@ -265,12 +268,12 @@ mod tests {
         let mut parser = create_parser("literal when expr:\n    1\n    2\n    3");
         let result = parse_match_arm(&mut parser);
         let expected = ASTMatchArm {
-            pattern: ASTMatchPattern::Value(ASTExpr::Identifier("literal")),
-            guard: Some(ASTExpr::Identifier("expr")),
+            pattern: ASTMatchPattern::Value(ASTExprKind::Identifier("literal")),
+            guard: Some(ASTExprKind::Identifier("expr")),
             block: vec![
-                ASTStatement::Expr(ASTExpr::Number(1)),
-                ASTStatement::Expr(ASTExpr::Number(2)),
-                ASTStatement::Expr(ASTExpr::Number(3)),
+                ASTStatement::Expr(ASTExprKind::Number(1)),
+                ASTStatement::Expr(ASTExprKind::Number(2)),
+                ASTStatement::Expr(ASTExprKind::Number(3)),
             ],
         };
 
@@ -282,9 +285,9 @@ mod tests {
         let mut parser = create_parser("match expr:\n    _: pass");
         let result = parse_match(&mut parser);
         let expected = ASTMatchStmt {
-            expr: ASTExpr::Identifier("expr"),
+            expr: ASTExprKind::Identifier("expr"),
             arms: vec![ASTMatchArm {
-                pattern: ASTMatchPattern::Value(ASTExpr::Identifier("_")),
+                pattern: ASTMatchPattern::Value(ASTExprKind::Identifier("_")),
                 guard: None,
                 block: vec![ASTStatement::Pass],
             }],
@@ -299,12 +302,12 @@ mod tests {
         let result = parse_match_pattern(&mut parser);
         let expected = ASTMatchPattern::Alternative(vec![
             ASTMatchPattern::Dictionary(vec![(
-                ASTExpr::Identifier("x"),
+                ASTExprKind::Identifier("x"),
                 Some(Box::new(ASTMatchPattern::Binding(
-                    ASTVariable::new_binding("y"),
+                    ASTVariable::new_binding("y", 10..11),
                 ))),
             )]),
-            ASTMatchPattern::Array(vec![ASTMatchPattern::Value(ASTExpr::Identifier("z"))]),
+            ASTMatchPattern::Array(vec![ASTMatchPattern::Value(ASTExprKind::Identifier("z"))]),
         ]);
 
         assert_eq!(result, expected);

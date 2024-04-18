@@ -1,5 +1,7 @@
 use crate::ast;
 
+type Range = std::ops::Range<usize>;
+
 pub trait Visitor {
     fn visit_file(&mut self, file: &ast::ASTFile) {
         self.visit_block(&file.body);
@@ -14,31 +16,31 @@ pub trait Visitor {
     #[rustfmt::skip]
     fn visit_statement(&mut self, stmt: &ast::ASTStatement) {
         match stmt {
-            ast::ASTStatement::Annotation(ann) => self.visit_annotation(ann),
-            ast::ASTStatement::Assert(expr) => self.visit_assert_statement(expr),
-            ast::ASTStatement::Break => self.visit_break_statement(),
-            ast::ASTStatement::Breakpoint => self.visit_breakpoint_statement(),
-            ast::ASTStatement::Class(class) => self.visit_class(class),
-            ast::ASTStatement::ClassName(identifier) => self.visit_class_name_statement(identifier),
-            ast::ASTStatement::Continue => self.visit_continue_statement(),
-            ast::ASTStatement::If(stmt) => self.visit_if_statement(stmt),
-            ast::ASTStatement::Elif(stmt) => self.visit_elif_statement(stmt),
-            ast::ASTStatement::Else(stmt) => self.visit_else_statement(stmt),
-            ast::ASTStatement::Enum(stmt) => self.visit_enum_statement(stmt),
-            ast::ASTStatement::Extends(identifier) => self.visit_extends_statement(identifier),
-            ast::ASTStatement::For(stmt) => self.visit_for_statement(stmt),
-            ast::ASTStatement::Func(func) => self.visit_func(func),
-            ast::ASTStatement::Pass => self.visit_pass_statement(),
-            ast::ASTStatement::Return(expr) => self.visit_return_statement(expr.as_ref()),
-            ast::ASTStatement::Signal(stmt) => self.visit_signal_statement(stmt),
-            ast::ASTStatement::Match(stmt) => self.visit_match_statement(stmt),
-            ast::ASTStatement::While(stmt) => self.visit_while_statement(stmt),
-            ast::ASTStatement::Variable(variable) => self.visit_variable(variable),
-            ast::ASTStatement::Expr(expr) => self.visit_expr(expr),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Annotation(ann) } => self.visit_annotation(ann, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Assert(expr) } => self.visit_assert_statement(expr, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Break } => self.visit_break_statement(range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Breakpoint } => self.visit_breakpoint_statement(range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Class(class) } => self.visit_class(class, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::ClassName(identifier) } => self.visit_class_name_statement(identifier, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Continue } => self.visit_continue_statement(range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::If(stmt) } => self.visit_if_statement(stmt, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Elif(stmt) } => self.visit_elif_statement(stmt, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Else(stmt) } => self.visit_else_statement(stmt, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Enum(stmt) } => self.visit_enum_statement(stmt, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Extends(identifier) } => self.visit_extends_statement(identifier, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::For(stmt) } => self.visit_for_statement(stmt, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Func(func) } => self.visit_func(func, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Pass } => self.visit_pass_statement(range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Return(expr) } => self.visit_return_statement(expr.as_ref(), range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Signal(stmt) } => self.visit_signal_statement(stmt, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Match(stmt) } => self.visit_match_statement(stmt, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::While(stmt) } => self.visit_while_statement(stmt, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Variable(variable) } => self.visit_variable(variable, range),
+            ast::ASTStatement { range, kind: ast::ASTStatementKind::Expr(expr) } => self.visit_expr(expr, range),
         }
     }
 
-    fn visit_annotation(&mut self, ann: &ast::ASTAnnotation) {
+    fn visit_annotation(&mut self, ann: &ast::ASTAnnotation, range: Range) {
         self.visit_expr(&ann.identifier);
 
         if let Some(args) = &ann.arguments {
@@ -46,14 +48,14 @@ pub trait Visitor {
         }
     }
 
-    fn visit_assert_statement(&mut self, expr: &ast::ASTExpr) {
+    fn visit_assert_statement(&mut self, expr: &ast::ASTExpr, range: Range) {
         self.visit_expr(expr);
     }
 
-    fn visit_break_statement(&mut self) {}
-    fn visit_breakpoint_statement(&mut self) {}
+    fn visit_break_statement(&mut self, range: Range) {}
+    fn visit_breakpoint_statement(&mut self, range: Range) {}
 
-    fn visit_class(&mut self, class: &ast::ASTClass) {
+    fn visit_class(&mut self, class: &ast::ASTClass, range: Range) {
         self.visit_expr(&class.identifier);
 
         if let Some(extends) = &class.extends {
@@ -63,27 +65,27 @@ pub trait Visitor {
         self.visit_block(class.body.as_slice());
     }
 
-    fn visit_class_name_statement(&mut self, identifier: &ast::ASTExpr) {
+    fn visit_class_name_statement(&mut self, identifier: &ast::ASTExpr, range: Range) {
         self.visit_expr(identifier);
     }
 
-    fn visit_continue_statement(&mut self) {}
+    fn visit_continue_statement(&mut self, range: Range) {}
 
-    fn visit_if_statement(&mut self, stmt: &ast::ASTIfStmt) {
+    fn visit_if_statement(&mut self, stmt: &ast::ASTIfStmt, range: Range) {
         self.visit_expr(&stmt.expr);
         self.visit_block(stmt.block.as_slice());
     }
 
-    fn visit_elif_statement(&mut self, stmt: &ast::ASTElifStmt) {
+    fn visit_elif_statement(&mut self, stmt: &ast::ASTElifStmt, range: Range) {
         self.visit_expr(&stmt.expr);
         self.visit_block(stmt.block.as_slice());
     }
 
-    fn visit_else_statement(&mut self, stmt: &ast::ASTElseStmt) {
+    fn visit_else_statement(&mut self, stmt: &ast::ASTElseStmt, range: Range) {
         self.visit_block(stmt.block.as_slice());
     }
 
-    fn visit_enum_statement(&mut self, enum_: &ast::ASTEnum) {
+    fn visit_enum_statement(&mut self, enum_: &ast::ASTEnum, range: Range) {
         if let Some(identfier) = &enum_.identifier {
             self.visit_expr(identfier)
         }
@@ -91,13 +93,13 @@ pub trait Visitor {
         self.visit_enum_variants(enum_.variants.as_slice());
     }
 
-    fn visit_enum_variants(&mut self, variants: &[ast::ASTEnumVariant]) {
+    fn visit_enum_variants(&mut self, variants: &[ast::ASTEnumVariant], range: Range) {
         for variant in variants {
             self.visit_enum_variant(variant);
         }
     }
 
-    fn visit_enum_variant(&mut self, variant: &ast::ASTEnumVariant) {
+    fn visit_enum_variant(&mut self, variant: &ast::ASTEnumVariant, range: Range) {
         self.visit_expr(&variant.identifier);
 
         if let Some(expr) = &variant.value {
@@ -105,17 +107,17 @@ pub trait Visitor {
         }
     }
 
-    fn visit_extends_statement(&mut self, identifier: &ast::ASTExpr) {
+    fn visit_extends_statement(&mut self, identifier: &ast::ASTExpr, range: Range) {
         self.visit_expr(identifier)
     }
 
-    fn visit_for_statement(&mut self, stmt: &ast::ASTForStmt) {
+    fn visit_for_statement(&mut self, stmt: &ast::ASTForStmt, range: Range) {
         self.visit_variable(&stmt.binding);
         self.visit_expr(&stmt.container);
         self.visit_block(stmt.block.as_slice());
     }
 
-    fn visit_func(&mut self, func: &ast::ASTFunction) {
+    fn visit_func(&mut self, func: &ast::ASTFunction, range: Range) {
         if let Some(identifier) = &func.identifier {
             self.visit_expr(identifier)
         }
@@ -129,21 +131,21 @@ pub trait Visitor {
         self.visit_block(func.body.as_slice());
     }
 
-    fn visit_parameters(&mut self, parameters: &[ast::ASTVariable]) {
+    fn visit_parameters(&mut self, parameters: &[ast::ASTVariable], range: Range) {
         for param in parameters {
             self.visit_variable(param);
         }
     }
 
-    fn visit_pass_statement(&mut self) {}
+    fn visit_pass_statement(&mut self, range: Range) {}
 
-    fn visit_return_statement(&mut self, expr: Option<&ast::ASTExpr>) {
+    fn visit_return_statement(&mut self, expr: Option<&ast::ASTExpr>, range: Range) {
         if let Some(expr) = expr {
             self.visit_expr(expr);
         }
     }
 
-    fn visit_signal_statement(&mut self, signal: &ast::ASTSignal) {
+    fn visit_signal_statement(&mut self, signal: &ast::ASTSignal, range: Range) {
         self.visit_expr(&signal.identifier);
 
         if let Some(params) = &signal.parameters {
@@ -151,18 +153,18 @@ pub trait Visitor {
         }
     }
 
-    fn visit_match_statement(&mut self, stmt: &ast::ASTMatchStmt) {
+    fn visit_match_statement(&mut self, stmt: &ast::ASTMatchStmt, range: Range) {
         self.visit_expr(&stmt.expr);
         self.visit_match_arms(stmt.arms.as_slice());
     }
 
-    fn visit_match_arms(&mut self, arms: &[ast::ASTMatchArm]) {
+    fn visit_match_arms(&mut self, arms: &[ast::ASTMatchArm], range: Range) {
         for arm in arms {
             self.visit_match_arm(arm);
         }
     }
 
-    fn visit_match_arm(&mut self, arm: &ast::ASTMatchArm) {
+    fn visit_match_arm(&mut self, arm: &ast::ASTMatchArm, range: Range) {
         self.visit_match_pattern(&arm.pattern);
 
         if let Some(guard) = &arm.guard {
@@ -172,14 +174,14 @@ pub trait Visitor {
         self.visit_block(arm.block.as_slice());
     }
 
-    fn visit_match_patterns(&mut self, patterns: &[ast::ASTMatchPattern]) {
+    fn visit_match_patterns(&mut self, patterns: &[ast::ASTMatchPattern], range: Range) {
         for pattern in patterns {
             self.visit_match_pattern(pattern);
         }
     }
 
     #[rustfmt::skip]
-    fn visit_match_pattern(&mut self, pattern: &ast::ASTMatchPattern) {
+    fn visit_match_pattern(&mut self, pattern: &ast::ASTMatchPattern, range: Range) {
         match pattern {
             ast::ASTMatchPattern::Value(expr) => self.visit_expr(expr),
             ast::ASTMatchPattern::Binding(binding) => self.visit_match_binding_pattern(binding),
@@ -190,19 +192,19 @@ pub trait Visitor {
         }
     }
 
-    fn visit_match_expr_pattern(&mut self, expr: &ast::ASTExpr) {
+    fn visit_match_expr_pattern(&mut self, expr: &ast::ASTExpr, range: Range) {
         self.visit_expr(expr);
     }
 
-    fn visit_match_binding_pattern(&mut self, binding: &ast::ASTVariable) {
+    fn visit_match_binding_pattern(&mut self, binding: &ast::ASTVariable, range: Range) {
         self.visit_variable(binding);
     }
 
-    fn visit_match_array_pattern(&mut self, subpatterns: &[ast::ASTMatchPattern]) {
+    fn visit_match_array_pattern(&mut self, subpatterns: &[ast::ASTMatchPattern], range: Range) {
         self.visit_match_patterns(subpatterns);
     }
 
-    fn visit_match_dictionary_pattern(&mut self, subpatterns: &[ast::DictPattern]) {
+    fn visit_match_dictionary_pattern(&mut self, subpatterns: &[ast::DictPattern], range: Range) {
         for (key, value) in subpatterns {
             self.visit_expr(key);
 
@@ -212,23 +214,27 @@ pub trait Visitor {
         }
     }
 
-    fn visit_match_alternative_pattern(&mut self, subpatterns: &[ast::ASTMatchPattern]) {
+    fn visit_match_alternative_pattern(
+        &mut self,
+        subpatterns: &[ast::ASTMatchPattern],
+        range: Range,
+    ) {
         self.visit_match_patterns(subpatterns);
     }
 
-    fn visit_match_ignore_pattern(&mut self) {}
+    fn visit_match_ignore_pattern(&mut self, range: Range) {}
 
-    fn visit_match_guard(&mut self, expr: &ast::ASTExpr) {
+    fn visit_match_guard(&mut self, expr: &ast::ASTExpr, range: Range) {
         self.visit_expr(expr);
     }
 
-    fn visit_while_statement(&mut self, stmt: &ast::ASTWhileStmt) {
+    fn visit_while_statement(&mut self, stmt: &ast::ASTWhileStmt, range: Range) {
         self.visit_expr(&stmt.expr);
         self.visit_block(stmt.block.as_slice());
     }
 
     #[rustfmt::skip]
-    fn visit_variable(&mut self, variable: &ast::ASTVariable) {
+    fn visit_variable(&mut self, variable: &ast::ASTVariable, range: Range) {
         match variable {
             ast::ASTVariable { kind: ast::ASTVariableKind::Regular, .. } => self.visit_regular_variable(variable),
             ast::ASTVariable { kind: ast::ASTVariableKind::Constant, .. } => self.visit_const_variable(variable),
@@ -237,23 +243,23 @@ pub trait Visitor {
         }
     }
 
-    fn visit_regular_variable(&mut self, variable: &ast::ASTVariable) {
+    fn visit_regular_variable(&mut self, variable: &ast::ASTVariable, range: Range) {
         self.visit_any_variable(variable);
     }
 
-    fn visit_const_variable(&mut self, variable: &ast::ASTVariable) {
+    fn visit_const_variable(&mut self, variable: &ast::ASTVariable, range: Range) {
         self.visit_any_variable(variable);
     }
 
-    fn visit_static_variable(&mut self, variable: &ast::ASTVariable) {
+    fn visit_static_variable(&mut self, variable: &ast::ASTVariable, range: Range) {
         self.visit_any_variable(variable);
     }
 
-    fn visit_binding_variable(&mut self, variable: &ast::ASTVariable) {
+    fn visit_binding_variable(&mut self, variable: &ast::ASTVariable, range: Range) {
         self.visit_any_variable(variable);
     }
 
-    fn visit_any_variable(&mut self, variable: &ast::ASTVariable) {
+    fn visit_any_variable(&mut self, variable: &ast::ASTVariable, range: Range) {
         self.visit_expr(&variable.identifier);
 
         if let Some(expr) = &variable.typehint {
@@ -265,7 +271,7 @@ pub trait Visitor {
         }
     }
 
-    fn visit_exprs(&mut self, exprs: &[ast::ASTExpr]) {
+    fn visit_exprs(&mut self, exprs: &[ast::ASTExpr], range: Range) {
         for expr in exprs {
             self.visit_expr(expr);
         }
@@ -274,65 +280,71 @@ pub trait Visitor {
     #[rustfmt::skip]
     fn visit_expr(&mut self, expr: &ast::ASTExpr) {
         match expr {
-            ast::ASTExpr::Group(exprs) => self.visit_group_expr(exprs),
-            ast::ASTExpr::Identifier(identifier) => self.visit_identifier_expr(identifier),
-            ast::ASTExpr::Number(number) => self.visit_number_expr(*number),
-            ast::ASTExpr::Float(float) => self.visit_float_expr(*float),
-            ast::ASTExpr::String(string) => self.visit_string_expr(string),
-            ast::ASTExpr::StringName(string) => self.visit_string_name_expr(string),
-            ast::ASTExpr::Node(path) => self.visit_node_expr(path),
-            ast::ASTExpr::UniqueNode(path) => self.visit_unique_node_expr(path),
-            ast::ASTExpr::NodePath(path) => self.visit_node_path_expr(path),
-            ast::ASTExpr::Boolean(boolean) => self.visit_boolean_expr(*boolean),
-            ast::ASTExpr::Null => self.visit_null_expr(),
-            ast::ASTExpr::Array(exprs) => self.visit_array_expr(exprs),
-            ast::ASTExpr::Dictionary(pairs) => self.visit_dictionary_expr(pairs.as_slice()),
-            ast::ASTExpr::Lambda(func) => self.visit_lambda_expr(func),
-            ast::ASTExpr::PrefixExpr(op, expr) => self.visit_prefix_expr(op, expr),
-            ast::ASTExpr::PostfixExpr(expr, op) => self.visit_postfix_expr(expr, op),
-            ast::ASTExpr::BinaryExpr(lhs, op, rhs) => self.visit_binary_expr(lhs, op, rhs),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Group(exprs) } => self.visit_group_expr(exprs),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Identifier(identifier) } => self.visit_identifier_expr(identifier),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Number(number) } => self.visit_number_expr(*number),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Float(float) } => self.visit_float_expr(*float),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::String(string) } => self.visit_string_expr(string),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::StringName(string) } => self.visit_string_name_expr(string),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Node(path) } => self.visit_node_expr(path),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::UniqueNode(path) } => self.visit_unique_node_expr(path),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::NodePath(path) } => self.visit_node_path_expr(path),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Boolean(boolean) } => self.visit_boolean_expr(*boolean),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Null } => self.visit_null_expr(),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Array(exprs) } => self.visit_array_expr(exprs),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Dictionary(pairs) } => self.visit_dictionary_expr(pairs.as_slice()),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::Lambda(func) } => self.visit_lambda_expr(func),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::PrefixExpr(op, expr) } => self.visit_prefix_expr(op, expr),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::PostfixExpr(expr, op) } => self.visit_postfix_expr(expr, op),
+            ast::ASTExpr { range, kind: ast::ASTExprKind::BinaryExpr(lhs, op, rhs) } => self.visit_binary_expr(lhs, op, rhs),
         }
     }
 
-    fn visit_group_expr(&mut self, exprs: &[ast::ASTExpr]) {
+    fn visit_group_expr(&mut self, exprs: &[ast::ASTExpr], range: Range) {
         self.visit_exprs(exprs);
     }
 
-    fn visit_identifier_expr(&mut self, _identifier: &str) {}
-    fn visit_number_expr(&mut self, _number: u64) {}
-    fn visit_float_expr(&mut self, _float: f64) {}
-    fn visit_string_expr(&mut self, _string: &str) {}
-    fn visit_string_name_expr(&mut self, _string: &str) {}
-    fn visit_node_expr(&mut self, _path: &str) {}
-    fn visit_unique_node_expr(&mut self, _path: &str) {}
-    fn visit_node_path_expr(&mut self, _path: &str) {}
-    fn visit_boolean_expr(&mut self, _boolean: bool) {}
-    fn visit_null_expr(&mut self) {}
+    fn visit_identifier_expr(&mut self, _identifier: &str, range: Range) {}
+    fn visit_number_expr(&mut self, _number: u64, range: Range) {}
+    fn visit_float_expr(&mut self, _float: f64, range: Range) {}
+    fn visit_string_expr(&mut self, _string: &str, range: Range) {}
+    fn visit_string_name_expr(&mut self, _string: &str, range: Range) {}
+    fn visit_node_expr(&mut self, _path: &str, range: Range) {}
+    fn visit_unique_node_expr(&mut self, _path: &str, range: Range) {}
+    fn visit_node_path_expr(&mut self, _path: &str, range: Range) {}
+    fn visit_boolean_expr(&mut self, _boolean: bool, range: Range) {}
+    fn visit_null_expr(&mut self, range: Range) {}
 
-    fn visit_array_expr(&mut self, exprs: &[ast::ASTExpr]) {
+    fn visit_array_expr(&mut self, exprs: &[ast::ASTExpr], range: Range) {
         self.visit_exprs(exprs);
     }
 
-    fn visit_dictionary_expr(&mut self, pairs: &[ast::DictValue]) {
+    fn visit_dictionary_expr(&mut self, pairs: &[ast::DictValue], range: Range) {
         for (key, value) in pairs {
             self.visit_expr(key);
             self.visit_expr(value)
         }
     }
 
-    fn visit_lambda_expr(&mut self, func: &ast::ASTFunction) {
+    fn visit_lambda_expr(&mut self, func: &ast::ASTFunction, range: Range) {
         self.visit_func(func);
     }
 
-    fn visit_prefix_expr(&mut self, _op: &ast::ASTPrefixOp, expr: &ast::ASTExpr) {
+    fn visit_prefix_expr(&mut self, _op: &ast::ASTPrefixOp, expr: &ast::ASTExpr, range: Range) {
         self.visit_expr(expr);
     }
 
-    fn visit_postfix_expr(&mut self, expr: &ast::ASTExpr, _op: &ast::ASTPostfixOp) {
+    fn visit_postfix_expr(&mut self, expr: &ast::ASTExpr, _op: &ast::ASTPostfixOp, range: Range) {
         self.visit_expr(expr);
     }
 
-    fn visit_binary_expr(&mut self, lhs: &ast::ASTExpr, _op: &ast::ASTBinaryOp, rhs: &ast::ASTExpr) {
+    fn visit_binary_expr(
+        &mut self,
+        lhs: &ast::ASTExpr,
+        _op: &ast::ASTBinaryOp,
+        rhs: &ast::ASTExpr,
+        range: Range,
+    ) {
         self.visit_expr(lhs);
         self.visit_expr(rhs);
     }

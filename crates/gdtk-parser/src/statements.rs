@@ -1,5 +1,5 @@
 use gdtk_ast::{
-    ASTElifStmt, ASTElseStmt, ASTExpr, ASTForStmt, ASTIfStmt, ASTStatement, ASTVariable,
+    ASTElifStmt, ASTElseStmt, ASTExprKind, ASTForStmt, ASTIfStmt, ASTStatement, ASTVariable,
     ASTVariableKind, ASTWhileStmt, CodeBlock,
 };
 use gdtk_lexer::{Token, TokenKind};
@@ -29,7 +29,7 @@ pub fn parse_for_stmt<'a>(
     parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::For);
-    let identifier = expect!(parser, TokenKind::Identifier(s), s);
+    let identifier = ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s));
 
     let typehint = if parser.peek().is_some_and(|t| t.kind.is_colon()) {
         parser.next();
@@ -61,7 +61,11 @@ pub fn parse_classname_stmt<'a>(
     parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::ClassName);
-    expect!(parser, TokenKind::Identifier(i), ASTStatement::ClassName(i))
+    expect!(
+        parser,
+        TokenKind::Identifier(i),
+        ASTStatement::ClassName(ASTExprKind::Identifier(i))
+    )
 }
 
 /// Parses an `extends` statement.
@@ -69,7 +73,11 @@ pub fn parse_extends_stmt<'a>(
     parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::Extends);
-    expect!(parser, TokenKind::Identifier(i), ASTStatement::Extends(i))
+    expect!(
+        parser,
+        TokenKind::Identifier(i),
+        ASTStatement::Extends(ASTExprKind::Identifier(i))
+    )
 }
 
 /// Parses a `var` statement.
@@ -145,7 +153,7 @@ pub fn parse_while_stmt<'a>(
 /// Parse a
 fn parse_iflike<'a>(
     parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
-) -> (ASTExpr<'a>, CodeBlock<'a>) {
+) -> (ASTExprKind<'a>, CodeBlock<'a>) {
     let cond = parse_expr(parser);
     expect!(parser, TokenKind::Colon);
     let block = parse_block(parser, false);
@@ -169,10 +177,10 @@ mod tests {
         let mut parser = create_parser("var a = 1");
         let expected = ASTStatement::Variable(ASTVariable {
             kind: ASTVariableKind::Regular,
-            identifier: "a",
+            identifier: ASTExprKind::Identifier("a"),
             infer_type: false,
             typehint: None,
-            value: Some(ASTExpr::Number(1)),
+            value: Some(ASTExprKind::Number(1)),
         });
         let result = parse_var_stmt(&mut parser);
 
@@ -184,10 +192,10 @@ mod tests {
         let mut parser = create_parser("const a = 1");
         let expected = ASTStatement::Variable(ASTVariable {
             kind: ASTVariableKind::Constant,
-            identifier: "a",
+            identifier: ASTExprKind::Identifier("a"),
             infer_type: false,
             typehint: None,
-            value: Some(ASTExpr::Number(1)),
+            value: Some(ASTExprKind::Number(1)),
         });
         let result = parse_const_stmt(&mut parser);
 
@@ -199,10 +207,10 @@ mod tests {
         let mut parser = create_parser("static var a = 1");
         let expected = ASTStatement::Variable(ASTVariable {
             kind: ASTVariableKind::Static,
-            identifier: "a",
+            identifier: ASTExprKind::Identifier("a"),
             infer_type: false,
             typehint: None,
-            value: Some(ASTExpr::Number(1)),
+            value: Some(ASTExprKind::Number(1)),
         });
         let result = parse_static_var_stmt(&mut parser);
 
@@ -212,7 +220,7 @@ mod tests {
     #[test]
     fn test_classname_stmt() {
         let mut parser = create_parser("class_name A");
-        let expected = ASTStatement::ClassName("A");
+        let expected = ASTStatement::ClassName(ASTExprKind::Identifier("A"));
         let result = parse_classname_stmt(&mut parser);
 
         assert_eq!(result, expected);
@@ -221,7 +229,7 @@ mod tests {
     #[test]
     fn test_extends_stmt() {
         let mut parser = create_parser("extends A");
-        let expected = ASTStatement::Extends("A");
+        let expected = ASTStatement::Extends(ASTExprKind::Identifier("A"));
         let result = parse_extends_stmt(&mut parser);
 
         assert_eq!(result, expected);
@@ -230,7 +238,7 @@ mod tests {
     #[test]
     fn test_return_stmt() {
         let mut parser = create_parser("return 1");
-        let expected = ASTStatement::Return(Some(ASTExpr::Number(1)));
+        let expected = ASTStatement::Return(Some(ASTExprKind::Number(1)));
         let result = parse_return_stmt(&mut parser);
 
         assert_eq!(result, expected);
@@ -249,8 +257,8 @@ mod tests {
     fn test_elif_stmt() {
         let mut parser = create_parser("elif 1:\n    2");
         let expected = ASTStatement::Elif(ASTElifStmt {
-            expr: ASTExpr::Number(1),
-            block: vec![ASTStatement::Expr(ASTExpr::Number(2))],
+            expr: ASTExprKind::Number(1),
+            block: vec![ASTStatement::Expr(ASTExprKind::Number(2))],
         });
         let result = parse_elif_stmt(&mut parser);
 
@@ -261,7 +269,7 @@ mod tests {
     fn test_else_stmt() {
         let mut parser = create_parser("else:\n    2");
         let expected = ASTStatement::Else(ASTElseStmt {
-            block: vec![ASTStatement::Expr(ASTExpr::Number(2))],
+            block: vec![ASTStatement::Expr(ASTExprKind::Number(2))],
         });
         let result = parse_else_stmt(&mut parser);
 
@@ -274,13 +282,13 @@ mod tests {
         let expected = ASTStatement::For(ASTForStmt {
             binding: ASTVariable {
                 kind: ASTVariableKind::Binding,
-                identifier: "i",
+                identifier: ASTExprKind::Identifier("i"),
                 infer_type: true,
                 typehint: None,
                 value: None,
             },
-            container: ASTExpr::Array(vec![ASTExpr::Number(1), ASTExpr::Number(2)]),
-            block: vec![ASTStatement::Expr(ASTExpr::Number(3))],
+            container: ASTExprKind::Array(vec![ASTExprKind::Number(1), ASTExprKind::Number(2)]),
+            block: vec![ASTStatement::Expr(ASTExprKind::Number(3))],
         });
         let result = parse_for_stmt(&mut parser);
 
@@ -291,8 +299,8 @@ mod tests {
     fn test_if_stmt() {
         let mut parser = create_parser("if 1:\n    2");
         let expected = ASTStatement::If(ASTIfStmt {
-            expr: ASTExpr::Number(1),
-            block: vec![ASTStatement::Expr(ASTExpr::Number(2))],
+            expr: ASTExprKind::Number(1),
+            block: vec![ASTStatement::Expr(ASTExprKind::Number(2))],
         });
         let result = parse_if_stmt(&mut parser);
 
@@ -303,8 +311,8 @@ mod tests {
     fn test_while_stmt() {
         let mut parser = create_parser("while 1:\n    2");
         let expected = ASTStatement::While(ASTWhileStmt {
-            expr: ASTExpr::Number(1),
-            block: vec![ASTStatement::Expr(ASTExpr::Number(2))],
+            expr: ASTExprKind::Number(1),
+            block: vec![ASTStatement::Expr(ASTExprKind::Number(2))],
         });
         let result = parse_while_stmt(&mut parser);
 

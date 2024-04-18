@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTClass, ASTEnum, ASTEnumVariant, ASTExpr};
+use gdtk_ast::{ASTClass, ASTEnum, ASTEnumVariant, ASTExprKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
@@ -13,7 +13,11 @@ pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
         .peek()
         .is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_)))
     {
-        Some(ASTExpr::Identifier(expect!(parser, TokenKind::Identifier(s), s)))
+        Some(ASTExprKind::Identifier(expect!(
+            parser,
+            TokenKind::Identifier(s),
+            s
+        )))
     } else {
         None
     };
@@ -23,7 +27,7 @@ pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
     fn parse_enum_variant<'a>(
         parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
     ) -> ASTEnumVariant<'a> {
-        let identifier = ASTExpr::Identifier(expect!(parser, TokenKind::Identifier(s), s));
+        let identifier = ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s));
 
         let value = if parser.peek().is_some_and(|t| t.kind.is_assignment()) {
             Some(advance_and_parse(parser, parse_expr))
@@ -54,7 +58,7 @@ pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
 pub fn parse_class<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTClass<'a> {
     expect!(parser, TokenKind::Class);
 
-    let identifier = ASTExpr::Identifier(expect!(parser, TokenKind::Identifier(s), s));
+    let identifier = ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s));
     let mut extends = None;
 
     if parser
@@ -62,7 +66,11 @@ pub fn parse_class<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> 
         .is_some_and(|t| matches!(t.kind, TokenKind::Extends))
     {
         parser.next();
-        extends = Some(ASTExpr::Identifier(expect!(parser, TokenKind::Identifier(s), s)));
+        extends = Some(ASTExprKind::Identifier(expect!(
+            parser,
+            TokenKind::Identifier(s),
+            s
+        )));
     }
 
     expect!(parser, TokenKind::Colon);
@@ -87,7 +95,7 @@ mod tests {
     fn test_parse_class() {
         let mut parser = create_parser("class MyClass:\n    pass");
         let expected = ASTClass {
-            identifier: ASTExpr::Identifier("MyClass"),
+            identifier: ASTExprKind::Identifier("MyClass"),
             extends: None,
             body: vec![ASTStatement::Pass],
         };
@@ -100,8 +108,8 @@ mod tests {
     fn test_parse_class_extends() {
         let mut parser = create_parser("class MyClass extends AnotherClass:\n    pass");
         let expected = ASTClass {
-            identifier: ASTExpr::Identifier("MyClass"),
-            extends: Some(ASTExpr::Identifier("AnotherClass")),
+            identifier: ASTExprKind::Identifier("MyClass"),
+            extends: Some(ASTExprKind::Identifier("AnotherClass")),
             body: vec![ASTStatement::Pass],
         };
         let result = parse_class(&mut parser);
@@ -125,7 +133,7 @@ mod tests {
     fn test_parse_enum_empty_named() {
         let mut parser = create_parser("enum State {}");
         let expected = ASTEnum {
-            identifier: Some(ASTExpr::Identifier("State")),
+            identifier: Some(ASTExprKind::Identifier("State")),
             variants: vec![],
         };
         let result = parse_enum(&mut parser);
@@ -140,11 +148,11 @@ mod tests {
             identifier: None,
             variants: vec![
                 ASTEnumVariant {
-                    identifier: ASTExpr::Identifier("WALKING"),
+                    identifier: ASTExprKind::Identifier("WALKING"),
                     value: None,
                 },
                 ASTEnumVariant {
-                    identifier: ASTExpr::Identifier("JUMPING"),
+                    identifier: ASTExprKind::Identifier("JUMPING"),
                     value: None,
                 },
             ],
@@ -158,14 +166,14 @@ mod tests {
     fn test_parse_enum_normal_named() {
         let mut parser = create_parser("enum State { WALKING, JUMPING }");
         let expected = ASTEnum {
-            identifier: Some(ASTExpr::Identifier("State")),
+            identifier: Some(ASTExprKind::Identifier("State")),
             variants: vec![
                 ASTEnumVariant {
-                    identifier: ASTExpr::Identifier("WALKING"),
+                    identifier: ASTExprKind::Identifier("WALKING"),
                     value: None,
                 },
                 ASTEnumVariant {
-                    identifier: ASTExpr::Identifier("JUMPING"),
+                    identifier: ASTExprKind::Identifier("JUMPING"),
                     value: None,
                 },
             ],
@@ -182,12 +190,12 @@ mod tests {
             identifier: None,
             variants: vec![
                 ASTEnumVariant {
-                    identifier: ASTExpr::Identifier("WALKING"),
-                    value: Some(ASTExpr::Number(1)),
+                    identifier: ASTExprKind::Identifier("WALKING"),
+                    value: Some(ASTExprKind::Number(1)),
                 },
                 ASTEnumVariant {
-                    identifier: ASTExpr::Identifier("JUMPING"),
-                    value: Some(ASTExpr::String("invalid")),
+                    identifier: ASTExprKind::Identifier("JUMPING"),
+                    value: Some(ASTExprKind::String("invalid")),
                 },
             ],
         };
@@ -200,15 +208,15 @@ mod tests {
     fn test_parse_enum_with_values_named() {
         let mut parser = create_parser("enum State { WALKING = 1, JUMPING = 'invalid' }");
         let expected = ASTEnum {
-            identifier: Some(ASTExpr::Identifier("State")),
+            identifier: Some(ASTExprKind::Identifier("State")),
             variants: vec![
                 ASTEnumVariant {
-                    identifier: ASTExpr::Identifier("WALKING"),
-                    value: Some(ASTExpr::Number(1)),
+                    identifier: ASTExprKind::Identifier("WALKING"),
+                    value: Some(ASTExprKind::Number(1)),
                 },
                 ASTEnumVariant {
-                    identifier: ASTExpr::Identifier("JUMPING"),
-                    value: Some(ASTExpr::String("invalid")),
+                    identifier: ASTExprKind::Identifier("JUMPING"),
+                    value: Some(ASTExprKind::String("invalid")),
                 },
             ],
         };

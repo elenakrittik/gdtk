@@ -1,5 +1,5 @@
 use gdtk_ast::Visitor;
-use heck::{ToTitleCase, ToSnakeCase, ToShoutySnakeCase};
+use heck::{ToShoutySnakeCase, ToSnakeCase, ToTitleCase};
 use miette::MietteDiagnostic;
 
 pub struct IdentifierCasing(pub Vec<MietteDiagnostic>);
@@ -9,7 +9,10 @@ impl IdentifierCasing {
         let diagnostic = miette::MietteDiagnostic::new(message)
             .with_code("gdtk::style::identifier_casing")
             .with_severity(miette::Severity::Advice)
-            .with_label(miette::LabeledSpan::at(range, "This identifier is incorrectly cased."));
+            .with_label(miette::LabeledSpan::at(
+                range,
+                "This identifier is incorrectly cased.",
+            ));
 
         self.0.push(diagnostic);
     }
@@ -26,7 +29,7 @@ impl Visitor for IdentifierCasing {
         self.visit_block(class.body.as_slice());
     }
 
-    fn visit_class_name_statement(&mut self, identifier: &gdtk_ast::ASTExpr) {
+    fn visit_class_name_statement(&mut self, identifier: &gdtk_ast::ASTExprKind) {
         let cased = identifier.as_identifier().unwrap().to_title_case();
 
         if cased != *identifier.as_identifier().unwrap() {
@@ -47,7 +50,11 @@ impl Visitor for IdentifierCasing {
     }
 
     fn visit_enum_variant(&mut self, variant: &gdtk_ast::ASTEnumVariant) {
-        let cased = variant.identifier.as_identifier().unwrap().to_shouty_snake_case();
+        let cased = variant
+            .identifier
+            .as_identifier()
+            .unwrap()
+            .to_shouty_snake_case();
 
         if cased != *variant.identifier.as_identifier().unwrap() {
             self.report("Enum variant name is not in screaming snake case.");
