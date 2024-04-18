@@ -1,3 +1,4 @@
+use gdtk_ast::{ASTExpr, ASTExprKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::Parser;
@@ -21,10 +22,10 @@ pub macro expect {
 /// Parses a list of values (as defined by the passed callback) separated by the specified delimiter.
 /// ``stop_at`` is used to know when to stop looking for new values.
 pub fn delemited_by<'a, I, V>(
-    parser: &mut Parser<I>,
+    parser: &mut Parser<'a, I>,
     delimiter: TokenKind<'a>,
     stop_at: &[TokenKind<'a>],
-    mut callback: impl FnMut(&mut Parser<I>) -> V,
+    mut callback: impl FnMut(&mut Parser<'a, I>) -> V,
 ) -> Vec<V>
 where
     I: Iterator<Item = Token<'a>>,
@@ -47,14 +48,23 @@ where
 
 /// Calls ``iter.next()``, then ``callback(iter)``.
 pub fn advance_and_parse<'a, I, V>(
-    parser: &mut Parser<I>,
-    mut callback: impl FnMut(&mut Parser<I>) -> V,
+    parser: &mut Parser<'a, I>,
+    mut callback: impl FnMut(&mut Parser<'a, I>) -> V,
 ) -> V
 where
     I: Iterator<Item = Token<'a>>,
 {
     parser.next();
     callback(parser)
+}
+
+pub fn parse_ident<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) -> ASTExpr<'a> {
+    let start = parser.range_start();
+
+    ASTExpr {
+        kind: ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s)),
+        range: Some(parser.finish_range(start)),
+    }
 }
 
 #[cfg(test)]

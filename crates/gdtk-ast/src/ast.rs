@@ -8,19 +8,22 @@ pub type DictPattern<'a> = (ASTExpr<'a>, Option<Box<ASTMatchPattern<'a>>>);
 
 type Range = std::ops::Range<usize>;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTFile<'a> {
     pub body: CodeBlock<'a>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct ASTClass<'a> {
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTClassStmt<'a> {
     pub identifier: ASTExpr<'a>,
     pub extends: Option<ASTExpr<'a>>,
     pub body: CodeBlock<'a>,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTVariable<'a> {
     pub identifier: ASTExpr<'a>,
     pub infer_type: bool,
@@ -31,12 +34,9 @@ pub struct ASTVariable<'a> {
 
 impl<'a> ASTVariable<'a> {
     /// Creates a [ASTVariableKind::Binding] variable with ``infer_type: true``.
-    pub fn new_binding(identifier: &'a str, range: Range) -> Self {
+    pub fn new_binding(identifier: ASTExpr<'a>) -> Self {
         Self {
-            identifier: ASTExpr {
-                range,
-                kind: ASTExprKind::Identifier(identifier),
-            },
+            identifier,
             infer_type: true,
             typehint: None,
             value: None,
@@ -45,7 +45,8 @@ impl<'a> ASTVariable<'a> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub enum ASTVariableKind {
     /// Regular (`var`) variable.
     Regular,
@@ -61,32 +62,43 @@ pub enum ASTVariableKind {
     Binding,
 }
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct ASTEnum<'a> {
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTEnumStmt<'a> {
     pub identifier: Option<ASTExpr<'a>>,
     pub variants: Vec<ASTEnumVariant<'a>>,
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTEnumVariant<'a> {
     pub identifier: ASTExpr<'a>,
     pub value: Option<ASTExpr<'a>>,
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
 }
 
 /// A function.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTFunction<'a> {
     pub identifier: Option<Box<ASTExpr<'a>>>,
     pub parameters: Vec<ASTVariable<'a>>,
     pub return_type: Option<Box<ASTExpr<'a>>>,
     pub body: CodeBlock<'a>,
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
 }
 
 /// An expression.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTExpr<'a> {
     pub kind: ASTExprKind<'a>,
-    pub range: Range,
+    #[derivative(PartialEq = "ignore")]
+    pub range: Option<Range>,
 }
 
 /// An expression's kind.
@@ -235,29 +247,22 @@ pub enum ASTBinaryOp<'a> {
 }
 
 /// A statement.
-#[derive(Debug, Clone, PartialEq)]
-pub struct ASTStatement<'a> {
-    pub kind: ASTStatementKind<'a>,
-    pub range: Range,
-}
-
-/// A statement kind.
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
-pub enum ASTStatementKind<'a> {
+pub enum ASTStatement<'a> {
     /// An annotation in form of a statement.
-    Annotation(ASTAnnotation<'a>),
+    Annotation(ASTAnnotationStmt<'a>),
     /// An ``assert`` statement.
-    Assert(ASTExpr<'a>),
+    Assert(ASTAssertStmt<'a>),
     /// A ``break`` statement.
-    Break,
+    Break(ASTBreakStmt),
     /// A ``breakpoint`` statement.
-    Breakpoint,
+    Breakpoint(ASTBreakpointStmt),
     /// An inner class statement.
-    Class(ASTClass<'a>),
+    Class(ASTClassStmt<'a>),
     /// A ``class_name`` statement.
-    ClassName(ASTExpr<'a>),
+    ClassName(ASTClassNameStmt<'a>),
     /// A ``continue`` statement.
-    Continue,
+    Continue(ASTContinueStmt),
     /// An ``if`` statement.
     If(ASTIfStmt<'a>),
     /// An ``elif`` statement.
@@ -265,19 +270,19 @@ pub enum ASTStatementKind<'a> {
     /// An ``else`` statement.
     Else(ASTElseStmt<'a>),
     /// A enum definition statement.
-    Enum(ASTEnum<'a>),
+    Enum(ASTEnumStmt<'a>),
     /// An ``extends`` statement.
-    Extends(ASTExpr<'a>),
+    Extends(ASTExtendsStmt<'a>),
     /// A ``for`` loop statement.
     For(ASTForStmt<'a>),
     /// A function definition statement.
     Func(ASTFunction<'a>),
     /// A ``pass`` statement.
-    Pass,
+    Pass(ASTPassStmt),
     /// A ``return`` statement.
-    Return(Option<ASTExpr<'a>>),
+    Return(ASTReturnStmt<'a>),
     /// A ``signal`` definition statement.
-    Signal(ASTSignal<'a>),
+    Signal(ASTSignalStmt<'a>),
     /// A ``match`` statement.
     Match(ASTMatchStmt<'a>),
     /// A ``while`` loop statement.
@@ -288,50 +293,125 @@ pub enum ASTStatementKind<'a> {
     Expr(ASTExpr<'a>),
 }
 
+/// A pass statement.
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTPassStmt {
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
+}
+
+/// An ``assert`` statement.
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTAssertStmt<'a> {
+    pub expr: ASTExpr<'a>,
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
+}
+
+/// A ``break`` statement.
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTBreakStmt {
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
+}
+
+/// A ``breakpoint`` statement.
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTBreakpointStmt {
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
+}
+
+/// A ``class_name`` statement.
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTClassNameStmt<'a> {
+    pub identifier: ASTExpr<'a>,
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
+}
+
+/// A ``continue`` statement.
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTContinueStmt {
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
+}
+
+/// An ``extends`` statement.
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTExtendsStmt<'a> {
+    pub identifier: ASTExpr<'a>,
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
+}
+
 /// A ``for`` loop statement.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTForStmt<'a> {
     pub binding: ASTVariable<'a>,
     pub container: ASTExpr<'a>,
     pub block: CodeBlock<'a>,
 }
 
+/// A return statement.
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTReturnStmt<'a> {
+    pub expr: Option<ASTExpr<'a>>,
+    #[derivative(PartialEq = "ignore")]
+    pub range: Range,
+}
+
 /// A ``while`` loop statement.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTWhileStmt<'a> {
     pub expr: ASTExpr<'a>,
     pub block: CodeBlock<'a>,
 }
 
 /// An ``if`` statement.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTIfStmt<'a> {
     pub expr: ASTExpr<'a>,
     pub block: CodeBlock<'a>,
 }
 
 /// An ``elif`` statement.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTElifStmt<'a> {
     pub expr: ASTExpr<'a>,
     pub block: CodeBlock<'a>,
 }
 
 /// An ``else`` statement.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTElseStmt<'a> {
     pub block: CodeBlock<'a>,
 }
 
 /// A ``match`` statement.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTMatchStmt<'a> {
     pub expr: ASTExpr<'a>,
     pub arms: Vec<ASTMatchArm<'a>>,
 }
 
 /// An arm of a [ASTMatchStmt].
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTMatchArm<'a> {
     pub pattern: ASTMatchPattern<'a>,
     pub guard: Option<ASTExpr<'a>>,
@@ -339,7 +419,8 @@ pub struct ASTMatchArm<'a> {
 }
 
 /// A pattern of an [ASTMatchArm].
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub enum ASTMatchPattern<'a> {
     Value(ASTExpr<'a>),
     Binding(ASTVariable<'a>),
@@ -351,15 +432,17 @@ pub enum ASTMatchPattern<'a> {
 }
 
 /// An ``@annotation`` attached to an item.
-#[derive(Debug, Clone, PartialEq)]
-pub struct ASTAnnotation<'a> {
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTAnnotationStmt<'a> {
     pub identifier: ASTExpr<'a>,
     pub arguments: Option<Vec<ASTExpr<'a>>>,
 }
 
 /// A ``signal`` definition.
-#[derive(Debug, Clone, PartialEq)]
-pub struct ASTSignal<'a> {
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
+pub struct ASTSignalStmt<'a> {
     pub identifier: ASTExpr<'a>,
     pub parameters: Option<Vec<ASTVariable<'a>>>,
 }

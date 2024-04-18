@@ -1,23 +1,21 @@
-use gdtk_ast::{ASTClass, ASTEnum, ASTEnumVariant, ASTExprKind};
+use gdtk_ast::{ASTClassStmt, ASTEnumStmt, ASTEnumVariant};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::expressions::parse_expr;
-use crate::utils::{advance_and_parse, delemited_by, expect};
+use crate::utils::{advance_and_parse, delemited_by, expect, parse_ident};
 use crate::Parser;
 
-pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTEnum<'a> {
+pub fn parse_enum<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) -> ASTEnumStmt<'a> {
+    let start = parser.range_start();
+
     expect!(parser, TokenKind::Enum);
 
     let identifier = if parser
         .peek()
         .is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_)))
     {
-        Some(ASTExprKind::Identifier(expect!(
-            parser,
-            TokenKind::Identifier(s),
-            s
-        )))
+        Some(parse_ident(parser))
     } else {
         None
     };
@@ -25,9 +23,11 @@ pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
     expect!(parser, TokenKind::OpeningBrace);
 
     fn parse_enum_variant<'a>(
-        parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+        parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
     ) -> ASTEnumVariant<'a> {
-        let identifier = ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s));
+        let start = parser.range_start();
+
+        let identifier = parse_ident(parser);
 
         let value = if parser.peek().is_some_and(|t| t.kind.is_assignment()) {
             Some(advance_and_parse(parser, parse_expr))
@@ -35,7 +35,11 @@ pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
             None
         };
 
-        ASTEnumVariant { identifier, value }
+        ASTEnumVariant {
+            identifier,
+            value,
+            range: parser.finish_range(start),
+        }
     }
 
     let variants = parser.with_parens_ctx(true, |parser| {
@@ -49,16 +53,19 @@ pub fn parse_enum<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
 
     expect!(parser, TokenKind::ClosingBrace);
 
-    ASTEnum {
+    ASTEnumStmt {
         identifier,
         variants,
+        range: parser.finish_range(start),
     }
 }
 
-pub fn parse_class<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTClass<'a> {
+pub fn parse_class<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ASTClassStmt<'a> {
     expect!(parser, TokenKind::Class);
 
-    let identifier = ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s));
+    let identifier = parse_ident(parser);
     let mut extends = None;
 
     if parser
@@ -66,18 +73,14 @@ pub fn parse_class<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> 
         .is_some_and(|t| matches!(t.kind, TokenKind::Extends))
     {
         parser.next();
-        extends = Some(ASTExprKind::Identifier(expect!(
-            parser,
-            TokenKind::Identifier(s),
-            s
-        )));
+        extends = Some(parse_ident(parser));
     }
 
     expect!(parser, TokenKind::Colon);
 
     let body = parse_block(parser, false);
 
-    ASTClass {
+    ASTClassStmt {
         identifier,
         extends,
         body,
@@ -89,15 +92,17 @@ mod tests {
     use gdtk_ast::*;
 
     use crate::classes::{parse_class, parse_enum};
-    use crate::test_utils::create_parser;
+    use crate::test_utils::{create_parser, make_ident, make_number, make_string};
+
+    const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { range: 0..0 });
 
     #[test]
     fn test_parse_class() {
         let mut parser = create_parser("class MyClass:\n    pass");
-        let expected = ASTClass {
-            identifier: ASTExprKind::Identifier("MyClass"),
+        let expected = ASTClassStmt {
+            identifier: make_ident("MyClass"),
             extends: None,
-            body: vec![ASTStatement::Pass],
+            body: vec![PASS_STMT],
         };
         let result = parse_class(&mut parser);
 
@@ -107,10 +112,10 @@ mod tests {
     #[test]
     fn test_parse_class_extends() {
         let mut parser = create_parser("class MyClass extends AnotherClass:\n    pass");
-        let expected = ASTClass {
-            identifier: ASTExprKind::Identifier("MyClass"),
-            extends: Some(ASTExprKind::Identifier("AnotherClass")),
-            body: vec![ASTStatement::Pass],
+        let expected = ASTClassStmt {
+            identifier: make_ident("MyClass"),
+            extends: Some(make_ident("AnotherClass")),
+            body: vec![PASS_STMT],
         };
         let result = parse_class(&mut parser);
 
@@ -120,9 +125,10 @@ mod tests {
     #[test]
     fn test_parse_enum_empty_unnamed() {
         let mut parser = create_parser("enum {}");
-        let expected = ASTEnum {
+        let expected = ASTEnumStmt {
             identifier: None,
             variants: vec![],
+            range: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -132,9 +138,10 @@ mod tests {
     #[test]
     fn test_parse_enum_empty_named() {
         let mut parser = create_parser("enum State {}");
-        let expected = ASTEnum {
-            identifier: Some(ASTExprKind::Identifier("State")),
+        let expected = ASTEnumStmt {
+            identifier: Some(make_ident("State")),
             variants: vec![],
+            range: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -144,18 +151,21 @@ mod tests {
     #[test]
     fn test_parse_enum_normal_unnamed() {
         let mut parser = create_parser("enum { WALKING, JUMPING }");
-        let expected = ASTEnum {
+        let expected = ASTEnumStmt {
             identifier: None,
             variants: vec![
                 ASTEnumVariant {
-                    identifier: ASTExprKind::Identifier("WALKING"),
+                    identifier: make_ident("WALKING"),
                     value: None,
+                    range: 0..0,
                 },
                 ASTEnumVariant {
-                    identifier: ASTExprKind::Identifier("JUMPING"),
+                    identifier: make_ident("JUMPING"),
                     value: None,
+                    range: 0..0,
                 },
             ],
+            range: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -165,18 +175,21 @@ mod tests {
     #[test]
     fn test_parse_enum_normal_named() {
         let mut parser = create_parser("enum State { WALKING, JUMPING }");
-        let expected = ASTEnum {
-            identifier: Some(ASTExprKind::Identifier("State")),
+        let expected = ASTEnumStmt {
+            identifier: Some(make_ident("State")),
             variants: vec![
                 ASTEnumVariant {
-                    identifier: ASTExprKind::Identifier("WALKING"),
+                    identifier: make_ident("WALKING"),
                     value: None,
+                    range: 0..0,
                 },
                 ASTEnumVariant {
-                    identifier: ASTExprKind::Identifier("JUMPING"),
+                    identifier: make_ident("JUMPING"),
                     value: None,
+                    range: 0..0,
                 },
             ],
+            range: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -186,18 +199,21 @@ mod tests {
     #[test]
     fn test_parse_enum_with_values_unnamed() {
         let mut parser = create_parser("enum { WALKING = 1, JUMPING = 'invalid' }");
-        let expected = ASTEnum {
+        let expected = ASTEnumStmt {
             identifier: None,
             variants: vec![
                 ASTEnumVariant {
-                    identifier: ASTExprKind::Identifier("WALKING"),
-                    value: Some(ASTExprKind::Number(1)),
+                    identifier: make_ident("WALKING"),
+                    value: Some(make_number(1)),
+                    range: 0..0,
                 },
                 ASTEnumVariant {
-                    identifier: ASTExprKind::Identifier("JUMPING"),
-                    value: Some(ASTExprKind::String("invalid")),
+                    identifier: make_ident("JUMPING"),
+                    value: Some(make_string("invalid")),
+                    range: 0..0,
                 },
             ],
+            range: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -207,18 +223,21 @@ mod tests {
     #[test]
     fn test_parse_enum_with_values_named() {
         let mut parser = create_parser("enum State { WALKING = 1, JUMPING = 'invalid' }");
-        let expected = ASTEnum {
-            identifier: Some(ASTExprKind::Identifier("State")),
+        let expected = ASTEnumStmt {
+            identifier: Some(make_ident("State")),
             variants: vec![
                 ASTEnumVariant {
-                    identifier: ASTExprKind::Identifier("WALKING"),
-                    value: Some(ASTExprKind::Number(1)),
+                    identifier: make_ident("WALKING"),
+                    value: Some(make_number(1)),
+                    range: 0..0,
                 },
                 ASTEnumVariant {
-                    identifier: ASTExprKind::Identifier("JUMPING"),
-                    value: Some(ASTExprKind::String("invalid")),
+                    identifier: make_ident("JUMPING"),
+                    value: Some(make_string("invalid")),
+                    range: 0..0,
                 },
             ],
+            range: 0..0,
         };
         let result = parse_enum(&mut parser);
 

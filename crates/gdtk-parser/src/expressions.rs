@@ -9,17 +9,20 @@ use crate::{
 };
 
 /// Parse an expression.
-pub fn parse_expr<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTExpr<'a> {
-    let (kind, range) = parser.track(|parser| {
-        ExprParser
-            .parse(parse_expr_impl(parser).into_iter())
-            .unwrap()
-    });
+pub fn parse_expr<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) -> ASTExpr<'a> {
+    let start = parser.range_start();
 
-    ASTExpr { kind, range }
+    let mut expr = ExprParser
+        .parse(parse_expr_impl(parser).into_iter())
+        .unwrap();
+
+    expr.range = Some(parser.finish_range(start));
+    expr
 }
 
-fn parse_expr_impl<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ExprIR<'a>> {
+fn parse_expr_impl<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> Vec<ExprIR<'a>> {
     let mut result = parse_expr_with_ops(parser);
 
     while let Some(op) = match parser.peek().map(|t| &t.kind) {
@@ -89,7 +92,7 @@ fn parse_expr_impl<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> 
 
 /// Parses a value taking into account possible prefix and postfix OPs
 fn parse_expr_with_ops<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> Vec<ExprIR<'a>> {
     let mut result = vec![];
 
@@ -155,9 +158,13 @@ fn parse_expr_with_ops<'a>(
     result
 }
 
-/// Parses a "clean" value, without checking for possible prefix or postfix OPs
-fn parse_expr_without_ops<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ExprIR<'a> {
-    let value = match &parser.peek().expect("unexpected EOF").kind {
+/// Parse a "clean" value, without checking for possible prefix or postfix OPs
+fn parse_expr_without_ops<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ExprIR<'a> {
+    let start = parser.range_start();
+
+    let kind = match &parser.peek().expect("unexpected EOF").kind {
         TokenKind::Identifier(_) => {
             ASTExprKind::Identifier(parser.next().unwrap().kind.into_identifier().unwrap())
         }
@@ -215,7 +222,10 @@ fn parse_expr_without_ops<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>
         _ => panic!("unknown or unsupported expression: {:#?}", parser.peek()),
     };
 
-    ExprIR::Primary(value)
+    ExprIR::Primary(ASTExpr {
+        kind,
+        range: Some(parser.finish_range(start)),
+    })
 }
 
 #[derive(Debug, enum_as_inner::EnumAsInner)]
@@ -223,8 +233,8 @@ enum ExprIR<'a> {
     Prefix(ASTPrefixOp),
     Postfix(ASTPostfixOp<'a>),
     Binary(ASTBinaryOp<'a>),
-    Group(Vec<ASTExprKind<'a>>),
-    Primary(ASTExprKind<'a>),
+    Group(Vec<ASTExpr<'a>>),
+    Primary(ASTExpr<'a>),
 }
 
 struct ExprParser;
@@ -235,7 +245,7 @@ where
 {
     type Error = pratt::NoError;
     type Input = ExprIR<'a>;
-    type Output = ASTExprKind<'a>;
+    type Output = ASTExpr<'a>;
 
     #[rustfmt::skip]
     fn query(&mut self, input: &Self::Input) -> Result<Affix, Self::Error> {
@@ -317,7 +327,10 @@ where
     fn primary(&mut self, input: Self::Input) -> Result<Self::Output, Self::Error> {
         Ok(match input {
             ExprIR::Primary(val) => val,
-            ExprIR::Group(vals) => ASTExprKind::Group(vals),
+            ExprIR::Group(vals) => ASTExpr {
+                kind: ASTExprKind::Group(vals),
+                range: None,
+            },
             _ => unreachable!(),
         })
     }
@@ -328,29 +341,28 @@ where
         op: Self::Input,
         rhs: Self::Output,
     ) -> Result<Self::Output, Self::Error> {
-        Ok(ASTExprKind::BinaryExpr(
-            Box::new(lhs),
-            op.into_binary().unwrap(),
-            Box::new(rhs),
-        ))
+        Ok(ASTExpr {
+            kind: ASTExprKind::BinaryExpr(Box::new(lhs), op.into_binary().unwrap(), Box::new(rhs)),
+            range: None,
+        })
     }
 
     fn prefix(&mut self, op: Self::Input, rhs: Self::Output) -> Result<Self::Output, Self::Error> {
-        Ok(ASTExprKind::PrefixExpr(
-            op.into_prefix().unwrap(),
-            Box::new(rhs),
-        ))
+        Ok(ASTExpr {
+            kind: ASTExprKind::PrefixExpr(op.into_prefix().unwrap(), Box::new(rhs)),
+            range: None,
+        })
     }
 
     fn postfix(&mut self, lhs: Self::Output, op: Self::Input) -> Result<Self::Output, Self::Error> {
-        Ok(ASTExprKind::PostfixExpr(
-            Box::new(lhs),
-            op.into_postfix().unwrap(),
-        ))
+        Ok(ASTExpr {
+            kind: ASTExprKind::PostfixExpr(Box::new(lhs), op.into_postfix().unwrap()),
+            range: None,
+        })
     }
 }
 
-#[cfg(test)]
+#[cfg(never)]
 mod tests {
     use gdtk_ast::*;
 

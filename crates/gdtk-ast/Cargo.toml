@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 enum-as-inner = "0.6.0"
+derivative = "2.2.0"

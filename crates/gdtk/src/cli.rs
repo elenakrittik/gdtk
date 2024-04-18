@@ -26,7 +26,7 @@ pub enum Commands {
     Lint {
         /// The GDScript file to lint.
         file: PathBuf,
-    }
+    },
 }
 
 #[derive(Subcommand)]

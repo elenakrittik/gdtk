@@ -7,7 +7,7 @@ use gdtk_lexer::Token;
 pub struct Parser<I> {
     pub iter: I,
     pub is_inside_parens: bool,
-    pub last_end: usize,
+    pub current_token_range: Option<std::ops::Range<usize>>,
 }
 
 impl<'a, I> Parser<Peekable<I>>
@@ -18,17 +18,22 @@ where
         Self {
             iter: iter.peekable(),
             is_inside_parens: false,
-            last_end: 0,
+            current_token_range: None,
         }
     }
 
-    pub fn track<F, R>(&mut self, mut f: F) -> (R, std::ops::Range<usize>)
-    where
-        F: FnMut(&mut Self) -> R,
-    {
-        let start = self.last_end;
+    pub fn range_start(&mut self) -> usize {
+        self.peek().as_ref().map(|t| t.range.start).unwrap_or(0)
+    }
 
-        (f(self), start..self.last_end)
+    pub fn finish_range(&mut self, start: usize) -> std::ops::Range<usize> {
+        let end = self
+            .current_token_range
+            .as_ref()
+            .map(|r| r.start)
+            .unwrap_or(0);
+
+        start..end
     }
 
     pub fn peek(&mut self) -> Option<&Token<'a>> {
@@ -73,14 +78,8 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         self.skip_blanks();
-
-        let token = self.iter.next();
-
-        if let Some(Token { ref range, .. }) = token {
-            self.last_end = range.end;
-        }
-
-        token
+        self.current_token_range = self.iter.peek().map(|t| t.range.start..t.range.end);
+        self.iter.next()
     }
 }
 
@@ -94,11 +93,13 @@ mod tests {
 
         assert!(parser.next().unwrap().kind.is_var());
 
-        let (_, range) = parser.track(|parser| {
-            assert!(parser.next().unwrap().kind.is_identifier());
-            assert!(parser.next().unwrap().kind.is_assignment());
-        });
+        let start = parser.range_start();
 
-        assert_eq!(range, 5..11);
+        assert!(parser.next().unwrap().kind.is_identifier());
+        assert!(parser.next().unwrap().kind.is_assignment());
+
+        let range = parser.finish_range(start);
+
+        assert_eq!(range, 4..10);
     }
 }

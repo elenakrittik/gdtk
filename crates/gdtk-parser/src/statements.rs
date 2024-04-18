@@ -1,35 +1,45 @@
 use gdtk_ast::{
-    ASTElifStmt, ASTElseStmt, ASTExprKind, ASTForStmt, ASTIfStmt, ASTStatement, ASTVariable,
-    ASTVariableKind, ASTWhileStmt, CodeBlock,
+    ASTAssertStmt, ASTBreakStmt, ASTBreakpointStmt, ASTClassNameStmt, ASTContinueStmt, ASTElifStmt,
+    ASTElseStmt, ASTExpr, ASTExtendsStmt, ASTForStmt, ASTIfStmt, ASTPassStmt, ASTReturnStmt,
+    ASTStatement, ASTVariable, ASTVariableKind, ASTWhileStmt, CodeBlock,
 };
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
-    block::parse_block, expressions::parse_expr, misc::parse_type, utils::expect,
-    variables::parse_variable_body, Parser,
+    block::parse_block,
+    expressions::parse_expr,
+    misc::parse_type,
+    utils::{expect, parse_ident},
+    variables::parse_variable_body,
+    Parser,
 };
 
 /// Parses a `return` statement.
 pub fn parse_return_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
+    let start = parser.range_start();
+
     expect!(parser, TokenKind::Return);
 
-    let value = if parser.peek().is_some_and(|t| !t.kind.is_line_end()) {
+    let expr = if parser.peek().is_some_and(|t| !t.kind.is_line_end()) {
         Some(parse_expr(parser))
     } else {
         None
     };
 
-    ASTStatement::Return(value)
+    ASTStatement::Return(ASTReturnStmt {
+        expr,
+        range: parser.finish_range(start),
+    })
 }
 
 /// Parses a `for` statement.
 pub fn parse_for_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::For);
-    let identifier = ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s));
+    let identifier = parse_ident(parser);
 
     let typehint = if parser.peek().is_some_and(|t| t.kind.is_colon()) {
         parser.next();
@@ -58,31 +68,39 @@ pub fn parse_for_stmt<'a>(
 
 /// Parses a ``class_name`` statement.
 pub fn parse_classname_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
+    let start = parser.range_start();
+
     expect!(parser, TokenKind::ClassName);
-    expect!(
-        parser,
-        TokenKind::Identifier(i),
-        ASTStatement::ClassName(ASTExprKind::Identifier(i))
-    )
+
+    let identifier = parse_ident(parser);
+
+    ASTStatement::ClassName(ASTClassNameStmt {
+        identifier,
+        range: parser.finish_range(start),
+    })
 }
 
 /// Parses an `extends` statement.
 pub fn parse_extends_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
+    let start = parser.range_start();
+
     expect!(parser, TokenKind::Extends);
-    expect!(
-        parser,
-        TokenKind::Identifier(i),
-        ASTStatement::Extends(ASTExprKind::Identifier(i))
-    )
+
+    let identifier = parse_ident(parser);
+
+    ASTStatement::Extends(ASTExtendsStmt {
+        identifier,
+        range: parser.finish_range(start),
+    })
 }
 
 /// Parses a `var` statement.
 pub fn parse_var_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::Var);
     ASTStatement::Variable(parse_variable_body(parser, ASTVariableKind::Regular))
@@ -90,7 +108,7 @@ pub fn parse_var_stmt<'a>(
 
 /// Parses a `const` statement.
 pub fn parse_const_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::Const);
     ASTStatement::Variable(parse_variable_body(parser, ASTVariableKind::Constant))
@@ -98,7 +116,7 @@ pub fn parse_const_stmt<'a>(
 
 /// Parses a `static var` statement.
 pub fn parse_static_var_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::Static);
     expect!(parser, TokenKind::Var);
@@ -107,7 +125,7 @@ pub fn parse_static_var_stmt<'a>(
 
 /// Parses an `else` statement.
 pub fn parse_else_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::Else);
     expect!(parser, TokenKind::Colon);
@@ -117,7 +135,9 @@ pub fn parse_else_stmt<'a>(
 }
 
 /// Parses an `if` statement.
-pub fn parse_if_stmt<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTStatement<'a> {
+pub fn parse_if_stmt<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
     expect!(parser, TokenKind::If);
     let tuple = parse_iflike(parser);
     ASTStatement::If(ASTIfStmt {
@@ -128,7 +148,7 @@ pub fn parse_if_stmt<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -
 
 /// Parses an `elif` statement.
 pub fn parse_elif_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::Elif);
     let tuple = parse_iflike(parser);
@@ -140,7 +160,7 @@ pub fn parse_elif_stmt<'a>(
 
 /// Parses a `while` statement.
 pub fn parse_while_stmt<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
     expect!(parser, TokenKind::While);
     let tuple = parse_iflike(parser);
@@ -152,13 +172,82 @@ pub fn parse_while_stmt<'a>(
 
 /// Parse a
 fn parse_iflike<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
-) -> (ASTExprKind<'a>, CodeBlock<'a>) {
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> (ASTExpr<'a>, CodeBlock<'a>) {
     let cond = parse_expr(parser);
+
     expect!(parser, TokenKind::Colon);
+
     let block = parse_block(parser, false);
 
     (cond, block)
+}
+
+/// Parses a `break` statement.
+pub fn parse_break_stmt<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
+    let start = parser.range_start();
+
+    expect!(parser, TokenKind::Break);
+
+    ASTStatement::Break(ASTBreakStmt {
+        range: parser.finish_range(start),
+    })
+}
+
+/// Parses a `breakpoint` statement.
+pub fn parse_breakpoint_stmt<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
+    let start = parser.range_start();
+
+    expect!(parser, TokenKind::Breakpoint);
+
+    ASTStatement::Breakpoint(ASTBreakpointStmt {
+        range: parser.finish_range(start),
+    })
+}
+
+/// Parses a `continue` statement.
+pub fn parse_continue_stmt<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
+    let start = parser.range_start();
+
+    expect!(parser, TokenKind::Continue);
+
+    ASTStatement::Continue(ASTContinueStmt {
+        range: parser.finish_range(start),
+    })
+}
+
+/// Parses a `pass` statement.
+pub fn parse_pass_stmt<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
+    let start = parser.range_start();
+
+    expect!(parser, TokenKind::Pass);
+
+    ASTStatement::Pass(ASTPassStmt {
+        range: parser.finish_range(start),
+    })
+}
+
+/// Parses an `assert` statement.
+pub fn parse_assert_stmt<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ASTStatement<'a> {
+    let start = parser.range_start();
+
+    expect!(parser, TokenKind::Assert);
+    let expr = parse_expr(parser);
+
+    ASTStatement::Assert(ASTAssertStmt {
+        expr,
+        range: parser.finish_range(start),
+    })
 }
 
 #[cfg(test)]
@@ -170,17 +259,17 @@ mod tests {
         parse_extends_stmt, parse_for_stmt, parse_if_stmt, parse_return_stmt,
         parse_static_var_stmt, parse_var_stmt, parse_while_stmt,
     };
-    use crate::test_utils::create_parser;
+    use crate::test_utils::{create_parser, make_ident, make_number};
 
     #[test]
     fn test_var_stmt() {
         let mut parser = create_parser("var a = 1");
         let expected = ASTStatement::Variable(ASTVariable {
             kind: ASTVariableKind::Regular,
-            identifier: ASTExprKind::Identifier("a"),
+            identifier: make_ident("a"),
             infer_type: false,
             typehint: None,
-            value: Some(ASTExprKind::Number(1)),
+            value: Some(make_number(1)),
         });
         let result = parse_var_stmt(&mut parser);
 
@@ -192,10 +281,10 @@ mod tests {
         let mut parser = create_parser("const a = 1");
         let expected = ASTStatement::Variable(ASTVariable {
             kind: ASTVariableKind::Constant,
-            identifier: ASTExprKind::Identifier("a"),
+            identifier: make_ident("a"),
             infer_type: false,
             typehint: None,
-            value: Some(ASTExprKind::Number(1)),
+            value: Some(make_number(1)),
         });
         let result = parse_const_stmt(&mut parser);
 
@@ -207,10 +296,10 @@ mod tests {
         let mut parser = create_parser("static var a = 1");
         let expected = ASTStatement::Variable(ASTVariable {
             kind: ASTVariableKind::Static,
-            identifier: ASTExprKind::Identifier("a"),
+            identifier: make_ident("a"),
             infer_type: false,
             typehint: None,
-            value: Some(ASTExprKind::Number(1)),
+            value: Some(make_number(1)),
         });
         let result = parse_static_var_stmt(&mut parser);
 
@@ -220,7 +309,10 @@ mod tests {
     #[test]
     fn test_classname_stmt() {
         let mut parser = create_parser("class_name A");
-        let expected = ASTStatement::ClassName(ASTExprKind::Identifier("A"));
+        let expected = ASTStatement::ClassName(ASTClassNameStmt {
+            identifier: make_ident("A"),
+            range: 0..0,
+        });
         let result = parse_classname_stmt(&mut parser);
 
         assert_eq!(result, expected);
@@ -229,7 +321,10 @@ mod tests {
     #[test]
     fn test_extends_stmt() {
         let mut parser = create_parser("extends A");
-        let expected = ASTStatement::Extends(ASTExprKind::Identifier("A"));
+        let expected = ASTStatement::Extends(ASTExtendsStmt {
+            identifier: make_ident("A"),
+            range: 0..0,
+        });
         let result = parse_extends_stmt(&mut parser);
 
         assert_eq!(result, expected);
@@ -238,7 +333,10 @@ mod tests {
     #[test]
     fn test_return_stmt() {
         let mut parser = create_parser("return 1");
-        let expected = ASTStatement::Return(Some(ASTExprKind::Number(1)));
+        let expected = ASTStatement::Return(ASTReturnStmt {
+            expr: Some(make_number(1)),
+            range: 0..0,
+        });
         let result = parse_return_stmt(&mut parser);
 
         assert_eq!(result, expected);
@@ -247,7 +345,10 @@ mod tests {
     #[test]
     fn test_return_no_value_stmt() {
         let mut parser = create_parser("return");
-        let expected = ASTStatement::Return(None);
+        let expected = ASTStatement::Return(ASTReturnStmt {
+            expr: None,
+            range: 0..0,
+        });
         let result = parse_return_stmt(&mut parser);
 
         assert_eq!(result, expected);
@@ -257,8 +358,8 @@ mod tests {
     fn test_elif_stmt() {
         let mut parser = create_parser("elif 1:\n    2");
         let expected = ASTStatement::Elif(ASTElifStmt {
-            expr: ASTExprKind::Number(1),
-            block: vec![ASTStatement::Expr(ASTExprKind::Number(2))],
+            expr: make_number(1),
+            block: vec![ASTStatement::Expr(make_number(2))],
         });
         let result = parse_elif_stmt(&mut parser);
 
@@ -269,7 +370,7 @@ mod tests {
     fn test_else_stmt() {
         let mut parser = create_parser("else:\n    2");
         let expected = ASTStatement::Else(ASTElseStmt {
-            block: vec![ASTStatement::Expr(ASTExprKind::Number(2))],
+            block: vec![ASTStatement::Expr(make_number(2))],
         });
         let result = parse_else_stmt(&mut parser);
 
@@ -282,13 +383,16 @@ mod tests {
         let expected = ASTStatement::For(ASTForStmt {
             binding: ASTVariable {
                 kind: ASTVariableKind::Binding,
-                identifier: ASTExprKind::Identifier("i"),
+                identifier: make_ident("i"),
                 infer_type: true,
                 typehint: None,
                 value: None,
             },
-            container: ASTExprKind::Array(vec![ASTExprKind::Number(1), ASTExprKind::Number(2)]),
-            block: vec![ASTStatement::Expr(ASTExprKind::Number(3))],
+            container: ASTExpr {
+                kind: ASTExprKind::Array(vec![make_number(1), make_number(2)]),
+                range: None,
+            },
+            block: vec![ASTStatement::Expr(make_number(3))],
         });
         let result = parse_for_stmt(&mut parser);
 
@@ -299,8 +403,8 @@ mod tests {
     fn test_if_stmt() {
         let mut parser = create_parser("if 1:\n    2");
         let expected = ASTStatement::If(ASTIfStmt {
-            expr: ASTExprKind::Number(1),
-            block: vec![ASTStatement::Expr(ASTExprKind::Number(2))],
+            expr: make_number(1),
+            block: vec![ASTStatement::Expr(make_number(2))],
         });
         let result = parse_if_stmt(&mut parser);
 
@@ -311,8 +415,8 @@ mod tests {
     fn test_while_stmt() {
         let mut parser = create_parser("while 1:\n    2");
         let expected = ASTStatement::While(ASTWhileStmt {
-            expr: ASTExprKind::Number(1),
-            block: vec![ASTStatement::Expr(ASTExprKind::Number(2))],
+            expr: make_number(1),
+            block: vec![ASTStatement::Expr(make_number(2))],
         });
         let result = parse_while_stmt(&mut parser);
 
