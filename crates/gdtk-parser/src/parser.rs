@@ -30,7 +30,7 @@ where
         let end = self
             .current_token_range
             .as_ref()
-            .map(|r| r.start)
+            .map(|r| r.end)
             .unwrap_or(0);
 
         start..end
