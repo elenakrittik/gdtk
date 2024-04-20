@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTBinaryOp, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPrefixOp};
+use gdtk_ast::{ASTBinaryOp, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPrefixOp, ASTPrefixOpKind};
 use gdtk_lexer::{Token, TokenKind};
 use pratt::{Affix, Associativity, PrattParser, Precedence};
 
@@ -97,16 +97,16 @@ fn parse_expr_with_ops<'a>(
     let mut result = vec![];
 
     while let Some(op) = match parser.peek().map(|t| &t.kind) {
-        Some(TokenKind::Plus) => Some(ASTPrefixOp::Identity),
-        Some(TokenKind::Minus) => Some(ASTPrefixOp::Negation),
-        Some(TokenKind::Await) => Some(ASTPrefixOp::Await),
-        Some(TokenKind::BitwiseNot) => Some(ASTPrefixOp::BitwiseNot),
-        Some(TokenKind::Not | TokenKind::SymbolizedNot) => Some(ASTPrefixOp::Not),
+        Some(TokenKind::Plus) => Some(ASTPrefixOpKind::Identity),
+        Some(TokenKind::Minus) => Some(ASTPrefixOpKind::Negation),
+        Some(TokenKind::Await) => Some(ASTPrefixOpKind::Await),
+        Some(TokenKind::BitwiseNot) => Some(ASTPrefixOpKind::BitwiseNot),
+        Some(TokenKind::Not | TokenKind::SymbolizedNot) => Some(ASTPrefixOpKind::Not),
         None => panic!("expected expression"),
         _ => None,
     } {
-        parser.next();
-        result.push(ExprIR::Prefix(op));
+        let range = parser.next().unwrap().range;
+        result.push(ExprIR::Prefix(ASTPrefixOp { kind: op, range }));
     }
 
     result.push(parse_expr_without_ops(parser));
@@ -259,15 +259,15 @@ where
 
             ExprIR::Postfix(ASTPostfixOp::Call(_)) => Affix::Postfix(Precedence(21)),
 
-            ExprIR::Prefix(ASTPrefixOp::Await) => Affix::Prefix(Precedence(20)),
+            ExprIR::Prefix(ASTPrefixOp { kind: ASTPrefixOpKind::Await, .. }) => Affix::Prefix(Precedence(20)),
 
             ExprIR::Binary(ASTBinaryOp::TypeCheck) => Affix::Infix(Precedence(19), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::Power) => Affix::Infix(Precedence(18), Associativity::Left),
 
-            ExprIR::Prefix(ASTPrefixOp::BitwiseNot) => Affix::Prefix(Precedence(17)),
+            ExprIR::Prefix(ASTPrefixOp { kind: ASTPrefixOpKind::BitwiseNot, .. }) => Affix::Prefix(Precedence(17)),
 
-            ExprIR::Prefix(ASTPrefixOp::Identity) => Affix::Prefix(Precedence(16)),
-            ExprIR::Prefix(ASTPrefixOp::Negation) => Affix::Prefix(Precedence(16)),
+            ExprIR::Prefix(ASTPrefixOp { kind: ASTPrefixOpKind::Identity, .. }) => Affix::Prefix(Precedence(16)),
+            ExprIR::Prefix(ASTPrefixOp { kind: ASTPrefixOpKind::Negation, .. }) => Affix::Prefix(Precedence(16)),
 
             ExprIR::Binary(ASTBinaryOp::Multiply) => Affix::Infix(Precedence(15), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::Divide) => Affix::Infix(Precedence(15), Associativity::Left),
@@ -295,7 +295,7 @@ where
             ExprIR::Binary(ASTBinaryOp::Contains) => Affix::Infix(Precedence(8), Associativity::Left),
             ExprIR::Binary(ASTBinaryOp::NotContains) => Affix::Infix(Precedence(8), Associativity::Left),
 
-            ExprIR::Prefix(ASTPrefixOp::Not) => Affix::Prefix(Precedence(7)),
+            ExprIR::Prefix(ASTPrefixOp { kind: ASTPrefixOpKind::Not, .. }) => Affix::Prefix(Precedence(7)),
 
             ExprIR::Binary(ASTBinaryOp::And) => Affix::Infix(Precedence(6), Associativity::Left),
 
@@ -341,16 +341,33 @@ where
         op: Self::Input,
         rhs: Self::Output,
     ) -> Result<Self::Output, Self::Error> {
+        let range = if
+            let Some(ref lrange) = lhs.range
+            && let Some(ref rrange) = rhs.range 
+        {
+            Some(lrange.start..rrange.end)
+        } else {
+            None
+        };
+
         Ok(ASTExpr {
             kind: ASTExprKind::BinaryExpr(Box::new(lhs), op.into_binary().unwrap(), Box::new(rhs)),
-            range: None,
+            range,
         })
     }
 
     fn prefix(&mut self, op: Self::Input, rhs: Self::Output) -> Result<Self::Output, Self::Error> {
+        let op = op.into_prefix().unwrap();
+
+        let range = if let Some(ref lrange) = rhs.range {
+            Some(op.range.start..lrange.end)
+        } else {
+            None
+        };
+
         Ok(ASTExpr {
-            kind: ASTExprKind::PrefixExpr(op.into_prefix().unwrap(), Box::new(rhs)),
-            range: None,
+            kind: ASTExprKind::PrefixExpr(op, Box::new(rhs)),
+            range,
         })
     }
 
@@ -413,12 +430,12 @@ mod tests {
     fn test_parse_prefix_exprs() {
         let inputs = ["await 1", "+1", "-1", "not 1", "!1", "~1"];
         let outputs = [
-            ASTExprKind::PrefixExpr(ASTPrefixOp::Await, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOp::Identity, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOp::Negation, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOp::Not, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOp::Not, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOp::BitwiseNot, Box::new(ASTExprKind::Number(1))),
+            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Await, Box::new(ASTExprKind::Number(1))),
+            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Identity, Box::new(ASTExprKind::Number(1))),
+            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Negation, Box::new(ASTExprKind::Number(1))),
+            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Not, Box::new(ASTExprKind::Number(1))),
+            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Not, Box::new(ASTExprKind::Number(1))),
+            ASTExprKind::PrefixExpr(ASTPrefixOpKind::BitwiseNot, Box::new(ASTExprKind::Number(1))),
         ];
 
         for (input, output) in inputs.into_iter().zip(outputs) {

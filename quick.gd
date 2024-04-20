@@ -1,4 +1,4 @@
 class_name MyNode
 
-func _init() -> void:
-	self.name = "DisguisedMyNode"
+func welcome(name: String) -> void:
+	self.people[name] = name

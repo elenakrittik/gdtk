@@ -140,8 +140,14 @@ pub enum ASTExprKind<'a> {
     BinaryExpr(Box<ASTExpr<'a>>, ASTBinaryOp<'a>, Box<ASTExpr<'a>>),
 }
 
+#[derive(Debug, Clone, PartialEq, Hash, Eq)]
+pub struct ASTPrefixOp {
+    pub kind: ASTPrefixOpKind,
+    pub range: Range,
+}
+
 #[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
-pub enum ASTPrefixOp {
+pub enum ASTPrefixOpKind {
     /// ``await a``.
     Await,
     /// ``+a``.
@@ -247,8 +253,23 @@ pub enum ASTBinaryOp<'a> {
 }
 
 impl ASTBinaryOp<'_> {
-    pub fn is_any_assignment() -> bool {
-        todo!()
+    pub fn is_any_assignment(&self) -> bool {
+        matches!(
+            self,
+            ASTBinaryOp::Assignment
+                | ASTBinaryOp::PlusAssignment
+                | ASTBinaryOp::MinusAssignment
+                | ASTBinaryOp::MultiplyAssignment
+                | ASTBinaryOp::PowerAssignment
+                | ASTBinaryOp::DivideAssignment
+                | ASTBinaryOp::RemainderAssignment
+                | ASTBinaryOp::BitwiseAndAssignment
+                | ASTBinaryOp::BitwiseOrAssignment
+                | ASTBinaryOp::BitwiseNotAssignment
+                | ASTBinaryOp::BitwiseXorAssignment
+                | ASTBinaryOp::BitwiseShiftLeftAssignment
+                | ASTBinaryOp::BitwiseShiftRightAssignment
+        )
     }
 }
 

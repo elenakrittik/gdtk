@@ -290,7 +290,7 @@ pub trait Visitor {
             ast::ASTExpr { range, kind: ast::ASTExprKind::Array(exprs) } => self.visit_array_expr(exprs, range.as_ref()),
             ast::ASTExpr { range, kind: ast::ASTExprKind::Dictionary(pairs) } => self.visit_dictionary_expr(pairs.as_slice(), range.as_ref()),
             ast::ASTExpr { range: _, kind: ast::ASTExprKind::Lambda(func) } => self.visit_lambda_expr(func),
-            ast::ASTExpr { range, kind: ast::ASTExprKind::PrefixExpr(op, expr) } => self.visit_prefix_expr(op, expr, range.as_ref()),
+            ast::ASTExpr { range: _, kind: ast::ASTExprKind::PrefixExpr(op, expr) } => self.visit_prefix_expr(op, expr),
             ast::ASTExpr { range, kind: ast::ASTExprKind::PostfixExpr(expr, op) } => self.visit_postfix_expr(expr, op, range.as_ref()),
             ast::ASTExpr { range, kind: ast::ASTExprKind::BinaryExpr(lhs, op, rhs) } => self.visit_binary_expr(lhs, op, rhs, range.as_ref()),
         }
@@ -330,7 +330,6 @@ pub trait Visitor {
         &mut self,
         _op: &ast::ASTPrefixOp,
         expr: &ast::ASTExpr,
-        _range: Option<&Range>,
     ) {
         self.visit_expr(expr);
     }

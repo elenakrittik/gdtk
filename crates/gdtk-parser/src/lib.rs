@@ -1,6 +1,6 @@
 //! A GDScript 2.0 parser.
 
-#![feature(decl_macro, stmt_expr_attributes, type_alias_impl_trait)]
+#![feature(decl_macro, stmt_expr_attributes, type_alias_impl_trait, let_chains)]
 
 use std::iter::Peekable;
 
