@@ -1,5 +1,4 @@
-class_name bad
+class_name MyNode
 
-func say(message: str) -> void:
-	print(message)
-	pass
+func _init() -> void:
+	self.name = "DisguisedMyNode"

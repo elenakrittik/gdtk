@@ -11,8 +11,8 @@ declare_lint!(
 impl Visitor for UnnecessaryPass {
     fn visit_block(&mut self, block: &[ast::ASTStatement]) {
         for stmt in block {
-            if stmt.is_pass() && block.len() > 2 {
-                self.report("Unnecessary `pass`, this block contains other statements.", Some(&stmt.as_pass().unwrap().range));
+            if let Some(stmt) = stmt.as_pass() && block.len() > 1 {
+                self.report("Unnecessary `pass`, this block is not empty.", Some(&stmt.range));
                 continue;
             }
 

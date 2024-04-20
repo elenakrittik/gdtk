@@ -246,6 +246,12 @@ pub enum ASTBinaryOp<'a> {
     BitwiseShiftRightAssignment,
 }
 
+impl ASTBinaryOp<'_> {
+    pub fn is_any_assignment() -> bool {
+        todo!()
+    }
+}
+
 /// A statement.
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTStatement<'a> {
