@@ -87,9 +87,19 @@ pub struct ASTFunction<'a> {
     pub identifier: Option<Box<ASTExpr<'a>>>,
     pub parameters: Vec<ASTVariable<'a>>,
     pub return_type: Option<Box<ASTExpr<'a>>>,
+    pub kind: ASTFunctionKind,
     pub body: CodeBlock<'a>,
     #[derivative(PartialEq = "ignore")]
     pub range: Range,
+}
+
+/// A function's kind.
+#[derive(Debug, Clone, PartialEq)]
+pub enum ASTFunctionKind {
+    /// A normal `func`.
+    Regular,
+    /// A `static func`.
+    Static,
 }
 
 /// An expression.

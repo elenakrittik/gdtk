@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTFunction, ASTVariableKind};
+use gdtk_ast::{ASTFunction, ASTFunctionKind, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
@@ -8,10 +8,15 @@ use crate::variables::parse_variable_body;
 use crate::Parser;
 
 pub fn parse_func<'a>(
-    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    kind: ASTFunctionKind,
     lambda: bool,
 ) -> ASTFunction<'a> {
     let start = parser.range_start();
+
+    if parser.peek().is_some_and(|t| t.kind.is_static()) {
+        parser.next();
+    }
 
     expect!(parser, TokenKind::Func);
 
@@ -55,6 +60,7 @@ pub fn parse_func<'a>(
         identifier,
         parameters,
         return_type: return_type.map(Box::new),
+        kind,
         body,
         range: parser.finish_range(start),
     }
@@ -77,9 +83,10 @@ mod tests {
             parameters: vec![],
             return_type: None,
             body: vec![PASS_STMT],
+            kind: ASTFunctionKind::Regular,
             range: 0..0,
         };
-        let result = parse_func(&mut parser, false);
+        let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
         assert_eq!(result, expected);
     }
@@ -91,10 +98,11 @@ mod tests {
             identifier: Some(Box::new(make_ident("foo"))),
             parameters: vec![],
             return_type: Some(Box::new(make_ident("int"))),
+            kind: ASTFunctionKind::Regular,
             body: vec![PASS_STMT],
             range: 0..0,
         };
-        let result = parse_func(&mut parser, false);
+        let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
         assert_eq!(result, expected);
     }
@@ -106,10 +114,11 @@ mod tests {
             identifier: None,
             parameters: vec![],
             return_type: None,
+            kind: ASTFunctionKind::Regular,
             body: vec![PASS_STMT],
             range: 0..0,
         };
-        let result = parse_func(&mut parser, false);
+        let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
         assert_eq!(result, expected);
     }
@@ -121,10 +130,11 @@ mod tests {
             identifier: None,
             parameters: vec![],
             return_type: Some(Box::new(make_ident("int"))),
+            kind: ASTFunctionKind::Regular,
             body: vec![PASS_STMT],
             range: 0..0,
         };
-        let result = parse_func(&mut parser, false);
+        let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
         assert_eq!(result, expected);
     }
@@ -165,10 +175,27 @@ mod tests {
                 },
             ],
             return_type: None,
+            kind: ASTFunctionKind::Regular,
             body: vec![PASS_STMT],
             range: 0..0,
         };
-        let result = parse_func(&mut parser, false);
+        let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_parse_static_func() {
+        let mut parser = create_parser("static func foo(): pass");
+        let expected = ASTFunction {
+            identifier: Some(Box::new(make_ident("foo"))),
+            parameters: vec![],
+            return_type: None,
+            kind: ASTFunctionKind::Static,
+            body: vec![PASS_STMT],
+            range: 0..0,
+        };
+        let result = parse_func(&mut parser, ASTFunctionKind::Static, false);
 
         assert_eq!(result, expected);
     }
