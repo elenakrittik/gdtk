@@ -1,4 +1,6 @@
-use gdtk_ast::{ASTBinaryOp, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPrefixOp, ASTPrefixOpKind};
+use gdtk_ast::{
+    ASTBinaryOp, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPostfixOpKind, ASTPrefixOp, ASTPrefixOpKind,
+};
 use gdtk_lexer::{Token, TokenKind};
 use pratt::{Affix, Associativity, PrattParser, Precedence};
 
@@ -122,6 +124,8 @@ fn parse_expr_with_ops<'a>(
             break;
         }
 
+        let start = parser.range_start();
+
         match parser.next().unwrap().kind {
             TokenKind::OpeningParenthesis => {
                 let values = parser.with_parens_ctx(true, |parser| {
@@ -135,7 +139,12 @@ fn parse_expr_with_ops<'a>(
 
                 expect!(parser, TokenKind::ClosingParenthesis);
 
-                result.push(ExprIR::Postfix(ASTPostfixOp::Call(values)));
+                let range = parser.finish_range(start);
+
+                result.push(ExprIR::Postfix(ASTPostfixOp {
+                    kind: ASTPostfixOpKind::Call(values),
+                    range,
+                }));
             }
             TokenKind::OpeningBracket => {
                 let values = parser.with_parens_ctx(true, |parser| {
@@ -149,7 +158,12 @@ fn parse_expr_with_ops<'a>(
 
                 expect!(parser, TokenKind::ClosingBracket);
 
-                result.push(ExprIR::Postfix(ASTPostfixOp::Subscript(values)));
+                let range = parser.finish_range(start);
+
+                result.push(ExprIR::Postfix(ASTPostfixOp {
+                    kind: ASTPostfixOpKind::Subscript(values),
+                    range,
+                }));
             }
             _ => unreachable!(),
         }
@@ -253,11 +267,11 @@ where
             ExprIR::Primary(_) => Affix::Nilfix,
             ExprIR::Group(_) => Affix::Nilfix,
 
-            ExprIR::Postfix(ASTPostfixOp::Subscript(_)) => Affix::Postfix(Precedence(23)),
+            ExprIR::Postfix(ASTPostfixOp { kind: ASTPostfixOpKind::Subscript(_), .. }) => Affix::Postfix(Precedence(23)),
 
             ExprIR::Binary(ASTBinaryOp::PropertyAccess) => Affix::Infix(Precedence(22), Associativity::Left),
 
-            ExprIR::Postfix(ASTPostfixOp::Call(_)) => Affix::Postfix(Precedence(21)),
+            ExprIR::Postfix(ASTPostfixOp { kind: ASTPostfixOpKind::Call(_), .. }) => Affix::Postfix(Precedence(21)),
 
             ExprIR::Prefix(ASTPrefixOp { kind: ASTPrefixOpKind::Await, .. }) => Affix::Prefix(Precedence(20)),
 
@@ -341,9 +355,8 @@ where
         op: Self::Input,
         rhs: Self::Output,
     ) -> Result<Self::Output, Self::Error> {
-        let range = if
-            let Some(ref lrange) = lhs.range
-            && let Some(ref rrange) = rhs.range 
+        let range = if let Some(ref lrange) = lhs.range
+            && let Some(ref rrange) = rhs.range
         {
             Some(lrange.start..rrange.end)
         } else {
@@ -359,8 +372,8 @@ where
     fn prefix(&mut self, op: Self::Input, rhs: Self::Output) -> Result<Self::Output, Self::Error> {
         let op = op.into_prefix().unwrap();
 
-        let range = if let Some(ref lrange) = rhs.range {
-            Some(op.range.start..lrange.end)
+        let range = if let Some(ref rrange) = rhs.range {
+            Some(op.range.start..rrange.end)
         } else {
             None
         };
@@ -372,9 +385,17 @@ where
     }
 
     fn postfix(&mut self, lhs: Self::Output, op: Self::Input) -> Result<Self::Output, Self::Error> {
+        let op = op.into_postfix().unwrap();
+
+        let range = if let Some(ref lrange) = lhs.range {
+            Some(lrange.start..op.range.end)
+        } else {
+            None
+        };
+
         Ok(ASTExpr {
-            kind: ASTExprKind::PostfixExpr(Box::new(lhs), op.into_postfix().unwrap()),
-            range: None,
+            kind: ASTExprKind::PostfixExpr(Box::new(lhs), op),
+            range,
         })
     }
 }
@@ -435,7 +456,10 @@ mod tests {
             ASTExprKind::PrefixExpr(ASTPrefixOpKind::Negation, Box::new(ASTExprKind::Number(1))),
             ASTExprKind::PrefixExpr(ASTPrefixOpKind::Not, Box::new(ASTExprKind::Number(1))),
             ASTExprKind::PrefixExpr(ASTPrefixOpKind::Not, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOpKind::BitwiseNot, Box::new(ASTExprKind::Number(1))),
+            ASTExprKind::PrefixExpr(
+                ASTPrefixOpKind::BitwiseNot,
+                Box::new(ASTExprKind::Number(1)),
+            ),
         ];
 
         for (input, output) in inputs.into_iter().zip(outputs) {

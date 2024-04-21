@@ -326,11 +326,7 @@ pub trait Visitor {
         self.visit_func(func);
     }
 
-    fn visit_prefix_expr(
-        &mut self,
-        _op: &ast::ASTPrefixOp,
-        expr: &ast::ASTExpr,
-    ) {
+    fn visit_prefix_expr(&mut self, _op: &ast::ASTPrefixOp, expr: &ast::ASTExpr) {
         self.visit_expr(expr);
     }
 

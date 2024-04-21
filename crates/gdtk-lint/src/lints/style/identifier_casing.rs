@@ -1,4 +1,4 @@
-use gdtk_ast::{Visitor, ast};
+use gdtk_ast::{ast, Visitor};
 use heck::{ToShoutySnakeCase, ToSnakeCase, ToTitleCase};
 
 crate::declare_lint!(

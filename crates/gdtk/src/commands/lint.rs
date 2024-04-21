@@ -10,11 +10,10 @@ pub fn run(file: PathBuf) -> anyhow::Result<()> {
     let diagnostics = gdtk_lint::run_builtin_lints(&parsed);
 
     for diagnostic in diagnostics {
-        let report = miette::Report::new(diagnostic)
-            .with_source_code(miette::NamedSource::new(
-                file.to_str().unwrap(),
-                content.clone(),
-            ));
+        let report = miette::Report::new(diagnostic).with_source_code(miette::NamedSource::new(
+            file.to_str().unwrap(),
+            content.clone(),
+        ));
 
         eprintln!("{:?}", report);
     }

@@ -160,8 +160,14 @@ pub enum ASTPrefixOpKind {
     BitwiseNot,
 }
 
+#[derive(Debug, Clone, PartialEq)]
+pub struct ASTPostfixOp<'a> {
+    pub kind: ASTPostfixOpKind<'a>,
+    pub range: Range,
+}
+
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
-pub enum ASTPostfixOp<'a> {
+pub enum ASTPostfixOpKind<'a> {
     /// ``a(b)``.
     Call(Vec<ASTExpr<'a>>),
     /// ``a[b]``.

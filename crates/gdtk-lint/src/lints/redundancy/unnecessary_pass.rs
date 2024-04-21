@@ -1,4 +1,4 @@
-use gdtk_ast::{Visitor, ast};
+use gdtk_ast::{ast, Visitor};
 
 use crate::declare_lint;
 
@@ -11,8 +11,13 @@ declare_lint!(
 impl Visitor for UnnecessaryPass {
     fn visit_block(&mut self, block: &[ast::ASTStatement]) {
         for stmt in block {
-            if let Some(stmt) = stmt.as_pass() && block.len() > 1 {
-                self.report("Unnecessary `pass`, this block is not empty.", Some(&stmt.range));
+            if let Some(stmt) = stmt.as_pass()
+                && block.len() > 1
+            {
+                self.report(
+                    "Unnecessary `pass`, this block is not empty.",
+                    Some(&stmt.range),
+                );
                 continue;
             }
 

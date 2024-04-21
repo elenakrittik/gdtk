@@ -1,5 +1,6 @@
 use gdtk_ast::{
-    ASTAnnotationStmt, ASTExpr, ASTExprKind, ASTPostfixOp, ASTSignalStmt, ASTVariableKind,
+    ASTAnnotationStmt, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPostfixOpKind, ASTSignalStmt,
+    ASTVariableKind,
 };
 use gdtk_lexer::{Token, TokenKind};
 
@@ -82,6 +83,9 @@ pub fn parse_type<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) 
     let base = expect!(parser, TokenKind::Identifier(s), s);
 
     if parser.peek().is_some_and(|t| t.kind.is_opening_bracket()) {
+        let ident_range = parser.finish_range(start);
+        let start = parser.range_start();
+
         parser.next();
 
         let type_parameters = delemited_by(
@@ -93,13 +97,18 @@ pub fn parse_type<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) 
 
         parser.next();
 
+        let type_params_range = parser.finish_range(start);
+
         ASTExpr {
             kind: ASTExprKind::PostfixExpr(
                 Box::new(ASTExpr {
                     kind: ASTExprKind::Identifier(base),
-                    range: Some(parser.finish_range(start)),
+                    range: Some(ident_range),
                 }),
-                ASTPostfixOp::Subscript(type_parameters),
+                ASTPostfixOp {
+                    kind: ASTPostfixOpKind::Subscript(type_parameters),
+                    range: type_params_range,
+                },
             ),
             range: Some(parser.finish_range(start)),
         }

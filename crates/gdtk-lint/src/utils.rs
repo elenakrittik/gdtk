@@ -4,7 +4,11 @@ macro_rules! declare_lint {
         pub struct $name(pub Vec<miette::MietteDiagnostic>);
 
         impl $name {
-            pub fn report(&mut self, message: &'static str, range: Option<&std::ops::Range<usize>>) {
+            pub fn report(
+                &mut self,
+                message: &'static str,
+                range: Option<&std::ops::Range<usize>>,
+            ) {
                 let mut diagnostic = miette::MietteDiagnostic::new(message)
                     .with_code($code)
                     .with_severity(miette::Severity::$severity);
@@ -17,5 +21,5 @@ macro_rules! declare_lint {
                 self.0.push(diagnostic);
             }
         }
-    }
+    };
 }
