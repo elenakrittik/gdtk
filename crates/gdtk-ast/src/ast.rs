@@ -98,7 +98,7 @@ pub struct ASTFunction<'a> {
 pub struct ASTExpr<'a> {
     pub kind: ASTExprKind<'a>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Option<Range>,
+    pub range: Range,
 }
 
 /// An expression's kind.
@@ -140,9 +140,11 @@ pub enum ASTExprKind<'a> {
     BinaryExpr(Box<ASTExpr<'a>>, ASTBinaryOp<'a>, Box<ASTExpr<'a>>),
 }
 
-#[derive(Debug, Clone, PartialEq, Hash, Eq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTPrefixOp {
     pub kind: ASTPrefixOpKind,
+    #[derivative(PartialEq = "ignore")]
     pub range: Range,
 }
 
@@ -160,9 +162,11 @@ pub enum ASTPrefixOpKind {
     BitwiseNot,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, derivative::Derivative)]
+#[derivative(PartialEq)]
 pub struct ASTPostfixOp<'a> {
     pub kind: ASTPostfixOpKind<'a>,
+    #[derivative(PartialEq = "ignore")]
     pub range: Range,
 }
 

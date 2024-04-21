@@ -12,10 +12,23 @@ impl Visitor for InvalidAssignmentTarget {
         lhs: &ast::ASTExpr,
         op: &ast::ASTBinaryOp,
         rhs: &ast::ASTExpr,
-        _range: Option<&std::ops::Range<usize>>,
+        _range: &std::ops::Range<usize>,
     ) {
         if op.is_any_assignment() && !is_valid_assignment_target(lhs) {
-            self.report("Invalid assignment target.", lhs.range.as_ref());
+            let mut report = self
+                .report("Invalid assignment target.", &lhs.range)
+                .and_label(miette::LabeledSpan::at(
+                    rhs.range.clone(),
+                    "..while trying to assign this expression",
+                ));
+
+            if let Some((_, op, _)) = lhs.kind.as_binary_expr()
+                && op.is_any_assignment()
+            {
+                report = report.with_help("Assignment chains are not valid syntax.");
+            }
+
+            self.submit(report);
         }
 
         self.visit_expr(lhs);

@@ -7,18 +7,25 @@ macro_rules! declare_lint {
             pub fn report(
                 &mut self,
                 message: &'static str,
-                range: Option<&std::ops::Range<usize>>,
-            ) {
-                let mut diagnostic = miette::MietteDiagnostic::new(message)
+                range: &std::ops::Range<usize>,
+            ) -> miette::MietteDiagnostic {
+                miette::MietteDiagnostic::new(message)
                     .with_code($code)
-                    .with_severity(miette::Severity::$severity);
+                    .with_severity(miette::Severity::$severity)
+                    .with_label(miette::LabeledSpan::at(range.start..range.end, message))
+            }
 
-                if let Some(range) = range {
-                    diagnostic = diagnostic
-                        .with_label(miette::LabeledSpan::at(range.start..range.end, message));
-                }
+            pub fn immediate_report(
+                &mut self,
+                message: &'static str,
+                range: &std::ops::Range<usize>,
+            ) {
+                let report = self.report(message, range);
+                self.submit(report);
+            }
 
-                self.0.push(diagnostic);
+            pub fn submit(&mut self, report: miette::MietteDiagnostic) {
+                self.0.push(report)
             }
         }
     };

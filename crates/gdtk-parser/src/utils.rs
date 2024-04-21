@@ -63,7 +63,7 @@ pub fn parse_ident<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>)
 
     ASTExpr {
         kind: ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s)),
-        range: Some(parser.finish_range(start)),
+        range: parser.finish_range(start),
     }
 }
 

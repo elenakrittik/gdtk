@@ -13,10 +13,7 @@ impl Visitor for IdentifierCasing {
         let cased = identifier.to_title_case();
 
         if cased != *identifier {
-            self.report(
-                "Class name is not in title case.",
-                class.identifier.range.as_ref(),
-            );
+            self.immediate_report("Class name is not in title case.", &class.identifier.range);
         }
 
         self.visit_block(class.body.as_slice());
@@ -27,10 +24,7 @@ impl Visitor for IdentifierCasing {
         let cased = identifier.to_title_case();
 
         if cased != *identifier {
-            self.report(
-                "Class name is not in title case.",
-                stmt.identifier.range.as_ref(),
-            );
+            self.immediate_report("Class name is not in title case.", &stmt.identifier.range);
         }
     }
 
@@ -40,7 +34,7 @@ impl Visitor for IdentifierCasing {
             let cased = ident.to_title_case();
 
             if cased != *ident {
-                self.report("Enum name is not in title case.", identifier.range.as_ref());
+                self.immediate_report("Enum name is not in title case.", &identifier.range);
             }
         }
 
@@ -52,9 +46,9 @@ impl Visitor for IdentifierCasing {
         let cased = identifier.to_shouty_snake_case();
 
         if cased != *identifier {
-            self.report(
+            self.immediate_report(
                 "Enum variant name is not in screaming snake case.",
-                variant.identifier.range.as_ref(),
+                &variant.identifier.range,
             );
         }
     }
@@ -65,10 +59,7 @@ impl Visitor for IdentifierCasing {
             let cased = ident.to_snake_case();
 
             if cased != *ident {
-                self.report(
-                    "Function name is not in snake case.",
-                    identifier.range.as_ref(),
-                );
+                self.immediate_report("Function name is not in snake case.", &identifier.range);
             }
         }
 
@@ -81,9 +72,9 @@ impl Visitor for IdentifierCasing {
         let cased = identifier.to_snake_case();
 
         if cased != *identifier {
-            self.report(
+            self.immediate_report(
                 "Signal name is not in snake case.",
-                signal.identifier.range.as_ref(),
+                &signal.identifier.range,
             );
         }
 
@@ -97,9 +88,9 @@ impl Visitor for IdentifierCasing {
         let cased = identifier.to_snake_case();
 
         if cased != *identifier {
-            self.report(
+            self.immediate_report(
                 "Binding name is not in snake case.",
-                variable.identifier.range.as_ref(),
+                &variable.identifier.range,
             );
         }
     }
@@ -109,9 +100,9 @@ impl Visitor for IdentifierCasing {
         let cased = identifier.to_snake_case();
 
         if cased != *identifier {
-            self.report(
+            self.immediate_report(
                 "Variable name is not in snake case.",
-                variable.identifier.range.as_ref(),
+                &variable.identifier.range,
             );
         }
     }

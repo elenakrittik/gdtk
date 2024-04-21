@@ -100,6 +100,6 @@ mod tests {
 
         let range = parser.finish_range(start);
 
-        assert_eq!(range, 4..10);
+        assert_eq!(range, 4..11); // 'hello ='
     }
 }

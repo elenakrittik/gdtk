@@ -390,7 +390,7 @@ mod tests {
             },
             container: ASTExpr {
                 kind: ASTExprKind::Array(vec![make_number(1), make_number(2)]),
-                range: None,
+                range: 0..0,
             },
             block: vec![ASTStatement::Expr(make_number(3))],
         });

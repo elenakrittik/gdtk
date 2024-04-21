@@ -14,10 +14,7 @@ impl Visitor for UnnecessaryPass {
             if let Some(stmt) = stmt.as_pass()
                 && block.len() > 1
             {
-                self.report(
-                    "Unnecessary `pass`, this block is not empty.",
-                    Some(&stmt.range),
-                );
+                self.report("Unnecessary `pass`, this block is not empty.", &stmt.range);
                 continue;
             }
 

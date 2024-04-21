@@ -78,12 +78,9 @@ pub fn parse_signal<'a>(
 }
 
 pub fn parse_type<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) -> ASTExpr<'a> {
-    let start = parser.range_start();
-
-    let base = expect!(parser, TokenKind::Identifier(s), s);
+    let ident = parse_ident(parser);
 
     if parser.peek().is_some_and(|t| t.kind.is_opening_bracket()) {
-        let ident_range = parser.finish_range(start);
         let start = parser.range_start();
 
         parser.next();
@@ -97,26 +94,21 @@ pub fn parse_type<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) 
 
         parser.next();
 
-        let type_params_range = parser.finish_range(start);
+        let type_parameters_range = parser.finish_range(start);
+        let whole_range = ident.range.start..type_parameters_range.end;
 
         ASTExpr {
             kind: ASTExprKind::PostfixExpr(
-                Box::new(ASTExpr {
-                    kind: ASTExprKind::Identifier(base),
-                    range: Some(ident_range),
-                }),
+                Box::new(ident),
                 ASTPostfixOp {
                     kind: ASTPostfixOpKind::Subscript(type_parameters),
-                    range: type_params_range,
+                    range: type_parameters_range,
                 },
             ),
-            range: Some(parser.finish_range(start)),
+            range: whole_range,
         }
     } else {
-        ASTExpr {
-            kind: ASTExprKind::Identifier(base),
-            range: Some(parser.finish_range(start)),
-        }
+        ident
     }
 }
 
