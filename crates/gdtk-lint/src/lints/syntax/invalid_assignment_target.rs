@@ -1,12 +1,19 @@
 use gdtk_ast::{ast, Visitor};
 
-crate::declare_lint!(
-    InvalidAssignmentTarget,
+// crate::declare_lint!(
+//     InvalidAssignmentTarget,
+//     code = "gdtk::syntax::invalid_assignment_target",
+//     severity = Error
+// );
+
+#[gdtk_macros::lint(
+    message = "Invalid assignment target.",
     code = "gdtk::syntax::invalid_assignment_target",
     severity = Error
-);
+)]
+pub struct InvalidAssignmentTarget {}
 
-impl Visitor for InvalidAssignmentTarget {
+impl Visitor<'_> for InvalidAssignmentTarget {
     fn visit_binary_expr(
         &mut self,
         lhs: &ast::ASTExpr,
@@ -15,11 +22,14 @@ impl Visitor for InvalidAssignmentTarget {
         _range: &std::ops::Range<usize>,
     ) {
         if op.is_any_assignment() && !is_valid_assignment_target(lhs) {
-            let mut report = self
-                .report("Invalid assignment target.", &lhs.range)
+            let mut report = Self::report()
                 .and_label(miette::LabeledSpan::at(
                     rhs.range.clone(),
                     "..while trying to assign this expression",
+                ))
+                .and_label(miette::LabeledSpan::at(
+                    lhs.range.clone(),
+                    "..to this target expression",
                 ));
 
             if let Some((_, op, _)) = lhs.kind.as_binary_expr()

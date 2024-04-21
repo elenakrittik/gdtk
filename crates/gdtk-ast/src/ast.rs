@@ -94,7 +94,7 @@ pub struct ASTFunction<'a> {
 }
 
 /// A function's kind.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTFunctionKind {
     /// A normal `func`.
     Regular,
@@ -338,6 +338,35 @@ pub enum ASTStatement<'a> {
     Variable(ASTVariable<'a>),
     /// A standalone expression.
     Expr(ASTExpr<'a>),
+}
+
+impl ASTStatement<'_> {
+    /// The range of the statement. FIXME: make this always return a range
+    pub fn range(&self) -> Option<&Range> {
+        match self {
+            ASTStatement::Annotation(_stmt) => None,
+            ASTStatement::Assert(stmt) => Some(&stmt.range),
+            ASTStatement::Break(stmt) => Some(&stmt.range),
+            ASTStatement::Breakpoint(stmt) => Some(&stmt.range),
+            ASTStatement::Class(_stmt) => None,
+            ASTStatement::ClassName(stmt) => Some(&stmt.range),
+            ASTStatement::Continue(stmt) => Some(&stmt.range),
+            ASTStatement::If(_stmt) => None,
+            ASTStatement::Elif(_stmt) => None,
+            ASTStatement::Else(_stmt) => None,
+            ASTStatement::Enum(stmt) => Some(&stmt.range),
+            ASTStatement::Extends(stmt) => Some(&stmt.range),
+            ASTStatement::For(_stmt) => None,
+            ASTStatement::Func(stmt) => Some(&stmt.range),
+            ASTStatement::Pass(stmt) => Some(&stmt.range),
+            ASTStatement::Return(stmt) => Some(&stmt.range),
+            ASTStatement::Signal(_stmt) => None,
+            ASTStatement::Match(_stmt) => None,
+            ASTStatement::While(_stmt) => None,
+            ASTStatement::Variable(_stmt) => None,
+            ASTStatement::Expr(stmt) => Some(&stmt.range),
+        }
+    }
 }
 
 /// A pass statement.

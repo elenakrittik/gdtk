@@ -1,20 +1,25 @@
 use gdtk_ast::{ast, Visitor};
 
-use crate::declare_lint;
-
-declare_lint!(
-    UnnecessaryPass,
+#[gdtk_macros::lint(
+    message = "Unnecessary `pass`, this block is not empty.",
     code = "gdtk::redundancy::unnecessary_pass",
     severity = Advice
-);
+)]
+pub struct UnnecessaryPass {}
 
-impl Visitor for UnnecessaryPass {
+impl Visitor<'_> for UnnecessaryPass {
     fn visit_block(&mut self, block: &[ast::ASTStatement]) {
-        for stmt in block {
+        for stmt in block.iter().skip(1) {
             if let Some(stmt) = stmt.as_pass()
                 && block.len() > 1
             {
-                self.report("Unnecessary `pass`, this block is not empty.", &stmt.range);
+                let report = Self::report().and_label(miette::LabeledSpan::at(
+                    stmt.range.clone(),
+                    "`pass` found here",
+                ));
+
+                self.submit(report);
+
                 continue;
             }
 
