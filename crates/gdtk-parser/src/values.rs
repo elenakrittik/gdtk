@@ -85,7 +85,9 @@ fn parse_python_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -
 
 /// Parse a lambda function.
 pub fn parse_lambda<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTFunction<'a> {
-    parser.with_parens_ctx(false, |parser| parse_func(parser, true))
+    parser.with_parens_ctx(false, |parser| {
+        parse_func(parser, gdtk_ast::ASTFunctionKind::Regular, true)
+    })
 }
 
 #[cfg(test)]

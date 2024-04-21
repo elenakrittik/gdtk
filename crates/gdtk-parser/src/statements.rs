@@ -92,7 +92,10 @@ pub fn parse_const_stmt<'a>(
 pub fn parse_static_var_stmt<'a>(
     parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    expect!(parser, TokenKind::Static);
+    if parser.peek().is_some_and(|t| t.kind.is_static()) {
+        parser.next();
+    }
+
     expect!(parser, TokenKind::Var);
     ASTStatement::Variable(parse_variable_body(parser, ASTVariableKind::Static))
 }
@@ -204,6 +207,9 @@ mod tests {
             typehint: None,
             value: Some(ASTExpr::Number(1)),
         });
+
+        parser.next(); // simulate consuming `static`
+
         let result = parse_static_var_stmt(&mut parser);
 
         assert_eq!(result, expected);

@@ -32,14 +32,32 @@ pub fn parse_statement<'a>(
         TokenKind::Extends => parse_extends_stmt(parser),
         TokenKind::For => parse_for_stmt(parser),
         TokenKind::Pass => advance_and_parse(parser, |_| ASTStatement::Pass),
-        TokenKind::Func => ASTStatement::Func(parse_func(parser, false)),
+        TokenKind::Func => ASTStatement::Func(parse_func(
+            parser,
+            gdtk_ast::ASTFunctionKind::Regular,
+            false,
+        )),
         TokenKind::Return => parse_return_stmt(parser),
         TokenKind::Signal => ASTStatement::Signal(parse_signal(parser)),
         TokenKind::Match => ASTStatement::Match(parse_match(parser)),
         TokenKind::While => parse_while_stmt(parser),
         TokenKind::Var => parse_var_stmt(parser),
         TokenKind::Const => parse_const_stmt(parser),
-        TokenKind::Static => parse_static_var_stmt(parser),
+        TokenKind::Static => {
+            parser.next(); // we have to consume it. sorry
+
+            match parser
+                .peek()
+                .expect("expected `var` or `func`, found EOF")
+                .kind
+            {
+                TokenKind::Var => parse_static_var_stmt(parser),
+                TokenKind::Func => {
+                    ASTStatement::Func(parse_func(parser, gdtk_ast::ASTFunctionKind::Static, false))
+                }
+                _ => panic!("expected `var` or `func`, found `{:?}`", parser.peek()),
+            }
+        }
         _ => ASTStatement::Value(parse_expr(parser)),
     }
 }
