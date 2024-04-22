@@ -1,12 +1,12 @@
 //! "Poor" GDScript abstract syntax tree. Does not interlink any references
 //! and instead represents them as raw strings.
 
+use gdtk_span::Span;
+
 /// A block of statements.
 pub type CodeBlock<'a> = Vec<ASTStatement<'a>>;
 pub type DictValue<'a> = (ASTExpr<'a>, ASTExpr<'a>);
 pub type DictPattern<'a> = (ASTExpr<'a>, Option<Box<ASTMatchPattern<'a>>>);
-
-type Range = std::ops::Range<usize>;
 
 #[derive(Debug, Clone, derivative::Derivative)]
 #[derivative(PartialEq)]
@@ -68,7 +68,7 @@ pub struct ASTEnumStmt<'a> {
     pub identifier: Option<ASTExpr<'a>>,
     pub variants: Vec<ASTEnumVariant<'a>>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, derivative::Derivative)]
@@ -77,7 +77,7 @@ pub struct ASTEnumVariant<'a> {
     pub identifier: ASTExpr<'a>,
     pub value: Option<ASTExpr<'a>>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// A function.
@@ -90,7 +90,7 @@ pub struct ASTFunction<'a> {
     pub kind: ASTFunctionKind,
     pub body: CodeBlock<'a>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// A function's kind.
@@ -108,7 +108,7 @@ pub enum ASTFunctionKind {
 pub struct ASTExpr<'a> {
     pub kind: ASTExprKind<'a>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// An expression's kind.
@@ -155,7 +155,7 @@ pub enum ASTExprKind<'a> {
 pub struct ASTPrefixOp {
     pub kind: ASTPrefixOpKind,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Hash, Eq, enum_as_inner::EnumAsInner)]
@@ -177,7 +177,7 @@ pub enum ASTPrefixOpKind {
 pub struct ASTPostfixOp<'a> {
     pub kind: ASTPostfixOpKind<'a>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 #[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
@@ -342,29 +342,29 @@ pub enum ASTStatement<'a> {
 
 impl ASTStatement<'_> {
     /// The range of the statement. FIXME: make this always return a range
-    pub fn range(&self) -> Option<&Range> {
+    pub fn range(&self) -> Option<&Span> {
         match self {
             ASTStatement::Annotation(_stmt) => None,
-            ASTStatement::Assert(stmt) => Some(&stmt.range),
-            ASTStatement::Break(stmt) => Some(&stmt.range),
-            ASTStatement::Breakpoint(stmt) => Some(&stmt.range),
+            ASTStatement::Assert(stmt) => Some(&stmt.span),
+            ASTStatement::Break(stmt) => Some(&stmt.span),
+            ASTStatement::Breakpoint(stmt) => Some(&stmt.span),
             ASTStatement::Class(_stmt) => None,
-            ASTStatement::ClassName(stmt) => Some(&stmt.range),
-            ASTStatement::Continue(stmt) => Some(&stmt.range),
+            ASTStatement::ClassName(stmt) => Some(&stmt.span),
+            ASTStatement::Continue(stmt) => Some(&stmt.span),
             ASTStatement::If(_stmt) => None,
             ASTStatement::Elif(_stmt) => None,
             ASTStatement::Else(_stmt) => None,
-            ASTStatement::Enum(stmt) => Some(&stmt.range),
-            ASTStatement::Extends(stmt) => Some(&stmt.range),
+            ASTStatement::Enum(stmt) => Some(&stmt.span),
+            ASTStatement::Extends(stmt) => Some(&stmt.span),
             ASTStatement::For(_stmt) => None,
-            ASTStatement::Func(stmt) => Some(&stmt.range),
-            ASTStatement::Pass(stmt) => Some(&stmt.range),
-            ASTStatement::Return(stmt) => Some(&stmt.range),
+            ASTStatement::Func(stmt) => Some(&stmt.span),
+            ASTStatement::Pass(stmt) => Some(&stmt.span),
+            ASTStatement::Return(stmt) => Some(&stmt.span),
             ASTStatement::Signal(_stmt) => None,
             ASTStatement::Match(_stmt) => None,
             ASTStatement::While(_stmt) => None,
             ASTStatement::Variable(_stmt) => None,
-            ASTStatement::Expr(stmt) => Some(&stmt.range),
+            ASTStatement::Expr(stmt) => Some(&stmt.span),
         }
     }
 }
@@ -374,7 +374,7 @@ impl ASTStatement<'_> {
 #[derivative(PartialEq)]
 pub struct ASTPassStmt {
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// An ``assert`` statement.
@@ -383,7 +383,7 @@ pub struct ASTPassStmt {
 pub struct ASTAssertStmt<'a> {
     pub expr: ASTExpr<'a>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// A ``break`` statement.
@@ -391,7 +391,7 @@ pub struct ASTAssertStmt<'a> {
 #[derivative(PartialEq)]
 pub struct ASTBreakStmt {
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// A ``breakpoint`` statement.
@@ -399,7 +399,7 @@ pub struct ASTBreakStmt {
 #[derivative(PartialEq)]
 pub struct ASTBreakpointStmt {
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// A ``class_name`` statement.
@@ -408,7 +408,7 @@ pub struct ASTBreakpointStmt {
 pub struct ASTClassNameStmt<'a> {
     pub identifier: ASTExpr<'a>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// A ``continue`` statement.
@@ -416,7 +416,7 @@ pub struct ASTClassNameStmt<'a> {
 #[derivative(PartialEq)]
 pub struct ASTContinueStmt {
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// An ``extends`` statement.
@@ -425,7 +425,7 @@ pub struct ASTContinueStmt {
 pub struct ASTExtendsStmt<'a> {
     pub identifier: ASTExpr<'a>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// A ``for`` loop statement.
@@ -443,7 +443,7 @@ pub struct ASTForStmt<'a> {
 pub struct ASTReturnStmt<'a> {
     pub expr: Option<ASTExpr<'a>>,
     #[derivative(PartialEq = "ignore")]
-    pub range: Range,
+    pub span: Span,
 }
 
 /// A ``while`` loop statement.

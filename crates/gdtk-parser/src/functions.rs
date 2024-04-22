@@ -12,7 +12,7 @@ pub fn parse_func<'a>(
     kind: ASTFunctionKind,
     lambda: bool,
 ) -> ASTFunction<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     if parser.peek().is_some_and(|t| t.kind.is_static()) {
         parser.next();
@@ -62,7 +62,7 @@ pub fn parse_func<'a>(
         return_type: return_type.map(Box::new),
         kind,
         body,
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     }
 }
 
@@ -73,7 +73,7 @@ mod tests {
     use crate::functions::parse_func;
     use crate::test_utils::{create_parser, make_ident, make_number};
 
-    const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { range: 0..0 });
+    const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { span: 0..0 });
 
     #[test]
     fn test_parse_func_simple() {
@@ -84,7 +84,7 @@ mod tests {
             return_type: None,
             body: vec![PASS_STMT],
             kind: ASTFunctionKind::Regular,
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -100,7 +100,7 @@ mod tests {
             return_type: Some(Box::new(make_ident("int"))),
             kind: ASTFunctionKind::Regular,
             body: vec![PASS_STMT],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -116,7 +116,7 @@ mod tests {
             return_type: None,
             kind: ASTFunctionKind::Regular,
             body: vec![PASS_STMT],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -132,7 +132,7 @@ mod tests {
             return_type: Some(Box::new(make_ident("int"))),
             kind: ASTFunctionKind::Regular,
             body: vec![PASS_STMT],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -177,7 +177,7 @@ mod tests {
             return_type: None,
             kind: ASTFunctionKind::Regular,
             body: vec![PASS_STMT],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -193,7 +193,7 @@ mod tests {
             return_type: None,
             kind: ASTFunctionKind::Static,
             body: vec![PASS_STMT],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Static, false);
 

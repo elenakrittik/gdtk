@@ -15,7 +15,7 @@ impl Visitor<'_> for IdentifierCasing {
 
         if cased != *identifier {
             let report = Self::report().and_label(miette::LabeledSpan::at(
-                class.identifier.range.clone(),
+                class.identifier.span.clone(),
                 "Class names should be in PascalCase.",
             ));
 
@@ -31,7 +31,7 @@ impl Visitor<'_> for IdentifierCasing {
 
         if cased != *identifier {
             let report = Self::report().and_label(miette::LabeledSpan::at(
-                stmt.identifier.range.clone(),
+                stmt.identifier.span.clone(),
                 "Class name is not in title case.",
             ));
 
@@ -46,7 +46,7 @@ impl Visitor<'_> for IdentifierCasing {
 
             if cased != *ident {
                 let report = Self::report().and_label(miette::LabeledSpan::at(
-                    identifier.range.clone(),
+                    identifier.span.clone(),
                     "Enum name is not in title case.",
                 ));
 
@@ -63,7 +63,7 @@ impl Visitor<'_> for IdentifierCasing {
 
         if cased != *identifier {
             let report = Self::report().and_label(miette::LabeledSpan::at(
-                variant.identifier.range.clone(),
+                variant.identifier.span.clone(),
                 "Enum variant name is not in screaming snake case.",
             ));
 
@@ -78,7 +78,7 @@ impl Visitor<'_> for IdentifierCasing {
 
             if cased != *ident {
                 let report = Self::report().and_label(miette::LabeledSpan::at(
-                    identifier.range.clone(),
+                    identifier.span.clone(),
                     "Function name is not in snake case.",
                 ));
 
@@ -96,7 +96,7 @@ impl Visitor<'_> for IdentifierCasing {
 
         if cased != *identifier {
             let report = Self::report().and_label(miette::LabeledSpan::at(
-                signal.identifier.range.clone(),
+                signal.identifier.span.clone(),
                 "Signal name is not in snake case.",
             ));
 
@@ -114,7 +114,7 @@ impl Visitor<'_> for IdentifierCasing {
 
         if cased != *identifier {
             let report = Self::report().and_label(miette::LabeledSpan::at(
-                variable.identifier.range.clone(),
+                variable.identifier.span.clone(),
                 "Binding name is not in snake case.",
             ));
 
@@ -128,7 +128,7 @@ impl Visitor<'_> for IdentifierCasing {
 
         if cased != *identifier {
             let report = Self::report().and_label(miette::LabeledSpan::at(
-                variable.identifier.range.clone(),
+                variable.identifier.span.clone(),
                 "Variable name is not in snake case.",
             ));
 

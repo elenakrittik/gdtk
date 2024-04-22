@@ -7,5 +7,5 @@ edition = "2021"
 heck = "0.5.0"
 miette = "7.2.0"
 gdtk-ast = { version = "0.1.0", path = "../gdtk-ast" }
-gdtk-diag = { version = "0.1.0", path = "../gdtk-diag" }
 gdtk-macros = { version = "0.1.0", path = "../gdtk-macros" }
+gdtk-span = { path = "../gdtk-span", version = "0.1.0" }

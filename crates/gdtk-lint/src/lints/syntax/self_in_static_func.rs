@@ -18,10 +18,10 @@ impl<'a> Visitor<'a> for SelfInStaticFunc<'a> {
         self.current_func = previous;
     }
 
-    fn visit_identifier_expr(&mut self, identifier: &str, range: &std::ops::Range<usize>) {
+    fn visit_identifier_expr(&mut self, identifier: &str, span: &gdtk_span::Span) {
         if self.current_func.is_some_and(|func| func.kind.is_static()) && identifier == "self" {
             let report = Self::report()
-                .and_label(miette::LabeledSpan::at(range.clone(), "`self` found here"));
+                .and_label(miette::LabeledSpan::at(span.clone(), "`self` found here"));
 
             self.submit(report);
         }

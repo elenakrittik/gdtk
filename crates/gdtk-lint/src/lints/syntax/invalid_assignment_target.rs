@@ -19,16 +19,16 @@ impl Visitor<'_> for InvalidAssignmentTarget {
         lhs: &ast::ASTExpr,
         op: &ast::ASTBinaryOp,
         rhs: &ast::ASTExpr,
-        _range: &std::ops::Range<usize>,
+        _span: &gdtk_span::Span,
     ) {
         if op.is_any_assignment() && !is_valid_assignment_target(lhs) {
             let mut report = Self::report()
                 .and_label(miette::LabeledSpan::at(
-                    rhs.range.clone(),
+                    rhs.span.clone(),
                     "..while trying to assign this expression",
                 ))
                 .and_label(miette::LabeledSpan::at(
-                    lhs.range.clone(),
+                    lhs.span.clone(),
                     "..to this target expression",
                 ));
 

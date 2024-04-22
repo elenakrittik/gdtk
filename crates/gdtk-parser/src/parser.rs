@@ -1,13 +1,14 @@
 use std::iter::Peekable;
 
 use gdtk_lexer::Token;
+use gdtk_span::Span;
 
 /// A wrapper around token iterator with additional functionality.
 #[derive(Debug)]
 pub struct Parser<I> {
     pub iter: I,
     pub is_inside_parens: bool,
-    pub current_token_range: Option<std::ops::Range<usize>>,
+    pub current_token_span: Option<Span>,
 }
 
 impl<'a, I> Parser<Peekable<I>>
@@ -18,17 +19,17 @@ where
         Self {
             iter: iter.peekable(),
             is_inside_parens: false,
-            current_token_range: None,
+            current_token_span: None,
         }
     }
 
-    pub fn range_start(&mut self) -> usize {
-        self.peek().as_ref().map(|t| t.range.start).unwrap_or(0)
+    pub fn span_start(&mut self) -> usize {
+        self.peek().as_ref().map(|t| t.span.start).unwrap_or(0)
     }
 
-    pub fn finish_range(&mut self, start: usize) -> std::ops::Range<usize> {
+    pub fn finish_span(&mut self, start: usize) -> Span {
         let end = self
-            .current_token_range
+            .current_token_span
             .as_ref()
             .map(|r| r.end)
             .unwrap_or(0);
@@ -78,7 +79,7 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         self.skip_blanks();
-        self.current_token_range = self.iter.peek().map(|t| t.range.start..t.range.end);
+        self.current_token_span = self.iter.peek().map(|t| t.span.start..t.span.end);
         self.iter.next()
     }
 }
@@ -88,18 +89,18 @@ mod tests {
     use crate::test_utils::create_parser;
 
     #[test]
-    fn test_range_tracking() {
+    fn test_span_tracking() {
         let mut parser = create_parser("var hello = 2");
 
         assert!(parser.next().unwrap().kind.is_var());
 
-        let start = parser.range_start();
+        let start = parser.span_start();
 
         assert!(parser.next().unwrap().kind.is_identifier());
         assert!(parser.next().unwrap().kind.is_assignment());
 
-        let range = parser.finish_range(start);
+        let span = parser.finish_span(start);
 
-        assert_eq!(range, 4..11); // 'hello ='
+        assert_eq!(span, 4..11); // 'hello ='
     }
 }

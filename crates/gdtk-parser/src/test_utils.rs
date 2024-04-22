@@ -16,20 +16,20 @@ pub(crate) fn next_kind<'a>(
 pub(crate) fn make_ident(ident: &str) -> ASTExpr<'_> {
     ASTExpr {
         kind: ASTExprKind::Identifier(ident),
-        range: 0..0,
+        span: 0..0,
     }
 }
 
 pub(crate) fn make_number(num: u64) -> ASTExpr<'static> {
     ASTExpr {
         kind: ASTExprKind::Number(num),
-        range: 0..0,
+        span: 0..0,
     }
 }
 
 pub(crate) fn make_string(string: &str) -> ASTExpr<'_> {
     ASTExpr {
         kind: ASTExprKind::String(string),
-        range: 0..0,
+        span: 0..0,
     }
 }

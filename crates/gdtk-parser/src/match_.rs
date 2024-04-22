@@ -162,7 +162,7 @@ mod tests {
     use crate::match_::{parse_match, parse_match_arm, parse_match_pattern};
     use crate::test_utils::{create_parser, make_ident, make_number};
 
-    const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { range: 0..0 });
+    const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { span: 0..0 });
 
     #[test]
     fn test_value_pattern() {

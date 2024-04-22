@@ -2,6 +2,7 @@ use gdtk_ast::{
     ASTBinaryOp, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPostfixOpKind, ASTPrefixOp, ASTPrefixOpKind,
 };
 use gdtk_lexer::{Token, TokenKind};
+use gdtk_span::Span;
 use pratt::{Affix, Associativity, PrattParser, Precedence};
 
 use crate::{
@@ -102,8 +103,8 @@ fn parse_expr_with_ops<'a>(
         None => panic!("expected expression"),
         _ => None,
     } {
-        let range = parser.next().unwrap().range;
-        result.push(ExprIR::Prefix(ASTPrefixOp { kind: op, range }));
+        let span = parser.next().unwrap().span;
+        result.push(ExprIR::Prefix(ASTPrefixOp { kind: op, span }));
     }
 
     result.push(parse_expr_without_ops(parser));
@@ -119,7 +120,7 @@ fn parse_expr_with_ops<'a>(
             break;
         }
 
-        let start = parser.range_start();
+        let start = parser.span_start();
 
         match parser.next().unwrap().kind {
             TokenKind::OpeningParenthesis => {
@@ -134,11 +135,11 @@ fn parse_expr_with_ops<'a>(
 
                 expect!(parser, TokenKind::ClosingParenthesis);
 
-                let range = parser.finish_range(start);
+                let span = parser.finish_span(start);
 
                 result.push(ExprIR::Postfix(ASTPostfixOp {
                     kind: ASTPostfixOpKind::Call(values),
-                    range,
+                    span,
                 }));
             }
             TokenKind::OpeningBracket => {
@@ -153,11 +154,11 @@ fn parse_expr_with_ops<'a>(
 
                 expect!(parser, TokenKind::ClosingBracket);
 
-                let range = parser.finish_range(start);
+                let span = parser.finish_span(start);
 
                 result.push(ExprIR::Postfix(ASTPostfixOp {
                     kind: ASTPostfixOpKind::Subscript(values),
-                    range,
+                    span,
                 }));
             }
             _ => unreachable!(),
@@ -171,8 +172,9 @@ fn parse_expr_with_ops<'a>(
 fn parse_expr_without_ops<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ExprIR<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
+    // TODO: rewrite using expect! and add a #[rustfmt::skip]
     let kind = match &parser.peek().expect("unexpected EOF").kind {
         TokenKind::Identifier(_) => {
             ASTExprKind::Identifier(parser.next().unwrap().kind.into_identifier().unwrap())
@@ -212,7 +214,7 @@ fn parse_expr_without_ops<'a>(
         TokenKind::OpeningBracket => ASTExprKind::Array(parse_array(parser)),
         TokenKind::OpeningBrace => ASTExprKind::Dictionary(parse_dictionary(parser)),
         TokenKind::OpeningParenthesis => {
-            let start = parser.range_start();
+            let start = parser.span_start();
 
             parser.next();
 
@@ -227,7 +229,7 @@ fn parse_expr_without_ops<'a>(
 
             expect!(parser, TokenKind::ClosingParenthesis);
 
-            return ExprIR::Group(values, parser.finish_range(start));
+            return ExprIR::Group(values, parser.finish_span(start));
         }
         TokenKind::Null => advance_and_parse(parser, |_| ASTExprKind::Null),
         _ => panic!("unknown or unsupported expression: {:#?}", parser.peek()),
@@ -235,7 +237,7 @@ fn parse_expr_without_ops<'a>(
 
     ExprIR::Primary(ASTExpr {
         kind,
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     })
 }
 
@@ -244,7 +246,7 @@ enum ExprIR<'a> {
     Prefix(ASTPrefixOp),
     Postfix(ASTPostfixOp<'a>),
     Binary(ASTBinaryOp<'a>),
-    Group(Vec<ASTExpr<'a>>, std::ops::Range<usize>),
+    Group(Vec<ASTExpr<'a>>, Span),
     Primary(ASTExpr<'a>),
 }
 
@@ -338,9 +340,9 @@ where
     fn primary(&mut self, input: Self::Input) -> Result<Self::Output, Self::Error> {
         Ok(match input {
             ExprIR::Primary(val) => val,
-            ExprIR::Group(vals, range) => ASTExpr {
+            ExprIR::Group(vals, span) => ASTExpr {
                 kind: ASTExprKind::Group(vals),
-                range,
+                span,
             },
             _ => unreachable!(),
         })
@@ -352,32 +354,32 @@ where
         op: Self::Input,
         rhs: Self::Output,
     ) -> Result<Self::Output, Self::Error> {
-        let range = lhs.range.start..rhs.range.end;
+        let span = lhs.span.start..rhs.span.end;
 
         Ok(ASTExpr {
             kind: ASTExprKind::BinaryExpr(Box::new(lhs), op.into_binary().unwrap(), Box::new(rhs)),
-            range,
+            span,
         })
     }
 
     fn prefix(&mut self, op: Self::Input, rhs: Self::Output) -> Result<Self::Output, Self::Error> {
         let op = op.into_prefix().unwrap();
-        let range = op.range.start..rhs.range.end;
+        let span = op.span.start..rhs.span.end;
 
         Ok(ASTExpr {
             kind: ASTExprKind::PrefixExpr(op, Box::new(rhs)),
-            range,
+            span,
         })
     }
 
     fn postfix(&mut self, lhs: Self::Output, op: Self::Input) -> Result<Self::Output, Self::Error> {
         let op = op.into_postfix().unwrap();
 
-        let range = lhs.range.start..op.range.end;
+        let span = lhs.span.start..op.span.end;
 
         Ok(ASTExpr {
             kind: ASTExprKind::PostfixExpr(Box::new(lhs), op),
-            range,
+            span,
         })
     }
 }

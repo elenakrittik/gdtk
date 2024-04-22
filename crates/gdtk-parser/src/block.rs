@@ -57,7 +57,7 @@ mod tests {
     #[test]
     fn test_parse_block_indents() {
         let mut parser = create_parser("\n    pass\n");
-        let expected = vec![ASTStatement::Pass(ASTPassStmt { range: 0..0 })];
+        let expected = vec![ASTStatement::Pass(ASTPassStmt { span: 0..0 })];
         let result = parse_block(&mut parser, false);
 
         assert_eq!(result, expected);
@@ -66,7 +66,7 @@ mod tests {
     #[test]
     fn test_parse_block_parens() {
         let mut parser = create_parser("\n    pass)");
-        let expected = vec![ASTStatement::Pass(ASTPassStmt { range: 0..0 })];
+        let expected = vec![ASTStatement::Pass(ASTPassStmt { span: 0..0 })];
         let result = parse_block(&mut parser, true);
 
         assert_eq!(result, expected);
@@ -75,7 +75,7 @@ mod tests {
     #[test]
     fn test_parse_block_inline() {
         let mut parser = create_parser("pass");
-        let expected = vec![ASTStatement::Pass(ASTPassStmt { range: 0..0 })];
+        let expected = vec![ASTStatement::Pass(ASTPassStmt { span: 0..0 })];
         let result = parse_block(&mut parser, false);
 
         assert_eq!(result, expected);
@@ -85,8 +85,8 @@ mod tests {
     fn test_parse_block_semicolons() {
         let mut parser = create_parser("\n    pass;pass");
         let expected = vec![
-            ASTStatement::Pass(ASTPassStmt { range: 0..0 }),
-            ASTStatement::Pass(ASTPassStmt { range: 0..0 }),
+            ASTStatement::Pass(ASTPassStmt { span: 0..0 }),
+            ASTStatement::Pass(ASTPassStmt { span: 0..0 }),
         ];
         let result = parse_block(&mut parser, false);
 

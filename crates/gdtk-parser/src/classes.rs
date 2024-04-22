@@ -7,7 +7,7 @@ use crate::utils::{advance_and_parse, delemited_by, expect, parse_ident};
 use crate::Parser;
 
 pub fn parse_enum<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) -> ASTEnumStmt<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     expect!(parser, TokenKind::Enum);
 
@@ -25,7 +25,7 @@ pub fn parse_enum<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) 
     fn parse_enum_variant<'a>(
         parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
     ) -> ASTEnumVariant<'a> {
-        let start = parser.range_start();
+        let start = parser.span_start();
 
         let identifier = parse_ident(parser);
 
@@ -38,7 +38,7 @@ pub fn parse_enum<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) 
         ASTEnumVariant {
             identifier,
             value,
-            range: parser.finish_range(start),
+            span: parser.finish_span(start),
         }
     }
 
@@ -56,7 +56,7 @@ pub fn parse_enum<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) 
     ASTEnumStmt {
         identifier,
         variants,
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     }
 }
 
@@ -94,7 +94,7 @@ mod tests {
     use crate::classes::{parse_class, parse_enum};
     use crate::test_utils::{create_parser, make_ident, make_number, make_string};
 
-    const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { range: 0..0 });
+    const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { span: 0..0 });
 
     #[test]
     fn test_parse_class() {
@@ -128,7 +128,7 @@ mod tests {
         let expected = ASTEnumStmt {
             identifier: None,
             variants: vec![],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -141,7 +141,7 @@ mod tests {
         let expected = ASTEnumStmt {
             identifier: Some(make_ident("State")),
             variants: vec![],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -157,15 +157,15 @@ mod tests {
                 ASTEnumVariant {
                     identifier: make_ident("WALKING"),
                     value: None,
-                    range: 0..0,
+                    span: 0..0,
                 },
                 ASTEnumVariant {
                     identifier: make_ident("JUMPING"),
                     value: None,
-                    range: 0..0,
+                    span: 0..0,
                 },
             ],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -181,15 +181,15 @@ mod tests {
                 ASTEnumVariant {
                     identifier: make_ident("WALKING"),
                     value: None,
-                    range: 0..0,
+                    span: 0..0,
                 },
                 ASTEnumVariant {
                     identifier: make_ident("JUMPING"),
                     value: None,
-                    range: 0..0,
+                    span: 0..0,
                 },
             ],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -205,15 +205,15 @@ mod tests {
                 ASTEnumVariant {
                     identifier: make_ident("WALKING"),
                     value: Some(make_number(1)),
-                    range: 0..0,
+                    span: 0..0,
                 },
                 ASTEnumVariant {
                     identifier: make_ident("JUMPING"),
                     value: Some(make_string("invalid")),
-                    range: 0..0,
+                    span: 0..0,
                 },
             ],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_enum(&mut parser);
 
@@ -229,15 +229,15 @@ mod tests {
                 ASTEnumVariant {
                     identifier: make_ident("WALKING"),
                     value: Some(make_number(1)),
-                    range: 0..0,
+                    span: 0..0,
                 },
                 ASTEnumVariant {
                     identifier: make_ident("JUMPING"),
                     value: Some(make_string("invalid")),
-                    range: 0..0,
+                    span: 0..0,
                 },
             ],
-            range: 0..0,
+            span: 0..0,
         };
         let result = parse_enum(&mut parser);
 

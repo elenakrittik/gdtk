@@ -14,7 +14,7 @@ impl Visitor<'_> for UnnecessaryPass {
                 && block.len() > 1
             {
                 let report = Self::report().and_label(miette::LabeledSpan::at(
-                    stmt.range.clone(),
+                    stmt.span.clone(),
                     "`pass` found here",
                 ));
 

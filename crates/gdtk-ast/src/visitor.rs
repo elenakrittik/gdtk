@@ -1,6 +1,6 @@
 use crate::ast;
 
-type Range = std::ops::Range<usize>;
+use gdtk_span::Span;
 
 pub trait Visitor<'a>: Sized {
     fn visit_file(&mut self, file: &'a ast::ASTFile<'a>) {
@@ -179,56 +179,56 @@ pub trait Visitor<'a>: Sized {
         walk_expr(self, expr);
     }
 
-    fn visit_group_expr(&mut self, exprs: &'a [ast::ASTExpr], range: &'a Range) {
-        walk_group_expr(self, exprs, range)
+    fn visit_group_expr(&mut self, exprs: &'a [ast::ASTExpr], span: &'a Span) {
+        walk_group_expr(self, exprs, span)
     }
 
-    fn visit_identifier_expr(&mut self, identifier: &'a str, range: &'a Range) {
-        walk_identifier_expr(self, identifier, range)
+    fn visit_identifier_expr(&mut self, identifier: &'a str, span: &'a Span) {
+        walk_identifier_expr(self, identifier, span)
     }
 
-    fn visit_number_expr(&mut self, number: u64, range: &'a Range) {
-        walk_number_expr(self, number, range)
+    fn visit_number_expr(&mut self, number: u64, span: &'a Span) {
+        walk_number_expr(self, number, span)
     }
 
-    fn visit_float_expr(&mut self, float: f64, range: &'a Range) {
-        walk_float_expr(self, float, range)
+    fn visit_float_expr(&mut self, float: f64, span: &'a Span) {
+        walk_float_expr(self, float, span)
     }
 
-    fn visit_string_expr(&mut self, string: &'a str, range: &'a Range) {
-        walk_string_expr(self, string, range)
+    fn visit_string_expr(&mut self, string: &'a str, span: &'a Span) {
+        walk_string_expr(self, string, span)
     }
 
-    fn visit_string_name_expr(&mut self, string: &'a str, range: &'a Range) {
-        walk_string_name_expr(self, string, range)
+    fn visit_string_name_expr(&mut self, string: &'a str, span: &'a Span) {
+        walk_string_name_expr(self, string, span)
     }
 
-    fn visit_node_expr(&mut self, path: &'a str, range: &'a Range) {
-        walk_node_expr(self, path, range)
+    fn visit_node_expr(&mut self, path: &'a str, span: &'a Span) {
+        walk_node_expr(self, path, span)
     }
 
-    fn visit_unique_node_expr(&mut self, path: &'a str, range: &'a Range) {
-        walk_unique_node_expr(self, path, range)
+    fn visit_unique_node_expr(&mut self, path: &'a str, span: &'a Span) {
+        walk_unique_node_expr(self, path, span)
     }
 
-    fn visit_node_path_expr(&mut self, path: &'a str, range: &'a Range) {
-        walk_node_path_expr(self, path, range)
+    fn visit_node_path_expr(&mut self, path: &'a str, span: &'a Span) {
+        walk_node_path_expr(self, path, span)
     }
 
-    fn visit_boolean_expr(&mut self, boolean: bool, range: &'a Range) {
-        walk_boolean_expr(self, boolean, range)
+    fn visit_boolean_expr(&mut self, boolean: bool, span: &'a Span) {
+        walk_boolean_expr(self, boolean, span)
     }
 
-    fn visit_null_expr(&mut self, range: &'a Range) {
-        walk_null_expr(self, range)
+    fn visit_null_expr(&mut self, span: &'a Span) {
+        walk_null_expr(self, span)
     }
 
-    fn visit_array_expr(&mut self, exprs: &'a [ast::ASTExpr], range: &'a Range) {
-        walk_array_expr(self, exprs, range)
+    fn visit_array_expr(&mut self, exprs: &'a [ast::ASTExpr], span: &'a Span) {
+        walk_array_expr(self, exprs, span)
     }
 
-    fn visit_dictionary_expr(&mut self, pairs: &'a [ast::DictValue], range: &'a Range) {
-        walk_dictionary_expr(self, pairs, range)
+    fn visit_dictionary_expr(&mut self, pairs: &'a [ast::DictValue], span: &'a Span) {
+        walk_dictionary_expr(self, pairs, span)
     }
 
     fn visit_lambda_expr(&mut self, func: &'a ast::ASTFunction<'a>) {
@@ -243,9 +243,9 @@ pub trait Visitor<'a>: Sized {
         &mut self,
         expr: &'a ast::ASTExpr,
         op: &'a ast::ASTPostfixOp,
-        range: &'a Range,
+        span: &'a Span,
     ) {
-        walk_postfix_expr(self, expr, op, range);
+        walk_postfix_expr(self, expr, op, span);
     }
 
     fn visit_binary_expr(
@@ -253,9 +253,9 @@ pub trait Visitor<'a>: Sized {
         lhs: &'a ast::ASTExpr,
         op: &'a ast::ASTBinaryOp,
         rhs: &'a ast::ASTExpr,
-        range: &'a Range,
+        span: &'a Span,
     ) {
-        walk_binary_expr(self, lhs, op, rhs, range)
+        walk_binary_expr(self, lhs, op, rhs, span)
     }
 }
 
@@ -576,30 +576,30 @@ pub fn walk_exprs<'a>(visitor: &mut impl Visitor<'a>, exprs: &'a [ast::ASTExpr<'
 #[rustfmt::skip]
 pub fn walk_expr<'a>(visitor: &mut impl Visitor<'a>, expr: &'a ast::ASTExpr<'a>) {
     match expr {
-        ast::ASTExpr { range, kind: ast::ASTExprKind::Group(exprs) } => visitor.visit_group_expr(exprs, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::Identifier(identifier) } => visitor.visit_identifier_expr(identifier, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::Number(number) } => visitor.visit_number_expr(*number, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::Float(float) } => visitor.visit_float_expr(*float, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::String(string) } => visitor.visit_string_expr(string, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::StringName(string) } => visitor.visit_string_name_expr(string, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::Node(path) } => visitor.visit_node_expr(path, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::UniqueNode(path) } => visitor.visit_unique_node_expr(path, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::NodePath(path) } => visitor.visit_node_path_expr(path, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::Boolean(boolean) } => visitor.visit_boolean_expr(*boolean, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::Null } => visitor.visit_null_expr(range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::Array(exprs) } => visitor.visit_array_expr(exprs, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::Dictionary(pairs) } => visitor.visit_dictionary_expr(pairs.as_slice(), range),
-        ast::ASTExpr { range: _, kind: ast::ASTExprKind::Lambda(func) } => visitor.visit_lambda_expr(func),
-        ast::ASTExpr { range: _, kind: ast::ASTExprKind::PrefixExpr(op, expr) } => visitor.visit_prefix_expr(op, expr),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::PostfixExpr(expr, op) } => visitor.visit_postfix_expr(expr, op, range),
-        ast::ASTExpr { range, kind: ast::ASTExprKind::BinaryExpr(lhs, op, rhs) } => visitor.visit_binary_expr(lhs, op, rhs, range),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::Group(exprs) } => visitor.visit_group_expr(exprs, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::Identifier(identifier) } => visitor.visit_identifier_expr(identifier, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::Number(number) } => visitor.visit_number_expr(*number, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::Float(float) } => visitor.visit_float_expr(*float, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::String(string) } => visitor.visit_string_expr(string, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::StringName(string) } => visitor.visit_string_name_expr(string, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::Node(path) } => visitor.visit_node_expr(path, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::UniqueNode(path) } => visitor.visit_unique_node_expr(path, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::NodePath(path) } => visitor.visit_node_path_expr(path, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::Boolean(boolean) } => visitor.visit_boolean_expr(*boolean, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::Null } => visitor.visit_null_expr(span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::Array(exprs) } => visitor.visit_array_expr(exprs, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::Dictionary(pairs) } => visitor.visit_dictionary_expr(pairs.as_slice(), span),
+        ast::ASTExpr { span: _, kind: ast::ASTExprKind::Lambda(func) } => visitor.visit_lambda_expr(func),
+        ast::ASTExpr { span: _, kind: ast::ASTExprKind::PrefixExpr(op, expr) } => visitor.visit_prefix_expr(op, expr),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::PostfixExpr(expr, op) } => visitor.visit_postfix_expr(expr, op, span),
+        ast::ASTExpr { span, kind: ast::ASTExprKind::BinaryExpr(lhs, op, rhs) } => visitor.visit_binary_expr(lhs, op, rhs, span),
     }
 }
 
 pub fn walk_group_expr<'a>(
     visitor: &mut impl Visitor<'a>,
     exprs: &'a [ast::ASTExpr],
-    _range: &'a Range,
+    _span: &'a Span,
 ) {
     visitor.visit_exprs(exprs);
 }
@@ -607,34 +607,34 @@ pub fn walk_group_expr<'a>(
 pub fn walk_identifier_expr<'a>(
     _visitor: &mut impl Visitor<'a>,
     _identifier: &'a str,
-    _range: &'a Range,
+    _span: &'a Span,
 ) {
 }
-pub fn walk_number_expr<'a>(_visitor: &mut impl Visitor<'a>, _number: u64, _range: &'a Range) {}
-pub fn walk_float_expr<'a>(_visitor: &mut impl Visitor<'a>, _float: f64, _range: &'a Range) {}
-pub fn walk_string_expr<'a>(_visitor: &mut impl Visitor<'a>, _string: &'a str, _range: &'a Range) {}
+pub fn walk_number_expr<'a>(_visitor: &mut impl Visitor<'a>, _number: u64, _span: &'a Span) {}
+pub fn walk_float_expr<'a>(_visitor: &mut impl Visitor<'a>, _float: f64, _span: &'a Span) {}
+pub fn walk_string_expr<'a>(_visitor: &mut impl Visitor<'a>, _string: &'a str, _span: &'a Span) {}
 pub fn walk_string_name_expr<'a>(
     _visitor: &mut impl Visitor<'a>,
     _string: &'a str,
-    _range: &'a Range,
+    _span: &'a Span,
 ) {
 }
-pub fn walk_node_expr<'a>(_visitor: &mut impl Visitor<'a>, _path: &'a str, _range: &'a Range) {}
+pub fn walk_node_expr<'a>(_visitor: &mut impl Visitor<'a>, _path: &'a str, _span: &'a Span) {}
 pub fn walk_unique_node_expr<'a>(
     _visitor: &mut impl Visitor<'a>,
     _path: &'a str,
-    _range: &'a Range,
+    _span: &'a Span,
 ) {
 }
-pub fn walk_node_path_expr<'a>(_visitor: &mut impl Visitor<'a>, _path: &'a str, _range: &'a Range) {
+pub fn walk_node_path_expr<'a>(_visitor: &mut impl Visitor<'a>, _path: &'a str, _span: &'a Span) {
 }
-pub fn walk_boolean_expr<'a>(_visitor: &mut impl Visitor<'a>, _boolean: bool, _range: &'a Range) {}
-pub fn walk_null_expr<'a>(_visitor: &mut impl Visitor<'a>, _range: &'a Range) {}
+pub fn walk_boolean_expr<'a>(_visitor: &mut impl Visitor<'a>, _boolean: bool, _span: &'a Span) {}
+pub fn walk_null_expr<'a>(_visitor: &mut impl Visitor<'a>, _span: &'a Span) {}
 
 pub fn walk_array_expr<'a>(
     visitor: &mut impl Visitor<'a>,
     exprs: &'a [ast::ASTExpr],
-    _range: &'a Range,
+    _span: &'a Span,
 ) {
     visitor.visit_exprs(exprs);
 }
@@ -642,7 +642,7 @@ pub fn walk_array_expr<'a>(
 pub fn walk_dictionary_expr<'a>(
     visitor: &mut impl Visitor<'a>,
     pairs: &'a [ast::DictValue],
-    _range: &'a Range,
+    _span: &'a Span,
 ) {
     for (key, value) in pairs {
         visitor.visit_expr(key);
@@ -676,7 +676,7 @@ pub fn walk_postfix_expr<'a>(
     visitor: &mut impl Visitor<'a>,
     expr: &'a ast::ASTExpr,
     op: &'a ast::ASTPostfixOp,
-    _range: &'a Range,
+    _span: &'a Span,
 ) {
     visitor.visit_expr(expr);
 
@@ -691,7 +691,7 @@ pub fn walk_binary_expr<'a>(
     lhs: &'a ast::ASTExpr,
     op: &'a ast::ASTBinaryOp,
     rhs: &'a ast::ASTExpr,
-    _range: &'a Range,
+    _span: &'a Span,
 ) {
     visitor.visit_expr(lhs);
 

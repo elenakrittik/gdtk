@@ -18,7 +18,7 @@ use crate::{
 pub fn parse_return_stmt<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     expect!(parser, TokenKind::Return);
 
@@ -30,7 +30,7 @@ pub fn parse_return_stmt<'a>(
 
     ASTStatement::Return(ASTReturnStmt {
         expr,
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     })
 }
 
@@ -70,7 +70,7 @@ pub fn parse_for_stmt<'a>(
 pub fn parse_classname_stmt<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     expect!(parser, TokenKind::ClassName);
 
@@ -78,7 +78,7 @@ pub fn parse_classname_stmt<'a>(
 
     ASTStatement::ClassName(ASTClassNameStmt {
         identifier,
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     })
 }
 
@@ -86,7 +86,7 @@ pub fn parse_classname_stmt<'a>(
 pub fn parse_extends_stmt<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     expect!(parser, TokenKind::Extends);
 
@@ -94,7 +94,7 @@ pub fn parse_extends_stmt<'a>(
 
     ASTStatement::Extends(ASTExtendsStmt {
         identifier,
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     })
 }
 
@@ -190,12 +190,12 @@ fn parse_iflike<'a>(
 pub fn parse_break_stmt<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     expect!(parser, TokenKind::Break);
 
     ASTStatement::Break(ASTBreakStmt {
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     })
 }
 
@@ -203,12 +203,12 @@ pub fn parse_break_stmt<'a>(
 pub fn parse_breakpoint_stmt<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     expect!(parser, TokenKind::Breakpoint);
 
     ASTStatement::Breakpoint(ASTBreakpointStmt {
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     })
 }
 
@@ -216,12 +216,12 @@ pub fn parse_breakpoint_stmt<'a>(
 pub fn parse_continue_stmt<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     expect!(parser, TokenKind::Continue);
 
     ASTStatement::Continue(ASTContinueStmt {
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     })
 }
 
@@ -229,12 +229,12 @@ pub fn parse_continue_stmt<'a>(
 pub fn parse_pass_stmt<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     expect!(parser, TokenKind::Pass);
 
     ASTStatement::Pass(ASTPassStmt {
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     })
 }
 
@@ -242,14 +242,14 @@ pub fn parse_pass_stmt<'a>(
 pub fn parse_assert_stmt<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     expect!(parser, TokenKind::Assert);
     let expr = parse_expr(parser);
 
     ASTStatement::Assert(ASTAssertStmt {
         expr,
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     })
 }
 
@@ -317,7 +317,7 @@ mod tests {
         let mut parser = create_parser("class_name A");
         let expected = ASTStatement::ClassName(ASTClassNameStmt {
             identifier: make_ident("A"),
-            range: 0..0,
+            span: 0..0,
         });
         let result = parse_classname_stmt(&mut parser);
 
@@ -329,7 +329,7 @@ mod tests {
         let mut parser = create_parser("extends A");
         let expected = ASTStatement::Extends(ASTExtendsStmt {
             identifier: make_ident("A"),
-            range: 0..0,
+            span: 0..0,
         });
         let result = parse_extends_stmt(&mut parser);
 
@@ -341,7 +341,7 @@ mod tests {
         let mut parser = create_parser("return 1");
         let expected = ASTStatement::Return(ASTReturnStmt {
             expr: Some(make_number(1)),
-            range: 0..0,
+            span: 0..0,
         });
         let result = parse_return_stmt(&mut parser);
 
@@ -353,7 +353,7 @@ mod tests {
         let mut parser = create_parser("return");
         let expected = ASTStatement::Return(ASTReturnStmt {
             expr: None,
-            range: 0..0,
+            span: 0..0,
         });
         let result = parse_return_stmt(&mut parser);
 
@@ -396,7 +396,7 @@ mod tests {
             },
             container: ASTExpr {
                 kind: ASTExprKind::Array(vec![make_number(1), make_number(2)]),
-                range: 0..0,
+                span: 0..0,
             },
             block: vec![ASTStatement::Expr(make_number(3))],
         });

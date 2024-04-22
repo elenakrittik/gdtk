@@ -58,12 +58,13 @@ where
     callback(parser)
 }
 
+/// Parse an identifier.
 pub fn parse_ident<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) -> ASTExpr<'a> {
-    let start = parser.range_start();
+    let start = parser.span_start();
 
     ASTExpr {
         kind: ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s)),
-        range: parser.finish_range(start),
+        span: parser.finish_span(start),
     }
 }
 

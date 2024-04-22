@@ -1,18 +1,18 @@
 use logos::Logos;
 
-use crate::callbacks::{convert, convert_radix, mut_open_paren, trim_quotes, State};
+use crate::callbacks::{convert, convert_radix, trim_quotes};
 use crate::error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {
-    pub range: std::ops::Range<usize>,
+    pub span: gdtk_span::Span,
     pub kind: TokenKind<'a>,
 }
 
 impl<'a> Token<'a> {
     pub fn transmute(self, new_kind: TokenKind<'a>) -> Token<'a> {
         Self {
-            range: self.range,
+            span: self.span,
             kind: new_kind,
         }
     }
@@ -25,7 +25,7 @@ impl<'a> Token<'a> {
 
 #[rustfmt::skip]
 #[derive(Logos, Debug, PartialEq, Clone, enum_as_inner::EnumAsInner)]
-#[logos(error = Error, extras = State)]
+#[logos(error = Error)]
 #[logos(subpattern int = r"[0-9](_?[0-9])*_?")]
 #[logos(subpattern float = r"(?&int)\.(?&int)")]
 #[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
@@ -287,22 +287,22 @@ pub enum TokenKind<'a> {
     #[regex("@")]
     Annotation,
 
-    #[token("(", mut_open_paren::<1>)]
+    #[token("(")]
     OpeningParenthesis,
 
-    #[token(")", mut_open_paren::<-1>)]
+    #[token(")")]
     ClosingParenthesis,
 
-    #[token("[", mut_open_paren::<1>)]
+    #[token("[")]
     OpeningBracket,
 
-    #[token("]", mut_open_paren::<-1>)]
+    #[token("]")]
     ClosingBracket,
 
-    #[token("{", mut_open_paren::<1>)]
+    #[token("{")]
     OpeningBrace,
 
-    #[token("}", mut_open_paren::<-1>)]
+    #[token("}")]
     ClosingBrace,
 
     #[token(",")]
