@@ -1,4 +1,0 @@
-https://astyle.sourceforge.net/astyle.html
-https://github.com/dotnet/format
-https://github.com/DotNetAnalyzers/StyleCopAnalyzers
-https://github.com/SonarSource/sonar-dotnet
