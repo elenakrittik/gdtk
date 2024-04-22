@@ -7,12 +7,10 @@ use std::iter::Peekable;
 use gdtk_ast::{ASTFile, CodeBlock};
 use gdtk_lexer::{token::TokenKind, Token};
 
-pub use crate::error::Error;
 use crate::statement::parse_statement;
 
 pub mod block;
 pub mod classes;
-pub mod error;
 pub mod expressions;
 pub mod functions;
 pub mod match_;
@@ -29,7 +27,7 @@ pub mod variables;
 pub type Parser<'a, I> = crate::parser::Parser<Peekable<I>>;
 
 /// Parse the result of lexing a GDScript source code file.
-pub fn parse_file<'a>(tokens: impl Iterator<Item = Token<'a>>) -> Result<ASTFile<'a>, Error> {
+pub fn parse_file<'a>(tokens: impl Iterator<Item = Token<'a>>) -> ASTFile<'a> {
     let mut body: CodeBlock<'_> = vec![];
     let mut parser = crate::parser::Parser::new(tokens);
 
@@ -43,5 +41,5 @@ pub fn parse_file<'a>(tokens: impl Iterator<Item = Token<'a>>) -> Result<ASTFile
         }
     }
 
-    Ok(ASTFile { body })
+    ASTFile { body }
 }
