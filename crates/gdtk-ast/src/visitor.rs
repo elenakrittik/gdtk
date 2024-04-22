@@ -1,6 +1,6 @@
-use crate::ast;
-
 use gdtk_span::Span;
+
+use crate::ast;
 
 pub trait Visitor<'a>: Sized {
     fn visit_file(&mut self, file: &'a ast::ASTFile<'a>) {
@@ -620,14 +620,9 @@ pub fn walk_string_name_expr<'a>(
 ) {
 }
 pub fn walk_node_expr<'a>(_visitor: &mut impl Visitor<'a>, _path: &'a str, _span: &'a Span) {}
-pub fn walk_unique_node_expr<'a>(
-    _visitor: &mut impl Visitor<'a>,
-    _path: &'a str,
-    _span: &'a Span,
-) {
+pub fn walk_unique_node_expr<'a>(_visitor: &mut impl Visitor<'a>, _path: &'a str, _span: &'a Span) {
 }
-pub fn walk_node_path_expr<'a>(_visitor: &mut impl Visitor<'a>, _path: &'a str, _span: &'a Span) {
-}
+pub fn walk_node_path_expr<'a>(_visitor: &mut impl Visitor<'a>, _path: &'a str, _span: &'a Span) {}
 pub fn walk_boolean_expr<'a>(_visitor: &mut impl Visitor<'a>, _boolean: bool, _span: &'a Span) {}
 pub fn walk_null_expr<'a>(_visitor: &mut impl Visitor<'a>, _span: &'a Span) {}
 

@@ -28,11 +28,7 @@ where
     }
 
     pub fn finish_span(&mut self, start: usize) -> Span {
-        let end = self
-            .current_token_span
-            .as_ref()
-            .map(|r| r.end)
-            .unwrap_or(0);
+        let end = self.current_token_span.as_ref().map(|r| r.end).unwrap_or(0);
 
         start..end
     }
