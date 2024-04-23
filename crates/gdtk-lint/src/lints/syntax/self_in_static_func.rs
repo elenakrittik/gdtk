@@ -1,5 +1,5 @@
 use diagnosis::{Diagnostic, Label, Severity};
-use gdtk_ast::{ast, visitor, Visitor};
+use gdtk_ast::{ast, visitor::walk_func, Visitor};
 
 #[derive(Default)]
 pub struct SelfInStaticFunc<'s> {
@@ -11,7 +11,7 @@ impl<'s> Visitor<'s> for SelfInStaticFunc<'s> {
     fn visit_func(&mut self, func: &'s ast::ASTFunction<'s>) {
         let previous = self.current_func.replace(func);
 
-        visitor::walk_func(self, func);
+        walk_func(self, func);
 
         self.current_func = previous;
     }
@@ -23,6 +23,7 @@ impl<'s> Visitor<'s> for SelfInStaticFunc<'s> {
                     "`self` cannot be used in `static` functions",
                     Severity::Error,
                 )
+                .with_code("self-in-static-func")
                 .add_label(Label::new("`self` found here", span)),
             );
         }

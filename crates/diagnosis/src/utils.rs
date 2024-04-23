@@ -12,15 +12,16 @@ impl<'a> Source<'a> {
     }
 
     /// Gives a human-friendly representation of a span: `(line, column)`.
-    pub fn locate(&self, span: &Span) -> (usize, usize) {
-        let mut line = 0usize;
+    /// Returns `None` if the span exists out of source's bounds.
+    pub fn locate(&self, span: &Span) -> Option<(usize, usize)> {
+        let mut line = 1usize;
         let mut column = 0usize;
 
         let mut chars = self.source.chars().enumerate();
 
         loop {
             let Some((idx, c)) = chars.next() else {
-                break;
+                break None;
             };
 
             match c {
@@ -32,16 +33,14 @@ impl<'a> Source<'a> {
             }
 
             if span.contains(&idx) {
-                break;
+                break Some((line, column));
             }
 
             column += 1;
         }
-
-        (line, column)
     }
 
-    /// Get the `n`th line in the source code.
+    /// Get the `n`th (zero-indexed) line in the source code.
     pub fn line(&self, n: usize) -> Option<&'a str> {
         self.source.split('\n').nth(n)
     }

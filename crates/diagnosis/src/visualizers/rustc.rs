@@ -4,20 +4,21 @@ use crate::{
     diagnostic::{Diagnostic, Severity},
     protocol::Visualizer,
     utils::Source,
-    Span,
+    Label, Span,
 };
 
 const ERROR: yansi::Style = yansi::Style::new().red();
 const WARNING: yansi::Style = yansi::Style::new().yellow();
-const ADVICE: yansi::Style = yansi::Style::new().green();
+const CUSTOM: yansi::Style = yansi::Style::new().green();
 const BORDER: yansi::Style = yansi::Style::new().blue();
 
-const fn severity_style(severity: &Severity) -> yansi::Style {
-    match severity {
-        Severity::Error => ERROR,
-        Severity::Warning => WARNING,
-        Severity::Advice => ADVICE,
-    }
+#[derive(thiserror::Error, Debug)]
+pub enum RustcVisualizerError {
+    #[error("IO error: {0}")]
+    IOError(#[from] std::io::Error),
+
+    #[error("Line '{0}' (zero-indexed) was not found in the provided source.")]
+    LineNotFound(usize),
 }
 
 /// A visualizer that visualizes diagnostics in rustc's fashion.
@@ -52,7 +53,7 @@ impl<'a> RustcVisualizer<'a> {
 }
 
 impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
-    type Error = std::io::Error;
+    type Error = RustcVisualizerError;
 
     fn visualize(
         &self,
@@ -64,15 +65,21 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
             severity,
             code,
             span,
-            labels: _,
+            labels,
             help: _,
         } = diag;
 
         self.visualize_primary_error(severity, code, message, f)?;
-
         writeln!(f)?;
-
         self.visualize_source_pointer(span, f)?;
+
+        for Label { message, span } in labels {
+            let Some((line, _)) = self.source.locate(span) else {
+                continue;
+            };
+
+            s
+        }
 
         writeln!(f)?;
 
@@ -81,6 +88,12 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
 }
 
 impl<'a> RustcVisualizer<'a> {
+    /// Visualize a primary error message.
+    ///
+    /// Example output may look like this:
+    /// ```md
+    /// error[E0499]: cannot borrow `v` as mutable more than once at a time
+    /// ```
     fn visualize_primary_error(
         &self,
         severity: Severity,
@@ -88,11 +101,10 @@ impl<'a> RustcVisualizer<'a> {
         message: &str,
         f: &mut impl std::io::Write,
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        let style = severity_style(&severity);
-        let directive = match severity {
-            Severity::Error => "error",
-            Severity::Warning => "warning",
-            Severity::Advice => "advice",
+        let (directive, style) = match severity {
+            Severity::Error => ("error", ERROR),
+            Severity::Warning => ("warning", WARNING),
+            Severity::Custom(kind) => (kind, CUSTOM),
         };
 
         write!(f, "{}", directive.paint(style))?;
@@ -109,6 +121,12 @@ impl<'a> RustcVisualizer<'a> {
         Ok(())
     }
 
+    /// Visualize a "source pointer".
+    ///
+    /// Example output may look like this:
+    /// ```md
+    ///  --> src/main.rs:4:15
+    /// ```
     fn visualize_source_pointer(
         &self,
         span: Option<&Span>,
@@ -117,11 +135,34 @@ impl<'a> RustcVisualizer<'a> {
         write!(f, "{}", "  --> ".paint(BORDER))?;
         write!(f, "{}", self.source_name)?;
 
+        // #![feature(let_chains)], i miss you so much
         if let Some(span) = span {
-            let (line, column) = self.source.locate(&span);
-
-            write!(f, ":{}:{}", line, column)?;
+            if let Some((line, column)) = self.source.locate(&span) {
+                write!(f, ":{}:{}", line, column)?;
+            }
         }
+
+        Ok(())
+    }
+
+    /// Visualize a source line (one-based).
+    ///
+    /// Example output may look like this:
+    /// ```md
+    ///  3 |     let one = &mut v;
+    /// ```
+    fn visualize_source_line(
+        &self,
+        line: usize,
+        f: &mut impl std::io::Write,
+    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
+        let Some(line_source) = self.source.line(line - 1) else {
+            return Err(RustcVisualizerError::LineNotFound(line - 1));
+        };
+
+        write!(f, "{}", line.paint(BORDER))?;
+        write!(f, " {} ", "|".paint(BORDER))?;
+        write!(f, "{}", line_source)?;
 
         Ok(())
     }

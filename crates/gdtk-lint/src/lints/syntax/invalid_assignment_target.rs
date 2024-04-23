@@ -1,5 +1,5 @@
 use diagnosis::{Diagnostic, Label, Severity};
-use gdtk_ast::{ast, Visitor};
+use gdtk_ast::{ast, visitor::walk_expr, Visitor};
 
 crate::lint!(InvalidAssignmentTarget);
 
@@ -12,7 +12,9 @@ impl<'s> Visitor<'s> for InvalidAssignmentTarget<'s> {
         _span: &'s gdtk_span::Span,
     ) {
         if op.is_any_assignment() && !is_valid_assignment_target(lhs) {
-            let mut diag = Diagnostic::new("Invalid assignment target.", Severity::Advice)
+            let mut diag = Diagnostic::new("Invalid assignment target.", Severity::Warning)
+                .with_code("invalid-assignment-target")
+                .with_span(&lhs.span)
                 .add_label(Label::new(
                     "..while trying to assign this expression",
                     &rhs.span,
@@ -28,8 +30,8 @@ impl<'s> Visitor<'s> for InvalidAssignmentTarget<'s> {
             self.0.push(diag);
         }
 
-        self.visit_expr(lhs);
-        self.visit_expr(rhs);
+        walk_expr(self, lhs);
+        walk_expr(self, rhs);
     }
 }
 

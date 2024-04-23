@@ -1,2 +1,3 @@
 func Hello():
     pass
+    pass

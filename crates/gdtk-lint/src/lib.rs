@@ -11,7 +11,7 @@ pub fn run_builtin_lints<'s>(file: &'s gdtk_ast::ASTFile) -> Vec<diagnosis::Diag
     let mut diagnostics = vec![];
 
     // Construct lints.
-    let mut identifier_casing = style::identifier_casing::IdentifierCasing::default();
+    let mut identifier_casing = style::identifier_case::IdentifierCase::default();
     let mut unnecessary_pass = redundancy::unnecessary_pass::UnnecessaryPass::default();
     let mut invalid_assignment_target =
         syntax::invalid_assignment_target::InvalidAssignmentTarget::default();

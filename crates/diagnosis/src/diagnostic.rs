@@ -5,7 +5,7 @@ pub struct Diagnostic<'a> {
     /// The primary message of the diagnostic.
     pub message: &'a str,
     /// The severity of the diagnostic.
-    pub severity: Severity,
+    pub severity: Severity<'a>,
     /// The code of the diagnostic.
     pub code: Option<&'a str>,
     /// The primary source span of the diagnostic.
@@ -17,7 +17,7 @@ pub struct Diagnostic<'a> {
 }
 
 impl<'a> Diagnostic<'a> {
-    pub fn new(message: &'a str, severity: Severity) -> Self {
+    pub fn new(message: &'a str, severity: Severity<'a>) -> Self {
         Self {
             message,
             severity,
@@ -50,13 +50,13 @@ impl<'a> Diagnostic<'a> {
 }
 
 /// The severity of a diagnostic.
-pub enum Severity {
+pub enum Severity<'a> {
     /// A critical error that prevents the program from doing job.
     Error,
     /// A warning that may impact the program's behavior in a non-fatal way.
     Warning,
-    /// A general informational message.
-    Advice,
+    /// A custom message kind.
+    Custom(&'a str),
 }
 
 /// A label attached to a diagnostic.

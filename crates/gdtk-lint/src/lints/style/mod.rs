@@ -1,1 +1,1 @@
-pub mod identifier_casing;
+pub mod identifier_case;
