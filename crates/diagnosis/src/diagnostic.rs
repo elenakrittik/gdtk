@@ -1,14 +1,3 @@
-// error[E0499]: cannot borrow `v` as mutable more than once at a time
-//  --> src/main.rs:4:15
-//   |
-// 3 |     let one = &mut v;
-//   |               ------ first mutable borrow occurs here
-// 4 |     let two = &mut v;
-//   |               ^^^^^^ second mutable borrow occurs here
-// 5 |
-// 6 |     dbg!(one, two);
-//   |          --- first borrow later used here
-
 pub type Span = std::ops::Range<usize>;
 
 /// A diagnostic.
