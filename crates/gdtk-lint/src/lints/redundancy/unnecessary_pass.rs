@@ -1,24 +1,19 @@
+use diagnosis::{Diagnostic, Label};
 use gdtk_ast::{ast, Visitor};
 
-#[gdtk_macros::lint(
-    message = "Unnecessary `pass`, this block is not empty.",
-    code = "gdtk::redundancy::unnecessary_pass",
-    severity = Advice
-)]
-pub struct UnnecessaryPass {}
+crate::lint!(UnnecessaryPass);
 
-impl Visitor<'_> for UnnecessaryPass {
-    fn visit_block(&mut self, block: &[ast::ASTStatement]) {
+impl<'s> Visitor<'s> for UnnecessaryPass<'s> {
+    fn visit_block(&mut self, block: &'s [ast::ASTStatement]) {
         for stmt in block.iter().skip(1) {
             if let Some(stmt) = stmt.as_pass()
                 && block.len() > 1
             {
-                let report = Self::report().and_label(miette::LabeledSpan::at(
-                    stmt.span.clone(),
-                    "`pass` found here",
-                ));
-
-                self.submit(report);
+                self.0.push(
+                    Diagnostic::new("Unnecessary `pass`.", diagnosis::Severity::Advice)
+                        .with_span(&stmt.span)
+                        .add_label(Label::new("`pass` found here", &stmt.span)),
+                );
 
                 continue;
             }

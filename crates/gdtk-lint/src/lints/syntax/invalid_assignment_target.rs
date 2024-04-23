@@ -1,44 +1,31 @@
+use diagnosis::{Diagnostic, Label, Severity};
 use gdtk_ast::{ast, Visitor};
 
-// crate::declare_lint!(
-//     InvalidAssignmentTarget,
-//     code = "gdtk::syntax::invalid_assignment_target",
-//     severity = Error
-// );
+crate::lint!(InvalidAssignmentTarget);
 
-#[gdtk_macros::lint(
-    message = "Invalid assignment target.",
-    code = "gdtk::syntax::invalid_assignment_target",
-    severity = Error
-)]
-pub struct InvalidAssignmentTarget {}
-
-impl Visitor<'_> for InvalidAssignmentTarget {
+impl<'s> Visitor<'s> for InvalidAssignmentTarget<'s> {
     fn visit_binary_expr(
         &mut self,
-        lhs: &ast::ASTExpr,
-        op: &ast::ASTBinaryOp,
-        rhs: &ast::ASTExpr,
-        _span: &gdtk_span::Span,
+        lhs: &'s ast::ASTExpr,
+        op: &'s ast::ASTBinaryOp,
+        rhs: &'s ast::ASTExpr,
+        _span: &'s gdtk_span::Span,
     ) {
         if op.is_any_assignment() && !is_valid_assignment_target(lhs) {
-            let mut report = Self::report()
-                .and_label(miette::LabeledSpan::at(
-                    rhs.span.clone(),
+            let mut diag = Diagnostic::new("Invalid assignment target.", Severity::Advice)
+                .add_label(Label::new(
                     "..while trying to assign this expression",
+                    &rhs.span,
                 ))
-                .and_label(miette::LabeledSpan::at(
-                    lhs.span.clone(),
-                    "..to this target expression",
-                ));
+                .add_label(Label::new("..to this target expression", &lhs.span));
 
             if let Some((_, op, _)) = lhs.kind.as_binary_expr()
                 && op.is_any_assignment()
             {
-                report = report.with_help("Assignment chains are not valid syntax.");
+                diag = diag.add_help("Assignment chains are not valid syntax.");
             }
 
-            self.submit(report);
+            self.0.push(diag);
         }
 
         self.visit_expr(lhs);

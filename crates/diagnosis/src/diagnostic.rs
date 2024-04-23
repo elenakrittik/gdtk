@@ -1,4 +1,4 @@
-pub type Span = std::ops::Range<usize>;
+use crate::Span;
 
 /// A diagnostic.
 pub struct Diagnostic<'a> {

@@ -1,88 +1,77 @@
+use diagnosis::{Diagnostic, Severity};
 use gdtk_ast::{ast, Visitor};
-use heck::{ToShoutySnakeCase, ToSnakeCase, ToTitleCase};
+use heck::{ToShoutySnakeCase, ToSnakeCase, ToUpperCamelCase};
 
-#[gdtk_macros::lint(
-    message = "Identifier is incorrectly cased.",
-    code = "gdtk::style::identifier_casing",
-    severity = Advice
-)]
-pub struct IdentifierCasing {}
+crate::lint!(IdentifierCasing);
 
-impl Visitor<'_> for IdentifierCasing {
-    fn visit_class(&mut self, class: &ast::ASTClassStmt) {
+impl<'s> Visitor<'s> for IdentifierCasing<'s> {
+    fn visit_class(&mut self, class: &'s ast::ASTClassStmt) {
         let identifier = class.identifier.kind.as_identifier().unwrap();
-        let cased = identifier.to_title_case();
+        let cased = identifier.to_upper_camel_case();
 
         if cased != *identifier {
-            let report = Self::report().and_label(miette::LabeledSpan::at(
-                class.identifier.span.clone(),
-                "Class names should be in PascalCase.",
-            ));
-
-            self.submit(report);
+            self.0.push(
+                Diagnostic::new("Class names should be in UpperCamelCase.", Severity::Advice)
+                    .with_span(&class.identifier.span),
+            );
         }
 
         self.visit_block(class.body.as_slice());
     }
 
-    fn visit_class_name_statement(&mut self, stmt: &ast::ASTClassNameStmt) {
+    fn visit_class_name_statement(&mut self, stmt: &'s ast::ASTClassNameStmt) {
         let identifier = stmt.identifier.kind.as_identifier().unwrap();
-        let cased = identifier.to_title_case();
+        let cased = identifier.to_upper_camel_case();
 
         if cased != *identifier {
-            let report = Self::report().and_label(miette::LabeledSpan::at(
-                stmt.identifier.span.clone(),
-                "Class name is not in title case.",
-            ));
-
-            self.submit(report);
+            self.0.push(
+                Diagnostic::new("Class names should be in UpperCamelCase.", Severity::Advice)
+                    .with_span(&stmt.identifier.span),
+            );
         }
     }
 
-    fn visit_enum_statement(&mut self, enum_: &ast::ASTEnumStmt) {
+    fn visit_enum_statement(&mut self, enum_: &'s ast::ASTEnumStmt) {
         if let Some(identifier) = &enum_.identifier {
             let ident = identifier.kind.as_identifier().unwrap();
-            let cased = ident.to_title_case();
+            let cased = ident.to_upper_camel_case();
 
             if cased != *ident {
-                let report = Self::report().and_label(miette::LabeledSpan::at(
-                    identifier.span.clone(),
-                    "Enum name is not in title case.",
-                ));
-
-                self.submit(report);
+                self.0.push(
+                    Diagnostic::new("Enum names should be in UpperCamelCase.", Severity::Advice)
+                        .with_span(&identifier.span),
+                );
             }
         }
 
         self.visit_enum_variants(enum_.variants.as_slice());
     }
 
-    fn visit_enum_variant(&mut self, variant: &ast::ASTEnumVariant) {
+    fn visit_enum_variant(&mut self, variant: &'s ast::ASTEnumVariant) {
         let identifier = variant.identifier.kind.as_identifier().unwrap();
         let cased = identifier.to_shouty_snake_case();
 
         if cased != *identifier {
-            let report = Self::report().and_label(miette::LabeledSpan::at(
-                variant.identifier.span.clone(),
-                "Enum variant name is not in screaming snake case.",
-            ));
-
-            self.submit(report);
+            self.0.push(
+                Diagnostic::new(
+                    "Enum variant names should be in SCREAMING_SNAKE_CASE.",
+                    Severity::Advice,
+                )
+                .with_span(&variant.span),
+            );
         }
     }
 
-    fn visit_func(&mut self, func: &ast::ASTFunction) {
+    fn visit_func(&mut self, func: &'s ast::ASTFunction) {
         if let Some(identifier) = &func.identifier {
             let ident = identifier.kind.as_identifier().unwrap();
             let cased = ident.to_snake_case();
 
             if cased != *ident {
-                let report = Self::report().and_label(miette::LabeledSpan::at(
-                    identifier.span.clone(),
-                    "Function name is not in snake case.",
-                ));
-
-                self.submit(report);
+                self.0.push(
+                    Diagnostic::new("Function names should be in snake_case.", Severity::Advice)
+                        .with_span(&identifier.span),
+                );
             }
         }
 
@@ -90,17 +79,15 @@ impl Visitor<'_> for IdentifierCasing {
         self.visit_block(func.body.as_slice());
     }
 
-    fn visit_signal_statement(&mut self, signal: &ast::ASTSignalStmt) {
+    fn visit_signal_statement(&mut self, signal: &'s ast::ASTSignalStmt) {
         let identifier = signal.identifier.kind.as_identifier().unwrap();
         let cased = identifier.to_snake_case();
 
         if cased != *identifier {
-            let report = Self::report().and_label(miette::LabeledSpan::at(
-                signal.identifier.span.clone(),
-                "Signal name is not in snake case.",
-            ));
-
-            self.submit(report);
+            self.0.push(
+                Diagnostic::new("Signal names should be in snake_case.", Severity::Advice)
+                    .with_span(&signal.identifier.span),
+            );
         }
 
         if let Some(params) = &signal.parameters {
@@ -108,31 +95,15 @@ impl Visitor<'_> for IdentifierCasing {
         }
     }
 
-    fn visit_binding_variable(&mut self, variable: &ast::ASTVariable) {
+    fn visit_any_variable(&mut self, variable: &'s ast::ASTVariable) {
         let identifier = variable.identifier.kind.as_identifier().unwrap();
         let cased = identifier.to_snake_case();
 
         if cased != *identifier {
-            let report = Self::report().and_label(miette::LabeledSpan::at(
-                variable.identifier.span.clone(),
-                "Binding name is not in snake case.",
-            ));
-
-            self.submit(report);
-        }
-    }
-
-    fn visit_any_variable(&mut self, variable: &ast::ASTVariable) {
-        let identifier = variable.identifier.kind.as_identifier().unwrap();
-        let cased = identifier.to_snake_case();
-
-        if cased != *identifier {
-            let report = Self::report().and_label(miette::LabeledSpan::at(
-                variable.identifier.span.clone(),
-                "Variable name is not in snake case.",
-            ));
-
-            self.submit(report);
+            self.0.push(
+                Diagnostic::new("Variable names should be in snake_case.", Severity::Advice)
+                    .with_span(&variable.identifier.span),
+            );
         }
     }
 }

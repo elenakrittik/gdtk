@@ -1,12 +1,13 @@
-#![feature(let_chains)]
+#![feature(let_chains, decl_macro)]
 
 pub mod lints;
+pub mod utils;
 
 use gdtk_ast::Visitor;
 
 use crate::lints::{redundancy, style, syntax};
 
-pub fn run_builtin_lints(file: &gdtk_ast::ASTFile) -> Vec<miette::MietteDiagnostic> {
+pub fn run_builtin_lints<'s>(file: &'s gdtk_ast::ASTFile) -> Vec<diagnosis::Diagnostic<'s>> {
     let mut diagnostics = vec![];
 
     // Construct lints.
@@ -23,10 +24,10 @@ pub fn run_builtin_lints(file: &gdtk_ast::ASTFile) -> Vec<miette::MietteDiagnost
     self_in_static.visit_file(file);
 
     // Collect diagnostics.
-    diagnostics.extend(identifier_casing.into_diagnostics());
-    diagnostics.extend(unnecessary_pass.into_diagnostics());
-    diagnostics.extend(invalid_assignment_target.into_diagnostics());
-    diagnostics.extend(self_in_static.into_diagnostics());
+    diagnostics.extend(identifier_casing.0);
+    diagnostics.extend(unnecessary_pass.0);
+    diagnostics.extend(invalid_assignment_target.0);
+    diagnostics.extend(self_in_static.diagnostics);
 
     diagnostics
 }

@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+use diagnosis::protocol::Visualizer;
+
 use crate::utils::get_content;
 
 pub fn run(file: PathBuf) -> anyhow::Result<()> {
@@ -8,14 +10,11 @@ pub fn run(file: PathBuf) -> anyhow::Result<()> {
     let parsed = gdtk_parser::parse_file(lexed);
 
     let diagnostics = gdtk_lint::run_builtin_lints(&parsed);
+    let vis = diagnosis::visualizers::rustc::RustcVisualizer::new(file.to_str().unwrap(), &content);
+    let mut stderr = std::io::stderr().lock();
 
     for diagnostic in diagnostics {
-        let report = miette::Report::new(diagnostic).with_source_code(miette::NamedSource::new(
-            file.to_str().unwrap(),
-            content.clone(),
-        ));
-
-        eprintln!("{:?}", report);
+        vis.visualize(diagnostic, &mut stderr)?;
     }
 
     Ok(())

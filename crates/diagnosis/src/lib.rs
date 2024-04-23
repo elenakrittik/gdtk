@@ -1,4 +1,9 @@
 pub mod diagnostic;
 pub mod protocol;
-pub mod report;
+pub mod utils;
 pub mod visualizers;
+
+pub type Span = std::ops::Range<usize>;
+
+pub use diagnostic::{Diagnostic, Label, Severity};
+pub use protocol::Visualizer;
