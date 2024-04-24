@@ -4,7 +4,7 @@ use crate::{
     diagnostic::{Diagnostic, Severity},
     protocol::Visualizer,
     utils::Source,
-    Label, Span,
+    Highlight, Span,
 };
 
 const ERROR: yansi::Style = yansi::Style::new().red();
@@ -32,7 +32,7 @@ pub enum RustcVisualizerError {
 /// 3 |     let one = &mut v;
 ///   |               ------ first mutable borrow occurs here
 /// 4 |     let two = &mut v;
-///   |               ^^^^^^ second mutable borrow occurs here
+///   |               ------ second mutable borrow occurs here
 /// 5 |
 /// 6 |     dbg!(one, two);
 ///   |          --- first borrow later used here
@@ -65,7 +65,7 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
             severity,
             code,
             span,
-            labels,
+            highlights,
             help: _,
         } = diag;
 
@@ -73,12 +73,20 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
         writeln!(f)?;
         self.visualize_source_pointer(span, f)?;
 
-        for Label { message, span } in labels {
-            let Some((line, _)) = self.source.locate(span) else {
+        if highlights.len() > 0 {
+            writeln!(f)?;
+            write!(f, "  {}", '|'.paint(BORDER))?;
+        }
+
+        for Highlight { span, message } in highlights {
+            let Some((line, offset)) = self.source.locate(span) else {
                 continue;
             };
 
-            s
+            writeln!(f)?;
+            self.visualize_source_line(line, f)?;
+            writeln!(f)?;
+            self.visualize_span_highlight(offset, span.end - span.start, message, f)?;
         }
 
         writeln!(f)?;
@@ -132,7 +140,7 @@ impl<'a> RustcVisualizer<'a> {
         span: Option<&Span>,
         f: &mut impl std::io::Write,
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        write!(f, "{}", "  --> ".paint(BORDER))?;
+        write!(f, " {}", "--> ".paint(BORDER))?;
         write!(f, "{}", self.source_name)?;
 
         // #![feature(let_chains)], i miss you so much
@@ -163,6 +171,31 @@ impl<'a> RustcVisualizer<'a> {
         write!(f, "{}", line.paint(BORDER))?;
         write!(f, " {} ", "|".paint(BORDER))?;
         write!(f, "{}", line_source)?;
+
+        Ok(())
+    }
+
+    /// Visualize a source line (one-based).
+    ///
+    /// Example output may look like this:
+    /// ```md
+    ///    |               ------ first mutable borrow occurs here
+    /// ```
+    fn visualize_span_highlight(
+        &self,
+        offset: usize,
+        len: usize,
+        message: Option<&str>,
+        f: &mut impl std::io::Write,
+    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
+        write!(f, "  {} ", "|".paint(BORDER))?;
+        // std::iter::repeat_n but stable
+        write!(f, "{}", std::iter::repeat(' ').take(offset).collect::<String>())?;
+        write!(f, "{}", std::iter::repeat('-').take(len).collect::<String>().paint(BORDER))?;
+
+        if let Some(message) = message {
+            write!(f, " {}", message.paint(BORDER))?;
+        }
 
         Ok(())
     }

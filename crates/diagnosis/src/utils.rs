@@ -24,6 +24,8 @@ impl<'a> Source<'a> {
                 break None;
             };
 
+            column += 1;
+
             match c {
                 '\n' => {
                     line += 1;
@@ -33,10 +35,8 @@ impl<'a> Source<'a> {
             }
 
             if span.contains(&idx) {
-                break Some((line, column));
+                break Some((line, column - 1));
             }
-
-            column += 1;
         }
     }
 

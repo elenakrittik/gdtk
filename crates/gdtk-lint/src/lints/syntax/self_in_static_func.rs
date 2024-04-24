@@ -1,4 +1,4 @@
-use diagnosis::{Diagnostic, Label, Severity};
+use diagnosis::{Diagnostic, Highlight, Severity};
 use gdtk_ast::{ast, visitor::walk_func, Visitor};
 
 #[derive(Default)]
@@ -24,7 +24,7 @@ impl<'s> Visitor<'s> for SelfInStaticFunc<'s> {
                     Severity::Error,
                 )
                 .with_code("self-in-static-func")
-                .add_label(Label::new("`self` found here", span)),
+                .add_highlight(Highlight::new(span, Some("`self` found here"))),
             );
         }
     }

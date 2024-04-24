@@ -1,4 +1,4 @@
-use diagnosis::{Diagnostic, Label, Severity};
+use diagnosis::{Diagnostic, Highlight, Severity};
 use gdtk_ast::{ast, visitor::walk_block, Visitor};
 
 crate::lint!(UnnecessaryPass);
@@ -11,7 +11,7 @@ impl<'s> Visitor<'s> for UnnecessaryPass<'s> {
                     Diagnostic::new("Unnecessary `pass`.", Severity::Warning)
                         .with_span(&stmt.span)
                         .with_code("unnecessary-pass")
-                        .add_label(Label::new("`pass` found here", &stmt.span)),
+                        .add_highlight(Highlight::new(&stmt.span, Some("`pass` found here")))
                 );
             }
         }

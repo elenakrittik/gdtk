@@ -1,4 +1,4 @@
-use diagnosis::{Diagnostic, Severity};
+use diagnosis::{Diagnostic, Severity, Highlight};
 use gdtk_ast::{
     ast,
     visitor::{walk_block, walk_enum_variants, walk_parameters},
@@ -20,7 +20,8 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                     Severity::Warning,
                 )
                 .with_code("identifier-case")
-                .with_span(&class.identifier.span),
+                .with_span(&class.identifier.span)
+                    .add_highlight(Highlight::new(&class.identifier.span, None))
             );
         }
 
@@ -38,7 +39,8 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                     Severity::Warning,
                 )
                 .with_code("identifier-case")
-                .with_span(&stmt.identifier.span),
+                .with_span(&stmt.identifier.span)
+                    .add_highlight(Highlight::new(&stmt.identifier.span, None))
             );
         }
     }
@@ -52,7 +54,8 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                 self.0.push(
                     Diagnostic::new("Enum names should be in UpperCamelCase.", Severity::Warning)
                         .with_code("identifier-case")
-                        .with_span(&identifier.span),
+                        .with_span(&identifier.span)
+                    .add_highlight(Highlight::new(&identifier.span, None))
                 );
             }
         }
@@ -71,7 +74,8 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                     Severity::Warning,
                 )
                 .with_code("identifier-case")
-                .with_span(&variant.span),
+                .with_span(&variant.span)
+                    .add_highlight(Highlight::new(&variant.identifier.span, None))
             );
         }
     }
@@ -85,7 +89,8 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                 self.0.push(
                     Diagnostic::new("Function names should be in snake_case.", Severity::Warning)
                         .with_code("identifier-case")
-                        .with_span(&identifier.span),
+                        .with_span(&identifier.span)
+                    .add_highlight(Highlight::new(&identifier.span, None))
                 );
             }
         }
@@ -102,7 +107,8 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
             self.0.push(
                 Diagnostic::new("Signal names should be in snake_case.", Severity::Warning)
                     .with_code("identifier-case")
-                    .with_span(&signal.identifier.span),
+                    .with_span(&signal.identifier.span)
+                    .add_highlight(Highlight::new(&signal.identifier.span, None))
             );
         }
 
@@ -119,7 +125,8 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
             self.0.push(
                 Diagnostic::new("Variable names should be in snake_case.", Severity::Warning)
                     .with_code("identifier-case")
-                    .with_span(&variable.identifier.span),
+                    .with_span(&variable.identifier.span)
+                    .add_highlight(Highlight::new(&variable.identifier.span, None))
             );
         }
     }

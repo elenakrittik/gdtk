@@ -10,8 +10,8 @@ pub struct Diagnostic<'a> {
     pub code: Option<&'a str>,
     /// The primary source span of the diagnostic.
     pub span: Option<&'a Span>,
-    /// Additional labels attached to the diagnostic.
-    pub labels: Vec<Label<'a>>,
+    /// Additional highlights attached to the diagnostic.
+    pub highlights: Vec<Highlight<'a>>,
     /// Additional help messages attached to the diagnostic.
     pub help: Vec<&'a str>,
 }
@@ -23,8 +23,8 @@ impl<'a> Diagnostic<'a> {
             severity,
             code: None,
             span: None,
-            labels: Vec::new(),
-            help: Vec::new(),
+            highlights: vec![],
+            help: vec![],
         }
     }
 
@@ -38,8 +38,8 @@ impl<'a> Diagnostic<'a> {
         self
     }
 
-    pub fn add_label(mut self, label: Label<'a>) -> Self {
-        self.labels.push(label);
+    pub fn add_highlight(mut self, highlight: Highlight<'a>) -> Self {
+        self.highlights.push(highlight);
         self
     }
 
@@ -59,16 +59,16 @@ pub enum Severity<'a> {
     Custom(&'a str),
 }
 
-/// A label attached to a diagnostic.
-pub struct Label<'a> {
-    /// The message of the label.
-    pub message: &'a str,
-    /// The source span of the label.
+/// A hightlight attached to a diagnostic.
+pub struct Highlight<'a> {
+    /// The source span of the highlight.
     pub span: &'a Span,
+    /// The message of the hightlight.
+    pub message: Option<&'a str>,
 }
 
-impl<'a> Label<'a> {
-    pub fn new(message: &'a str, span: &'a Span) -> Self {
-        Self { message, span }
+impl<'a> Highlight<'a> {
+    pub fn new(span: &'a Span, message: Option<&'a str>) -> Self {
+        Self { span, message }
     }
 }

@@ -5,5 +5,5 @@ pub mod visualizers;
 
 pub type Span = std::ops::Range<usize>;
 
-pub use diagnostic::{Diagnostic, Label, Severity};
+pub use diagnostic::{Diagnostic, Highlight, Severity};
 pub use protocol::Visualizer;
