@@ -45,7 +45,7 @@ impl<'a> ASTVariable<'a> {
     }
 }
 
-#[derive(Debug, Clone, derivative::Derivative)]
+#[derive(Debug, Clone, derivative::Derivative, enum_as_inner::EnumAsInner)]
 #[derivative(PartialEq)]
 pub enum ASTVariableKind {
     /// Regular (`var`) variable.

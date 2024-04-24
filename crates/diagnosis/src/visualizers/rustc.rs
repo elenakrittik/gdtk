@@ -10,7 +10,8 @@ use crate::{
 const ERROR: yansi::Style = yansi::Style::new().red();
 const WARNING: yansi::Style = yansi::Style::new().yellow();
 const CUSTOM: yansi::Style = yansi::Style::new().green();
-const BORDER: yansi::Style = yansi::Style::new().blue();
+const HELP: yansi::Style = yansi::Style::new().blue();
+const BORDER: yansi::Style = yansi::Style::new().cyan();
 
 #[derive(thiserror::Error, Debug)]
 pub enum RustcVisualizerError {
@@ -21,25 +22,44 @@ pub enum RustcVisualizerError {
     LineNotFound(usize),
 }
 
+/// Styles to apply to parts of the output.
+pub struct Styles {
+    pub error: yansi::Style,
+    pub warning: yansi::Style,
+    pub custom: yansi::Style,
+    pub help: yansi::Style,
+    pub border: yansi::Style,
+}
+
+impl Default for Styles {
+    fn default() -> Self {
+        Self {
+            error: ERROR,
+            warning: WARNING,
+            custom: CUSTOM,
+            help: HELP,
+            border: BORDER,
+        }
+    }
+}
+
 /// A visualizer that visualizes diagnostics in rustc's fashion.
 ///
 /// An example output may look like this:
 ///
-/// ```
-/// error[E0499]: cannot borrow `v` as mutable more than once at a time
-///  --> src/main.rs:4:15
+/// ```md
+/// warning[invalid-assignment-target]: Invalid assignment target.
+///  --> .\quick.gd:2:4
 ///   |
-/// 3 |     let one = &mut v;
-///   |               ------ first mutable borrow occurs here
-/// 4 |     let two = &mut v;
-///   |               ------ second mutable borrow occurs here
-/// 5 |
-/// 6 |     dbg!(one, two);
-///   |          --- first borrow later used here
+/// 2 |     2 + 2 = 5
+///   |             - ..while trying to assign this expression
+/// 2 |     2 + 2 = 5
+///   |     ----- ..to this target expression
 /// ```
 pub struct RustcVisualizer<'a> {
     source_name: &'a str,
     source: Source<'a>,
+    styles: Styles,
 }
 
 impl<'a> RustcVisualizer<'a> {
@@ -48,7 +68,14 @@ impl<'a> RustcVisualizer<'a> {
         Self {
             source_name,
             source: Source::new(source),
+            styles: Styles::default(),
         }
+    }
+
+    /// Update colors used by the visualizer.
+    pub fn with_styles(mut self, styles: Styles) -> Self {
+        self.styles = styles;
+        self
     }
 }
 
@@ -66,7 +93,7 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
             code,
             span,
             highlights,
-            help: _,
+            help_messages,
         } = diag;
 
         self.visualize_primary_error(severity, code, message, f)?;
@@ -75,7 +102,7 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
 
         if highlights.len() > 0 {
             writeln!(f)?;
-            write!(f, "  {}", '|'.paint(BORDER))?;
+            self.visualize_border(None, f)?;
         }
 
         for Highlight { span, message } in highlights {
@@ -86,7 +113,17 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
             writeln!(f)?;
             self.visualize_source_line(line, f)?;
             writeln!(f)?;
-            self.visualize_span_highlight(offset, span.end - span.start, message, f)?;
+            self.visualize_highlight(offset, span.end - span.start, message, f)?;
+        }
+
+        if help_messages.len() > 0 {
+            writeln!(f)?;
+            self.visualize_border(None, f)?;
+        }
+
+        for help_message in help_messages {
+            writeln!(f)?;
+            self.visualize_help_message(help_message, f)?;
         }
 
         writeln!(f)?;
@@ -100,7 +137,7 @@ impl<'a> RustcVisualizer<'a> {
     ///
     /// Example output may look like this:
     /// ```md
-    /// error[E0499]: cannot borrow `v` as mutable more than once at a time
+    /// warning[invalid-assignment-target]: Invalid assignment target.
     /// ```
     fn visualize_primary_error(
         &self,
@@ -133,7 +170,7 @@ impl<'a> RustcVisualizer<'a> {
     ///
     /// Example output may look like this:
     /// ```md
-    ///  --> src/main.rs:4:15
+    ///  --> .\quick.gd:2:4
     /// ```
     fn visualize_source_pointer(
         &self,
@@ -157,7 +194,7 @@ impl<'a> RustcVisualizer<'a> {
     ///
     /// Example output may look like this:
     /// ```md
-    ///  3 |     let one = &mut v;
+    /// 2 |     2 + 2 = 5
     /// ```
     fn visualize_source_line(
         &self,
@@ -168,8 +205,7 @@ impl<'a> RustcVisualizer<'a> {
             return Err(RustcVisualizerError::LineNotFound(line - 1));
         };
 
-        write!(f, "{}", line.paint(BORDER))?;
-        write!(f, " {} ", "|".paint(BORDER))?;
+        self.visualize_border(Some(line), f)?;
         write!(f, "{}", line_source)?;
 
         Ok(())
@@ -179,23 +215,73 @@ impl<'a> RustcVisualizer<'a> {
     ///
     /// Example output may look like this:
     /// ```md
-    ///    |               ------ first mutable borrow occurs here
+    ///   |             - ..while trying to assign this expression
     /// ```
-    fn visualize_span_highlight(
+    fn visualize_highlight(
         &self,
         offset: usize,
         len: usize,
         message: Option<&str>,
         f: &mut impl std::io::Write,
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        write!(f, "  {} ", "|".paint(BORDER))?;
+        self.visualize_border(None, f)?;
         // std::iter::repeat_n but stable
-        write!(f, "{}", std::iter::repeat(' ').take(offset).collect::<String>())?;
-        write!(f, "{}", std::iter::repeat('-').take(len).collect::<String>().paint(BORDER))?;
+        write!(
+            f,
+            "{}",
+            std::iter::repeat(' ').take(offset).collect::<String>()
+        )?;
+        write!(
+            f,
+            "{}",
+            std::iter::repeat('-')
+                .take(len)
+                .collect::<String>()
+                .paint(BORDER)
+        )?;
 
         if let Some(message) = message {
             write!(f, " {}", message.paint(BORDER))?;
         }
+
+        Ok(())
+    }
+
+    /// Visualize a help message.
+    ///
+    /// Example output may look like this:
+    /// ```md
+    ///    = help: assignment chains are not valid syntax
+    /// ```
+    fn visualize_help_message(
+        &self,
+        message: &str,
+        f: &mut impl std::io::Write,
+    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
+        write!(f, "{}", "  = help: ".paint(HELP))?;
+        write!(f, "{}", message.paint(HELP))?;
+
+        Ok(())
+    }
+
+    /// Visualize a help message.
+    ///
+    /// Example output may look like this:
+    /// ```md
+    ///  2 |
+    /// ```
+    fn visualize_border(
+        &self,
+        num: Option<usize>,
+        f: &mut impl std::io::Write,
+    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
+        if let Some(num) = num {
+            write!(f, "{}", num.paint(BORDER))?;
+        } else {
+            write!(f, " ")?;
+        }
+
+        write!(f, " {} ", "|".paint(BORDER))?;
 
         Ok(())
     }

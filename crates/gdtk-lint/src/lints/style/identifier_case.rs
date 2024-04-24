@@ -1,4 +1,4 @@
-use diagnosis::{Diagnostic, Severity, Highlight};
+use diagnosis::{Diagnostic, Highlight, Severity};
 use gdtk_ast::{
     ast,
     visitor::{walk_block, walk_enum_variants, walk_parameters},
@@ -21,7 +21,7 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                 )
                 .with_code("identifier-case")
                 .with_span(&class.identifier.span)
-                    .add_highlight(Highlight::new(&class.identifier.span, None))
+                .add_highlight(Highlight::new(&class.identifier.span)),
             );
         }
 
@@ -40,7 +40,7 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                 )
                 .with_code("identifier-case")
                 .with_span(&stmt.identifier.span)
-                    .add_highlight(Highlight::new(&stmt.identifier.span, None))
+                .add_highlight(Highlight::new(&stmt.identifier.span)),
             );
         }
     }
@@ -55,7 +55,7 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                     Diagnostic::new("Enum names should be in UpperCamelCase.", Severity::Warning)
                         .with_code("identifier-case")
                         .with_span(&identifier.span)
-                    .add_highlight(Highlight::new(&identifier.span, None))
+                        .add_highlight(Highlight::new(&identifier.span)),
                 );
             }
         }
@@ -75,7 +75,7 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                 )
                 .with_code("identifier-case")
                 .with_span(&variant.span)
-                    .add_highlight(Highlight::new(&variant.identifier.span, None))
+                .add_highlight(Highlight::new(&variant.identifier.span)),
             );
         }
     }
@@ -90,7 +90,7 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                     Diagnostic::new("Function names should be in snake_case.", Severity::Warning)
                         .with_code("identifier-case")
                         .with_span(&identifier.span)
-                    .add_highlight(Highlight::new(&identifier.span, None))
+                        .add_highlight(Highlight::new(&identifier.span)),
                 );
             }
         }
@@ -108,7 +108,7 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
                 Diagnostic::new("Signal names should be in snake_case.", Severity::Warning)
                     .with_code("identifier-case")
                     .with_span(&signal.identifier.span)
-                    .add_highlight(Highlight::new(&signal.identifier.span, None))
+                    .add_highlight(Highlight::new(&signal.identifier.span)),
             );
         }
 
@@ -119,15 +119,44 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
 
     fn visit_any_variable(&mut self, variable: &'s ast::ASTVariable) {
         let identifier = *variable.identifier.kind.as_identifier().unwrap();
-        let cased = identifier.to_snake_case();
+
+        let (cased, message) = variable_case_helper(identifier, variable);
 
         if cased != identifier {
             self.0.push(
-                Diagnostic::new("Variable names should be in snake_case.", Severity::Warning)
+                Diagnostic::new(message, Severity::Warning)
                     .with_code("identifier-case")
                     .with_span(&variable.identifier.span)
-                    .add_highlight(Highlight::new(&variable.identifier.span, None))
+                    .add_highlight(Highlight::new(&variable.identifier.span)),
             );
         }
     }
+}
+
+fn variable_case_helper(identifier: &str, variable: &ast::ASTVariable) -> (String, &'static str) {
+    if let Some(value) = &variable.value
+        && let Some((expr, op)) = value.kind.as_postfix_expr()
+        && let Some(&"preload" | &"load") = expr.kind.as_identifier()
+        && let Some(args) = op.kind.as_call()
+        && let [arg] = args.as_slice()
+        && let Some(s) = arg.kind.as_string()
+        && (s.ends_with(".tscn") || s.ends_with(".gd"))
+    {
+        return (
+            identifier.to_upper_camel_case(),
+            "Names of variables that `preload` or `load` scenes or scripts should be in UpperCamelCase."
+        );
+    }
+
+    if variable.kind.is_constant() {
+        return (
+            identifier.to_shouty_snake_case(),
+            "Constant names should be in SCREAMING_SNAKE_CASE.",
+        );
+    }
+
+    (
+        identifier.to_snake_case(),
+        "Variable names should be in snake_case.",
+    )
 }

@@ -13,7 +13,7 @@ pub struct Diagnostic<'a> {
     /// Additional highlights attached to the diagnostic.
     pub highlights: Vec<Highlight<'a>>,
     /// Additional help messages attached to the diagnostic.
-    pub help: Vec<&'a str>,
+    pub help_messages: Vec<&'a str>,
 }
 
 impl<'a> Diagnostic<'a> {
@@ -24,7 +24,7 @@ impl<'a> Diagnostic<'a> {
             code: None,
             span: None,
             highlights: vec![],
-            help: vec![],
+            help_messages: vec![],
         }
     }
 
@@ -44,7 +44,7 @@ impl<'a> Diagnostic<'a> {
     }
 
     pub fn add_help(mut self, help: &'a str) -> Self {
-        self.help.push(help);
+        self.help_messages.push(help);
         self
     }
 }
@@ -68,7 +68,15 @@ pub struct Highlight<'a> {
 }
 
 impl<'a> Highlight<'a> {
-    pub fn new(span: &'a Span, message: Option<&'a str>) -> Self {
-        Self { span, message }
+    pub fn new(span: &'a Span) -> Self {
+        Self {
+            span,
+            message: None,
+        }
+    }
+
+    pub fn with_message(mut self, message: &'a str) -> Self {
+        self.message = Some(message);
+        self
     }
 }

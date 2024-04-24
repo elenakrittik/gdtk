@@ -1,5 +1,2 @@
-func Hello():
-    pass
-    pass
-
-a = b = c
+func _init() -> void:
+    2 + 2 = 5

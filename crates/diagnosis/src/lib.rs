@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 pub mod diagnostic;
 pub mod protocol;
 pub mod utils;

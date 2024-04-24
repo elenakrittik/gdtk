@@ -24,7 +24,7 @@ impl<'s> Visitor<'s> for SelfInStaticFunc<'s> {
                     Severity::Error,
                 )
                 .with_code("self-in-static-func")
-                .add_highlight(Highlight::new(span, Some("`self` found here"))),
+                .add_highlight(Highlight::new(span).with_message("`self` found here")),
             );
         }
     }

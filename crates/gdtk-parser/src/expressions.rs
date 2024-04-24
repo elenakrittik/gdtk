@@ -174,42 +174,20 @@ fn parse_expr_without_ops<'a>(
 ) -> ExprIR<'a> {
     let start = parser.span_start();
 
-    // TODO: rewrite using expect! and add a #[rustfmt::skip]
+    #[rustfmt::skip]
     let kind = match &parser.peek().expect("unexpected EOF").kind {
-        TokenKind::Identifier(_) => {
-            ASTExprKind::Identifier(parser.next().unwrap().kind.into_identifier().unwrap())
-        }
-        TokenKind::Integer(_) => {
-            ASTExprKind::Number(parser.next().unwrap().kind.into_integer().unwrap())
-        }
-        TokenKind::BinaryInteger(_) => {
-            ASTExprKind::Number(parser.next().unwrap().kind.into_binary_integer().unwrap())
-        }
-        TokenKind::HexInteger(_) => {
-            ASTExprKind::Number(parser.next().unwrap().kind.into_hex_integer().unwrap())
-        }
-        TokenKind::Float(_) => {
-            ASTExprKind::Float(parser.next().unwrap().kind.into_float().unwrap())
-        }
-        TokenKind::ScientificFloat(_) => {
-            ASTExprKind::Float(parser.next().unwrap().kind.into_scientific_float().unwrap())
-        }
-        TokenKind::String(_) => {
-            ASTExprKind::String(parser.next().unwrap().kind.into_string().unwrap())
-        }
-        TokenKind::StringName(_) => {
-            ASTExprKind::StringName(parser.next().unwrap().kind.into_string_name().unwrap())
-        }
-        TokenKind::Node(_) => ASTExprKind::Node(parser.next().unwrap().kind.into_node().unwrap()),
-        TokenKind::UniqueNode(_) => {
-            ASTExprKind::UniqueNode(parser.next().unwrap().kind.into_unique_node().unwrap())
-        }
-        TokenKind::NodePath(_) => {
-            ASTExprKind::NodePath(parser.next().unwrap().kind.into_node_path().unwrap())
-        }
-        TokenKind::Boolean(_) => {
-            ASTExprKind::Boolean(parser.next().unwrap().kind.into_boolean().unwrap())
-        }
+        TokenKind::Identifier(_) => ASTExprKind::Identifier(expect!(parser, TokenKind::Identifier(s), s))
+        ,TokenKind::Integer(_) => ASTExprKind::Number(expect!(parser, TokenKind::Integer(n), n)),
+        TokenKind::BinaryInteger(_) => ASTExprKind::Number(expect!(parser, TokenKind::BinaryInteger(n), n)),
+        TokenKind::HexInteger(_) => ASTExprKind::Number(expect!(parser, TokenKind::HexInteger(n), n)),
+        TokenKind::Float(_) => ASTExprKind::Float(expect!(parser, TokenKind::Float(f), f)),
+        TokenKind::ScientificFloat(_) => ASTExprKind::Float(expect!(parser, TokenKind::ScientificFloat(f), f)),
+        TokenKind::String(_) => ASTExprKind::String(expect!(parser, TokenKind::String(s), s)),
+        TokenKind::StringName(_) => ASTExprKind::StringName(expect!(parser, TokenKind::StringName(s), s)),
+        TokenKind::Node(_) => ASTExprKind::Node(expect!(parser, TokenKind::Node(s), s)),
+        TokenKind::UniqueNode(_) => ASTExprKind::UniqueNode(expect!(parser, TokenKind::UniqueNode(s), s)),
+        TokenKind::NodePath(_) => ASTExprKind::NodePath(expect!(parser, TokenKind::NodePath(s), s)),
+        TokenKind::Boolean(_) => ASTExprKind::Boolean(expect!(parser, TokenKind::Boolean(b), b)),
         TokenKind::Func => ASTExprKind::Lambda(parse_lambda(parser)),
         TokenKind::OpeningBracket => ASTExprKind::Array(parse_array(parser)),
         TokenKind::OpeningBrace => ASTExprKind::Dictionary(parse_dictionary(parser)),

@@ -11,7 +11,9 @@ impl<'s> Visitor<'s> for UnnecessaryPass<'s> {
                     Diagnostic::new("Unnecessary `pass`.", Severity::Warning)
                         .with_span(&stmt.span)
                         .with_code("unnecessary-pass")
-                        .add_highlight(Highlight::new(&stmt.span, Some("`pass` found here")))
+                        .add_highlight(
+                            Highlight::new(&stmt.span).with_message("`pass` found here"),
+                        ),
                 );
             }
         }

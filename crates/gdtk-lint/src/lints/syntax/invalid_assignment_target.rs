@@ -15,11 +15,13 @@ impl<'s> Visitor<'s> for InvalidAssignmentTarget<'s> {
             let mut diag = Diagnostic::new("Invalid assignment target.", Severity::Warning)
                 .with_code("invalid-assignment-target")
                 .with_span(&lhs.span)
-                .add_highlight(Highlight::new(
-                    &rhs.span,
-                    Some("..while trying to assign this expression"),
-                ))
-                .add_highlight(Highlight::new(&lhs.span, Some("..to this target expression")));
+                .add_highlight(
+                    Highlight::new(&rhs.span)
+                        .with_message("..while trying to assign this expression"),
+                )
+                .add_highlight(
+                    Highlight::new(&lhs.span).with_message("..to this target expression"),
+                );
 
             if let Some((_, op, _)) = lhs.kind.as_binary_expr()
                 && op.is_any_assignment()
