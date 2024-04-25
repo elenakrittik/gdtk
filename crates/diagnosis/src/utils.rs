@@ -26,12 +26,9 @@ impl<'a> Source<'a> {
 
             column += 1;
 
-            match c {
-                '\n' => {
-                    line += 1;
-                    column = 0;
-                }
-                _ => (),
+            if c == '\n' {
+                line += 1;
+                column = 0;
             }
 
             if span.contains(&idx) {

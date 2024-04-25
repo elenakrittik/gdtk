@@ -100,7 +100,7 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
         writeln!(f)?;
         self.visualize_source_pointer(span, f)?;
 
-        if highlights.len() > 0 {
+        if !highlights.is_empty() {
             writeln!(f)?;
             self.visualize_border(None, f)?;
         }
@@ -116,7 +116,7 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
             self.visualize_highlight(offset, span.end - span.start, message, f)?;
         }
 
-        if help_messages.len() > 0 {
+        if !help_messages.is_empty() {
             writeln!(f)?;
             self.visualize_border(None, f)?;
         }
@@ -182,7 +182,7 @@ impl<'a> RustcVisualizer<'a> {
 
         // #![feature(let_chains)], i miss you so much
         if let Some(span) = span {
-            if let Some((line, column)) = self.source.locate(&span) {
+            if let Some((line, column)) = self.source.locate(span) {
                 write!(f, ":{}:{}", line, column)?;
             }
         }
@@ -226,19 +226,8 @@ impl<'a> RustcVisualizer<'a> {
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
         self.visualize_border(None, f)?;
         // std::iter::repeat_n but stable
-        write!(
-            f,
-            "{}",
-            std::iter::repeat(' ').take(offset).collect::<String>()
-        )?;
-        write!(
-            f,
-            "{}",
-            std::iter::repeat('-')
-                .take(len)
-                .collect::<String>()
-                .paint(BORDER)
-        )?;
+        write!(f, "{}", " ".repeat(offset))?;
+        write!(f, "{}", "-".repeat(len).paint(BORDER))?;
 
         if let Some(message) = message {
             write!(f, " {}", message.paint(BORDER))?;
