@@ -362,12 +362,12 @@ where
     }
 }
 
-#[cfg(never)]
+#[cfg(test)]
 mod tests {
     use gdtk_ast::*;
 
     use crate::expressions::parse_expr;
-    use crate::test_utils::create_parser;
+    use crate::test_utils::{create_parser, make_ident, make_number, make_string};
 
     #[test]
     fn test_literals() {
@@ -413,14 +413,47 @@ mod tests {
     fn test_parse_prefix_exprs() {
         let inputs = ["await 1", "+1", "-1", "not 1", "!1", "~1"];
         let outputs = [
-            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Await, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Identity, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Negation, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Not, Box::new(ASTExprKind::Number(1))),
-            ASTExprKind::PrefixExpr(ASTPrefixOpKind::Not, Box::new(ASTExprKind::Number(1))),
             ASTExprKind::PrefixExpr(
-                ASTPrefixOpKind::BitwiseNot,
-                Box::new(ASTExprKind::Number(1)),
+                ASTPrefixOp {
+                    kind: ASTPrefixOpKind::Await,
+                    span: 0..0,
+                },
+                Box::new(make_number(1)),
+            ),
+            ASTExprKind::PrefixExpr(
+                ASTPrefixOp {
+                    kind: ASTPrefixOpKind::Identity,
+                    span: 0..0,
+                },
+                Box::new(make_number(1)),
+            ),
+            ASTExprKind::PrefixExpr(
+                ASTPrefixOp {
+                    kind: ASTPrefixOpKind::Negation,
+                    span: 0..0,
+                },
+                Box::new(make_number(1)),
+            ),
+            ASTExprKind::PrefixExpr(
+                ASTPrefixOp {
+                    kind: ASTPrefixOpKind::Not,
+                    span: 0..0,
+                },
+                Box::new(make_number(1)),
+            ),
+            ASTExprKind::PrefixExpr(
+                ASTPrefixOp {
+                    kind: ASTPrefixOpKind::Not,
+                    span: 0..0,
+                },
+                Box::new(make_number(1)),
+            ),
+            ASTExprKind::PrefixExpr(
+                ASTPrefixOp {
+                    kind: ASTPrefixOpKind::BitwiseNot,
+                    span: 0..0,
+                },
+                Box::new(make_number(1)),
             ),
         ];
 
@@ -436,27 +469,41 @@ mod tests {
         let inputs = ["1(2, 3)", "[1, 2, 3][0]", "1.1[0]", "{'foo': 'bar'}['foo']"];
         let outputs = [
             ASTExprKind::PostfixExpr(
-                Box::new(ASTExprKind::Number(1)),
-                ASTPostfixOp::Call(vec![ASTExprKind::Number(2), ASTExprKind::Number(3)]),
+                Box::new(make_number(1)),
+                ASTPostfixOp {
+                    kind: ASTPostfixOpKind::Call(vec![make_number(2), make_number(3)]),
+                    span: 0..0,
+                },
             ),
             ASTExprKind::PostfixExpr(
-                Box::new(ASTExprKind::Array(vec![
-                    ASTExprKind::Number(1),
-                    ASTExprKind::Number(2),
-                    ASTExprKind::Number(3),
-                ])),
-                ASTPostfixOp::Subscript(vec![ASTExprKind::Number(0)]),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::Array(vec![make_number(1), make_number(2), make_number(3)]),
+                    span: 0..0,
+                }),
+                ASTPostfixOp {
+                    kind: ASTPostfixOpKind::Subscript(vec![make_number(0)]),
+                    span: 0..0,
+                },
             ),
             ASTExprKind::PostfixExpr(
-                Box::new(ASTExprKind::Float(1.1)),
-                ASTPostfixOp::Subscript(vec![ASTExprKind::Number(0)]),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::Float(1.1),
+                    span: 0..0,
+                }),
+                ASTPostfixOp {
+                    kind: ASTPostfixOpKind::Subscript(vec![make_number(0)]),
+                    span: 0..0,
+                },
             ),
             ASTExprKind::PostfixExpr(
-                Box::new(ASTExprKind::Dictionary(vec![(
-                    ASTExprKind::String("foo"),
-                    ASTExprKind::String("bar"),
-                )])),
-                ASTPostfixOp::Subscript(vec![ASTExprKind::String("foo")]),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::Dictionary(vec![(make_string("foo"), make_string("bar"))]),
+                    span: 0..0,
+                }),
+                ASTPostfixOp {
+                    kind: ASTPostfixOpKind::Subscript(vec![make_string("foo")]),
+                    span: 0..0,
+                },
             ),
         ];
 
@@ -494,109 +541,109 @@ mod tests {
         ];
         let outputs = [
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::Add,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::Subtract,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::Multiply,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::Divide,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::Remainder,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::BitwiseShiftLeft,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::BitwiseShiftRight,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::BitwiseOr,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::BitwiseAnd,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::BitwiseXor,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::Equals,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::NotEqual,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::Greater,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::GreaterOrEqual,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::LessThan,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::LessOrEqual,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::And,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::Or,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::And,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
+                Box::new(make_number(1)),
                 ASTBinaryOp::Or,
-                Box::new(ASTExprKind::Number(2)),
+                Box::new(make_number(2)),
             ),
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
-                ASTBinaryOp::TernaryIfElse(Box::new(ASTExprKind::Number(2))),
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(1)),
+                ASTBinaryOp::TernaryIfElse(Box::new(make_number(2))),
+                Box::new(make_number(3)),
             ),
         ];
 
@@ -627,143 +674,194 @@ mod tests {
         let outputs = [
             // 1 + 2 - 3
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(1)),
-                    ASTBinaryOp::Add,
-                    Box::new(ASTExprKind::Number(2)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(1)),
+                        ASTBinaryOp::Add,
+                        Box::new(make_number(2)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::Subtract,
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(3)),
             ),
             // 1 * 2 / 3 % 4
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::BinaryExpr(
-                        Box::new(ASTExprKind::Number(1)),
-                        ASTBinaryOp::Multiply,
-                        Box::new(ASTExprKind::Number(2)),
-                    )),
-                    ASTBinaryOp::Divide,
-                    Box::new(ASTExprKind::Number(3)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(ASTExpr {
+                            kind: ASTExprKind::BinaryExpr(
+                                Box::new(make_number(1)),
+                                ASTBinaryOp::Multiply,
+                                Box::new(make_number(2)),
+                            ),
+                            span: 0..0,
+                        }),
+                        ASTBinaryOp::Divide,
+                        Box::new(make_number(3)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::Remainder,
-                Box::new(ASTExprKind::Number(4)),
+                Box::new(make_number(4)),
             ),
             // 1 << 2 >> 3
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(1)),
-                    ASTBinaryOp::BitwiseShiftLeft,
-                    Box::new(ASTExprKind::Number(2)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(1)),
+                        ASTBinaryOp::BitwiseShiftLeft,
+                        Box::new(make_number(2)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::BitwiseShiftRight,
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(3)),
             ),
             // 1 | 2 | 3
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(1)),
-                    ASTBinaryOp::BitwiseOr,
-                    Box::new(ASTExprKind::Number(2)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(1)),
+                        ASTBinaryOp::BitwiseOr,
+                        Box::new(make_number(2)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::BitwiseOr,
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(3)),
             ),
             // 1 & 2 & 3
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(1)),
-                    ASTBinaryOp::BitwiseAnd,
-                    Box::new(ASTExprKind::Number(2)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(1)),
+                        ASTBinaryOp::BitwiseAnd,
+                        Box::new(make_number(2)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::BitwiseAnd,
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(3)),
             ),
             // 1 ^ 2 ^ 3
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(1)),
-                    ASTBinaryOp::BitwiseXor,
-                    Box::new(ASTExprKind::Number(2)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(1)),
+                        ASTBinaryOp::BitwiseXor,
+                        Box::new(make_number(2)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::BitwiseXor,
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(3)),
             ),
             // 1 == 2 != 3 > 4 >= 5 < 6 <= 7
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::BinaryExpr(
-                        Box::new(ASTExprKind::BinaryExpr(
-                            Box::new(ASTExprKind::BinaryExpr(
-                                Box::new(ASTExprKind::BinaryExpr(
-                                    Box::new(ASTExprKind::Number(1)),
-                                    ASTBinaryOp::Equals,
-                                    Box::new(ASTExprKind::Number(2)),
-                                )),
-                                ASTBinaryOp::NotEqual,
-                                Box::new(ASTExprKind::Number(3)),
-                            )),
-                            ASTBinaryOp::Greater,
-                            Box::new(ASTExprKind::Number(4)),
-                        )),
-                        ASTBinaryOp::GreaterOrEqual,
-                        Box::new(ASTExprKind::Number(5)),
-                    )),
-                    ASTBinaryOp::LessThan,
-                    Box::new(ASTExprKind::Number(6)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(ASTExpr {
+                            kind: ASTExprKind::BinaryExpr(
+                                Box::new(ASTExpr {
+                                    kind: ASTExprKind::BinaryExpr(
+                                        Box::new(ASTExpr {
+                                            kind: ASTExprKind::BinaryExpr(
+                                                Box::new(ASTExpr {
+                                                    kind: ASTExprKind::BinaryExpr(
+                                                        Box::new(make_number(1)),
+                                                        ASTBinaryOp::Equals,
+                                                        Box::new(make_number(2)),
+                                                    ),
+                                                    span: 0..0,
+                                                }),
+                                                ASTBinaryOp::NotEqual,
+                                                Box::new(make_number(3)),
+                                            ),
+                                            span: 0..0,
+                                        }),
+                                        ASTBinaryOp::Greater,
+                                        Box::new(make_number(4)),
+                                    ),
+                                    span: 0..0,
+                                }),
+                                ASTBinaryOp::GreaterOrEqual,
+                                Box::new(make_number(5)),
+                            ),
+                            span: 0..0,
+                        }),
+                        ASTBinaryOp::LessThan,
+                        Box::new(make_number(6)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::LessOrEqual,
-                Box::new(ASTExprKind::Number(7)),
+                Box::new(make_number(7)),
             ),
             // 1 and 2 and 3
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(1)),
-                    ASTBinaryOp::And,
-                    Box::new(ASTExprKind::Number(2)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(1)),
+                        ASTBinaryOp::And,
+                        Box::new(make_number(2)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::And,
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(3)),
             ),
             // 1 or 2 or 3
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(1)),
-                    ASTBinaryOp::Or,
-                    Box::new(ASTExprKind::Number(2)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(1)),
+                        ASTBinaryOp::Or,
+                        Box::new(make_number(2)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::Or,
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(3)),
             ),
             // 1 && 2 && 3
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(1)),
-                    ASTBinaryOp::And,
-                    Box::new(ASTExprKind::Number(2)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(1)),
+                        ASTBinaryOp::And,
+                        Box::new(make_number(2)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::And,
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(3)),
             ),
             // 1 || 2 || 3
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(1)),
-                    ASTBinaryOp::Or,
-                    Box::new(ASTExprKind::Number(2)),
-                )),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(1)),
+                        ASTBinaryOp::Or,
+                        Box::new(make_number(2)),
+                    ),
+                    span: 0..0,
+                }),
                 ASTBinaryOp::Or,
-                Box::new(ASTExprKind::Number(3)),
+                Box::new(make_number(3)),
             ),
             // 1 if 2 else 3 if 4 else 5
             ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
-                ASTBinaryOp::TernaryIfElse(Box::new(ASTExprKind::Number(2))),
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Number(3)),
-                    ASTBinaryOp::TernaryIfElse(Box::new(ASTExprKind::Number(4))),
-                    Box::new(ASTExprKind::Number(5)),
-                )),
+                Box::new(make_number(1)),
+                ASTBinaryOp::TernaryIfElse(Box::new(make_number(2))),
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::BinaryExpr(
+                        Box::new(make_number(3)),
+                        ASTBinaryOp::TernaryIfElse(Box::new(make_number(4))),
+                        Box::new(make_number(5)),
+                    ),
+                    span: 0..0,
+                }),
             ),
         ];
 
@@ -778,13 +876,16 @@ mod tests {
     fn test_expr_precedence_add_multiply() {
         let mut parser = create_parser("1 + 2 * 3");
         let expected = ASTExprKind::BinaryExpr(
-            Box::new(ASTExprKind::Number(1)),
+            Box::new(make_number(1)),
             ASTBinaryOp::Add,
-            Box::new(ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(2)),
-                ASTBinaryOp::Multiply,
-                Box::new(ASTExprKind::Number(3)),
-            )),
+            Box::new(ASTExpr {
+                kind: ASTExprKind::BinaryExpr(
+                    Box::new(make_number(2)),
+                    ASTBinaryOp::Multiply,
+                    Box::new(make_number(3)),
+                ),
+                span: 0..0,
+            }),
         );
         let result = parse_expr(&mut parser);
 
@@ -795,13 +896,16 @@ mod tests {
     fn test_expr_precedence_multiply_add() {
         let mut parser = create_parser("2 * 3 + 1");
         let expected = ASTExprKind::BinaryExpr(
-            Box::new(ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(2)),
-                ASTBinaryOp::Multiply,
-                Box::new(ASTExprKind::Number(3)),
-            )),
+            Box::new(ASTExpr {
+                kind: ASTExprKind::BinaryExpr(
+                    Box::new(make_number(2)),
+                    ASTBinaryOp::Multiply,
+                    Box::new(make_number(3)),
+                ),
+                span: 0..0,
+            }),
             ASTBinaryOp::Add,
-            Box::new(ASTExprKind::Number(1)),
+            Box::new(make_number(1)),
         );
         let result = parse_expr(&mut parser);
 
@@ -812,17 +916,23 @@ mod tests {
     fn test_expr_precedence_compare_and() {
         let mut parser = create_parser("1 < 2 && 3 == 4");
         let expected = ASTExprKind::BinaryExpr(
-            Box::new(ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
-                ASTBinaryOp::LessThan,
-                Box::new(ASTExprKind::Number(2)),
-            )),
+            Box::new(ASTExpr {
+                kind: ASTExprKind::BinaryExpr(
+                    Box::new(make_number(1)),
+                    ASTBinaryOp::LessThan,
+                    Box::new(make_number(2)),
+                ),
+                span: 0..0,
+            }),
             ASTBinaryOp::And,
-            Box::new(ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(3)),
-                ASTBinaryOp::Equals,
-                Box::new(ASTExprKind::Number(4)),
-            )),
+            Box::new(ASTExpr {
+                kind: ASTExprKind::BinaryExpr(
+                    Box::new(make_number(3)),
+                    ASTBinaryOp::Equals,
+                    Box::new(make_number(4)),
+                ),
+                span: 0..0,
+            }),
         );
         let result = parse_expr(&mut parser);
 
@@ -833,17 +943,23 @@ mod tests {
     fn test_expr_precedence_compare_or() {
         let mut parser = create_parser("1 < 2 || 3 == 4");
         let expected = ASTExprKind::BinaryExpr(
-            Box::new(ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(1)),
-                ASTBinaryOp::LessThan,
-                Box::new(ASTExprKind::Number(2)),
-            )),
+            Box::new(ASTExpr {
+                kind: ASTExprKind::BinaryExpr(
+                    Box::new(make_number(1)),
+                    ASTBinaryOp::LessThan,
+                    Box::new(make_number(2)),
+                ),
+                span: 0..0,
+            }),
             ASTBinaryOp::Or,
-            Box::new(ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::Number(3)),
-                ASTBinaryOp::Equals,
-                Box::new(ASTExprKind::Number(4)),
-            )),
+            Box::new(ASTExpr {
+                kind: ASTExprKind::BinaryExpr(
+                    Box::new(make_number(3)),
+                    ASTBinaryOp::Equals,
+                    Box::new(make_number(4)),
+                ),
+                span: 0..0,
+            }),
         );
         let result = parse_expr(&mut parser);
 
@@ -854,17 +970,23 @@ mod tests {
     fn test_expr_precedence_assignment() {
         let mut parser = create_parser("a = b = c = 42");
         let expected = ASTExprKind::BinaryExpr(
-            Box::new(ASTExprKind::BinaryExpr(
-                Box::new(ASTExprKind::BinaryExpr(
-                    Box::new(ASTExprKind::Identifier("a")),
+            Box::new(ASTExpr {
+                kind: ASTExprKind::BinaryExpr(
+                    Box::new(ASTExpr {
+                        kind: ASTExprKind::BinaryExpr(
+                            Box::new(make_ident("a")),
+                            ASTBinaryOp::Assignment,
+                            Box::new(make_ident("b")),
+                        ),
+                        span: 0..0,
+                    }),
                     ASTBinaryOp::Assignment,
-                    Box::new(ASTExprKind::Identifier("b")),
-                )),
-                ASTBinaryOp::Assignment,
-                Box::new(ASTExprKind::Identifier("c")),
-            )),
+                    Box::new(make_ident("c")),
+                ),
+                span: 0..0,
+            }),
             ASTBinaryOp::Assignment,
-            Box::new(ASTExprKind::Number(42)),
+            Box::new(make_number(42)),
         );
         let result = parse_expr(&mut parser);
 
@@ -874,14 +996,23 @@ mod tests {
     #[test]
     fn test_expr_group_newlines() {
         let mut parser = create_parser("(1\n+ fn\n())");
-        let expected = ASTExprKind::Group(vec![ASTExprKind::BinaryExpr(
-            Box::new(ASTExprKind::Number(1)),
-            ASTBinaryOp::Add,
-            Box::new(ASTExprKind::PostfixExpr(
-                Box::new(ASTExprKind::Identifier("fn")),
-                ASTPostfixOp::Call(vec![]),
-            )),
-        )]);
+        let expected = ASTExprKind::Group(vec![ASTExpr {
+            kind: ASTExprKind::BinaryExpr(
+                Box::new(make_number(1)),
+                ASTBinaryOp::Add,
+                Box::new(ASTExpr {
+                    kind: ASTExprKind::PostfixExpr(
+                        Box::new(make_ident("fn")),
+                        ASTPostfixOp {
+                            kind: ASTPostfixOpKind::Call(vec![]),
+                            span: 0..0,
+                        },
+                    ),
+                    span: 0..0,
+                }),
+            ),
+            span: 0..0,
+        }]);
         let result = parse_expr(&mut parser);
 
         assert_eq!(result.kind, expected);
@@ -890,7 +1021,7 @@ mod tests {
     #[test]
     fn test_expr_group_multiple() {
         let mut parser = create_parser("(1, 2)");
-        let expected = ASTExprKind::Group(vec![ASTExprKind::Number(1), ASTExprKind::Number(2)]);
+        let expected = ASTExprKind::Group(vec![make_number(1), make_number(2)]);
         let result = parse_expr(&mut parser);
 
         assert_eq!(result.kind, expected);
