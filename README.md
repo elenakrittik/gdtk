@@ -10,7 +10,7 @@ this is essentially a public roadmap
 - - [x] Lexer
 - - [x] Actual parser
 - [ ] Formatter
-- [ ] Linter
+- [x] Linter
 - [ ] Project and dependency manager
 - - [ ] Addon dependencies
 - - [ ] Native dependencies
