@@ -1,5 +1,7 @@
-//! "Poor" GDScript abstract syntax tree. Does not interlink any references
-//! and instead represents them as raw strings.
+//! A bare-bones GDScript abstract syntax tree. All references are plain strings.
+//!
+//! Note that not all nodes have spans attached to them yet, this will be resolved
+//! as needs arise.
 
 use gdtk_span::Span;
 
