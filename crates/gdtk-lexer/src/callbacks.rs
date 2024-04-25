@@ -2,15 +2,6 @@ use std::str::FromStr;
 
 use crate::token::TokenKind;
 
-#[derive(Default)]
-pub struct State {
-    pub(crate) paren_open: isize,
-}
-
-pub(crate) fn mut_open_paren<'a, const N: isize>(lexer: &mut logos::Lexer<'a, TokenKind<'a>>) {
-    lexer.extras.paren_open += N;
-}
-
 pub(crate) fn convert<'a, T: std::str::FromStr>(
     lexer: &logos::Lexer<'a, TokenKind<'a>>,
 ) -> logos::Filter<T> {

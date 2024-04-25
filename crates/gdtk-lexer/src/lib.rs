@@ -13,7 +13,7 @@ pub use crate::token::{Token, TokenKind};
 pub fn lex(input: &str) -> impl Iterator<Item = Token<'_>> {
     let tokens = TokenKind::lexer(input)
         .spanned()
-        .filter_map(|(result, range)| result.ok().map(|kind| Token { range, kind }))
+        .filter_map(|(result, span)| result.ok().map(|kind| Token { span, kind }))
         .peekable();
 
     generate_indents(tokens).into_iter()
@@ -32,13 +32,13 @@ fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -
                     continue;
                 }
 
-                let (range, indent_len) = if tokens.peek().is_some_and(|t| t.kind.is_blank()) {
+                let (span, indent_len) = if tokens.peek().is_some_and(|t| t.kind.is_blank()) {
                     let token = tokens.next().unwrap();
                     let len = token.kind.as_blank().unwrap().len();
 
-                    (token.range, len)
+                    (token.span, len)
                 } else {
-                    (token.range.start..token.range.end, 0)
+                    (token.span.start..token.span.end, 0)
                 };
 
                 match indent_len.cmp(stack.last().unwrap()) {
@@ -46,14 +46,14 @@ fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -
                         stack.push(indent_len);
                         out.push(token);
                         out.push(Token {
-                            range,
+                            span,
                             kind: TokenKind::Indent,
                         });
                     }
                     std::cmp::Ordering::Equal => out.push(token),
                     std::cmp::Ordering::Less => {
                         let token = Token {
-                            range,
+                            span,
                             kind: TokenKind::Dedent,
                         };
 
@@ -71,7 +71,7 @@ fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -
 
     if stack.last().unwrap() > &0 {
         let token = Token {
-            range: 0..0, // should be fine?
+            span: 0..0, // should be fine?
             kind: TokenKind::Dedent,
         };
 

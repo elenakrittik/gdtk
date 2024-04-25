@@ -1,19 +1,22 @@
-use gdtk_ast::{ASTAnnotation, ASTExpr, ASTPostfixOp, ASTSignal, ASTVariableKind};
+use gdtk_ast::{
+    ASTAnnotationStmt, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPostfixOpKind, ASTSignalStmt,
+    ASTVariableKind,
+};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
     expressions::parse_expr,
-    utils::{delemited_by, expect},
+    utils::{delemited_by, expect, parse_ident},
     variables::parse_variable_body,
     Parser,
 };
 
 pub fn parse_annotation<'a>(
-    parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
-) -> ASTAnnotation<'a> {
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ASTAnnotationStmt<'a> {
     expect!(parser, TokenKind::Annotation);
 
-    let identifier = expect!(parser, TokenKind::Identifier(i), i);
+    let identifier = parse_ident(parser);
 
     let arguments = if parser
         .peek()
@@ -35,16 +38,18 @@ pub fn parse_annotation<'a>(
         None
     };
 
-    ASTAnnotation {
+    ASTAnnotationStmt {
         identifier,
         arguments,
     }
 }
 
-pub fn parse_signal<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTSignal<'a> {
+pub fn parse_signal<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> ASTSignalStmt<'a> {
     expect!(parser, TokenKind::Signal);
 
-    let identifier = expect!(parser, TokenKind::Identifier(s), s);
+    let identifier = parse_ident(parser);
 
     let parameters = if parser
         .peek()
@@ -66,16 +71,18 @@ pub fn parse_signal<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) ->
         None
     };
 
-    ASTSignal {
+    ASTSignalStmt {
         identifier,
         parameters,
     }
 }
 
-pub fn parse_type<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTExpr<'a> {
-    let base = expect!(parser, TokenKind::Identifier(s), s);
+pub fn parse_type<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) -> ASTExpr<'a> {
+    let ident = parse_ident(parser);
 
     if parser.peek().is_some_and(|t| t.kind.is_opening_bracket()) {
+        let start = parser.span_start();
+
         parser.next();
 
         let type_parameters = delemited_by(
@@ -87,12 +94,21 @@ pub fn parse_type<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> A
 
         parser.next();
 
-        ASTExpr::PostfixExpr(
-            Box::new(ASTExpr::Identifier(base)),
-            ASTPostfixOp::Subscript(type_parameters),
-        )
+        let type_parameters_span = parser.finish_span(start);
+        let whole_span = ident.span.start..type_parameters_span.end;
+
+        ASTExpr {
+            kind: ASTExprKind::PostfixExpr(
+                Box::new(ident),
+                ASTPostfixOp {
+                    kind: ASTPostfixOpKind::Subscript(type_parameters),
+                    span: type_parameters_span,
+                },
+            ),
+            span: whole_span,
+        }
     } else {
-        ASTExpr::Identifier(base)
+        ident
     }
 }
 
@@ -101,14 +117,14 @@ mod tests {
     use gdtk_ast::*;
 
     use super::*;
-    use crate::test_utils::create_parser;
+    use crate::test_utils::{create_parser, make_ident, make_number};
 
     #[test]
     fn test_annotation_empty() {
         let mut parser = create_parser("@annotation");
         let result = parse_annotation(&mut parser);
-        let expected = ASTAnnotation {
-            identifier: "annotation",
+        let expected = ASTAnnotationStmt {
+            identifier: make_ident("annotation"),
             arguments: None,
         };
 
@@ -119,8 +135,8 @@ mod tests {
     fn test_annotation_zero_args() {
         let mut parser = create_parser("@annotation()");
         let result = parse_annotation(&mut parser);
-        let expected = ASTAnnotation {
-            identifier: "annotation",
+        let expected = ASTAnnotationStmt {
+            identifier: make_ident("annotation"),
             arguments: Some(vec![]),
         };
 
@@ -131,9 +147,9 @@ mod tests {
     fn test_annotation_one_arg() {
         let mut parser = create_parser("@annotation(0)");
         let result = parse_annotation(&mut parser);
-        let expected = ASTAnnotation {
-            identifier: "annotation",
-            arguments: Some(vec![ASTExpr::Number(0)]),
+        let expected = ASTAnnotationStmt {
+            identifier: make_ident("annotation"),
+            arguments: Some(vec![make_number(0)]),
         };
 
         assert_eq!(result, expected);
@@ -143,9 +159,9 @@ mod tests {
     fn test_annotation_two_args() {
         let mut parser = create_parser("@annotation(0, 1)");
         let result = parse_annotation(&mut parser);
-        let expected = ASTAnnotation {
-            identifier: "annotation",
-            arguments: Some(vec![ASTExpr::Number(0), ASTExpr::Number(1)]),
+        let expected = ASTAnnotationStmt {
+            identifier: make_ident("annotation"),
+            arguments: Some(vec![make_number(0), make_number(1)]),
         };
 
         assert_eq!(result, expected);
@@ -155,9 +171,9 @@ mod tests {
     fn test_annotation_trailing_comma() {
         let mut parser = create_parser("@annotation(0,)");
         let result = parse_annotation(&mut parser);
-        let expected = ASTAnnotation {
-            identifier: "annotation",
-            arguments: Some(vec![ASTExpr::Number(0)]),
+        let expected = ASTAnnotationStmt {
+            identifier: make_ident("annotation"),
+            arguments: Some(vec![make_number(0)]),
         };
 
         assert_eq!(result, expected);
@@ -167,8 +183,8 @@ mod tests {
     fn test_parse_signal_basic() {
         let mut parser = create_parser("signal done");
         let result = parse_signal(&mut parser);
-        let expected = ASTSignal {
-            identifier: "done",
+        let expected = ASTSignalStmt {
+            identifier: make_ident("done"),
             parameters: None,
         };
 
@@ -179,21 +195,21 @@ mod tests {
     fn test_parse_signal_with_parameters() {
         let mut parser = create_parser("signal done(a, b: int)");
         let result = parse_signal(&mut parser);
-        let expected = ASTSignal {
-            identifier: "done",
+        let expected = ASTSignalStmt {
+            identifier: make_ident("done"),
             parameters: Some(vec![
                 ASTVariable {
                     kind: ASTVariableKind::Binding,
-                    identifier: "a",
+                    identifier: make_ident("a"),
                     infer_type: false,
                     typehint: None,
                     value: None,
                 },
                 ASTVariable {
                     kind: ASTVariableKind::Binding,
-                    identifier: "b",
+                    identifier: make_ident("b"),
                     infer_type: false,
-                    typehint: Some(ASTExpr::Identifier("int")),
+                    typehint: Some(make_ident("int")),
                     value: None,
                 },
             ]),

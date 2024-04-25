@@ -4,11 +4,13 @@ use gdtk_lexer::{Token, TokenKind};
 use crate::{
     expressions::parse_expr,
     functions::parse_func,
-    utils::{delemited_by, expect},
+    utils::{delemited_by, expect, parse_ident},
     Parser,
 };
 
-pub fn parse_array<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> Vec<ASTExpr<'a>> {
+pub fn parse_array<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> Vec<ASTExpr<'a>> {
     parser.next();
 
     let value = parser.with_parens_ctx(true, |parser| {
@@ -25,7 +27,9 @@ pub fn parse_array<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> 
     value
 }
 
-pub fn parse_dictionary<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+pub fn parse_dictionary<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> Vec<DictValue<'a>> {
     expect!(parser, TokenKind::OpeningBrace);
 
     let value = match parser.peek().expect("unexpected EOF").kind {
@@ -40,12 +44,16 @@ pub fn parse_dictionary<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>
 }
 
 /// Parse a lua-style dictionary body.
-fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+fn parse_lua_dict<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> Vec<DictValue<'a>> {
     fn parse_lua_key_value<'a>(
-        parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+        parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
     ) -> (ASTExpr<'a>, ASTExpr<'a>) {
-        let key = ASTExpr::Identifier(expect!(parser, TokenKind::Identifier(s), s));
+        let key = parse_ident(parser);
+
         expect!(parser, TokenKind::Assignment);
+
         let value = parse_expr(parser);
 
         (key, value)
@@ -62,12 +70,16 @@ fn parse_lua_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> D
 }
 
 /// Parse a python-style dictionary body.
-fn parse_python_dict<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> DictValue<'a> {
+fn parse_python_dict<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> Vec<DictValue<'a>> {
     fn parse_python_key_value<'a>(
-        parser: &mut Parser<impl Iterator<Item = Token<'a>>>,
+        parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
     ) -> (ASTExpr<'a>, ASTExpr<'a>) {
         let key = parse_expr(parser);
+
         expect!(parser, TokenKind::Colon);
+
         let value = parse_expr(parser);
 
         (key, value)
@@ -92,9 +104,7 @@ pub fn parse_lambda<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) ->
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::*;
-
-    use crate::test_utils::create_parser;
+    use crate::test_utils::{create_parser, make_ident, make_number, make_string};
     use crate::values::{parse_array, parse_dictionary};
 
     #[test]
@@ -110,7 +120,7 @@ mod tests {
     fn test_parse_array() {
         let mut parser = create_parser("[1, 2, 3]");
         let result = parse_array(&mut parser);
-        let expected = vec![ASTExpr::Number(1), ASTExpr::Number(2), ASTExpr::Number(3)];
+        let expected = vec![make_number(1), make_number(2), make_number(3)];
 
         assert_eq!(result, expected);
     }
@@ -129,8 +139,8 @@ mod tests {
         let mut parser = create_parser("{'a': 1, 'b': 2}");
         let result = parse_dictionary(&mut parser);
         let expected = vec![
-            (ASTExpr::String("a"), ASTExpr::Number(1)),
-            (ASTExpr::String("b"), ASTExpr::Number(2)),
+            (make_string("a"), make_number(1)),
+            (make_string("b"), make_number(2)),
         ];
 
         assert_eq!(result, expected);
@@ -141,8 +151,8 @@ mod tests {
         let mut parser = create_parser("{a = 1, b = 2}");
         let result = parse_dictionary(&mut parser);
         let expected = vec![
-            (ASTExpr::Identifier("a"), ASTExpr::Number(1)),
-            (ASTExpr::Identifier("b"), ASTExpr::Number(2)),
+            (make_ident("a"), make_number(1)),
+            (make_ident("b"), make_number(2)),
         ];
 
         assert_eq!(result, expected);

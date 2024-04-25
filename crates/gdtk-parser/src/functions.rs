@@ -3,7 +3,7 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::misc::parse_type;
-use crate::utils::{delemited_by, expect};
+use crate::utils::{delemited_by, expect, parse_ident};
 use crate::variables::parse_variable_body;
 use crate::Parser;
 
@@ -12,6 +12,8 @@ pub fn parse_func<'a>(
     kind: ASTFunctionKind,
     lambda: bool,
 ) -> ASTFunction<'a> {
+    let start = parser.span_start();
+
     if parser.peek().is_some_and(|t| t.kind.is_static()) {
         parser.next();
     }
@@ -26,7 +28,7 @@ pub fn parse_func<'a>(
         .peek()
         .is_some_and(|t| matches!(t.kind, TokenKind::Identifier(_)))
     {
-        identifier = Some(expect!(parser, TokenKind::Identifier(s), s));
+        identifier = Some(Box::new(parse_ident(parser)));
     }
 
     expect!(parser, TokenKind::OpeningParenthesis);
@@ -60,6 +62,7 @@ pub fn parse_func<'a>(
         return_type: return_type.map(Box::new),
         kind,
         body,
+        span: parser.finish_span(start),
     }
 }
 
@@ -68,17 +71,20 @@ mod tests {
     use gdtk_ast::*;
 
     use crate::functions::parse_func;
-    use crate::test_utils::create_parser;
+    use crate::test_utils::{create_parser, make_ident, make_number};
+
+    const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { span: 0..0 });
 
     #[test]
     fn test_parse_func_simple() {
         let mut parser = create_parser("func foo(): pass");
         let expected = ASTFunction {
-            identifier: Some("foo"),
+            identifier: Some(Box::new(make_ident("foo"))),
             parameters: vec![],
             return_type: None,
+            body: vec![PASS_STMT],
             kind: ASTFunctionKind::Regular,
-            body: vec![ASTStatement::Pass],
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -89,11 +95,12 @@ mod tests {
     fn test_parse_func_simple_with_return_type() {
         let mut parser = create_parser("func foo() -> int: pass");
         let expected = ASTFunction {
-            identifier: Some("foo"),
+            identifier: Some(Box::new(make_ident("foo"))),
             parameters: vec![],
-            return_type: Some(Box::new(ASTExpr::Identifier("int"))),
+            return_type: Some(Box::new(make_ident("int"))),
             kind: ASTFunctionKind::Regular,
-            body: vec![ASTStatement::Pass],
+            body: vec![PASS_STMT],
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -108,7 +115,8 @@ mod tests {
             parameters: vec![],
             return_type: None,
             kind: ASTFunctionKind::Regular,
-            body: vec![ASTStatement::Pass],
+            body: vec![PASS_STMT],
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -121,9 +129,10 @@ mod tests {
         let expected = ASTFunction {
             identifier: None,
             parameters: vec![],
-            return_type: Some(Box::new(ASTExpr::Identifier("int"))),
+            return_type: Some(Box::new(make_ident("int"))),
             kind: ASTFunctionKind::Regular,
-            body: vec![ASTStatement::Pass],
+            body: vec![PASS_STMT],
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -134,40 +143,41 @@ mod tests {
     fn test_parse_func_with_parameters() {
         let mut parser = create_parser("func foo(a, b: int, c := 0, d: int = 0): pass");
         let expected = ASTFunction {
-            identifier: Some("foo"),
+            identifier: Some(Box::new(make_ident("foo"))),
             parameters: vec![
                 ASTVariable {
-                    identifier: "a",
+                    identifier: make_ident("a"),
                     kind: ASTVariableKind::Binding,
                     infer_type: false,
                     typehint: None,
                     value: None,
                 },
                 ASTVariable {
-                    identifier: "b",
+                    identifier: make_ident("b"),
                     kind: ASTVariableKind::Binding,
                     infer_type: false,
-                    typehint: Some(ASTExpr::Identifier("int")),
+                    typehint: Some(make_ident("int")),
                     value: None,
                 },
                 ASTVariable {
-                    identifier: "c",
+                    identifier: make_ident("c"),
                     kind: ASTVariableKind::Binding,
                     infer_type: true,
                     typehint: None,
-                    value: Some(ASTExpr::Number(0)),
+                    value: Some(make_number(0)),
                 },
                 ASTVariable {
-                    identifier: "d",
+                    identifier: make_ident("d"),
                     kind: ASTVariableKind::Binding,
                     infer_type: false,
-                    typehint: Some(ASTExpr::Identifier("int")),
-                    value: Some(ASTExpr::Number(0)),
+                    typehint: Some(make_ident("int")),
+                    value: Some(make_number(0)),
                 },
             ],
             return_type: None,
             kind: ASTFunctionKind::Regular,
-            body: vec![ASTStatement::Pass],
+            body: vec![PASS_STMT],
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Regular, false);
 
@@ -178,11 +188,12 @@ mod tests {
     fn test_parse_static_func() {
         let mut parser = create_parser("static func foo(): pass");
         let expected = ASTFunction {
-            identifier: Some("foo"),
+            identifier: Some(Box::new(make_ident("foo"))),
             parameters: vec![],
             return_type: None,
             kind: ASTFunctionKind::Static,
-            body: vec![ASTStatement::Pass],
+            body: vec![PASS_STMT],
+            span: 0..0,
         };
         let result = parse_func(&mut parser, ASTFunctionKind::Static, false);
 

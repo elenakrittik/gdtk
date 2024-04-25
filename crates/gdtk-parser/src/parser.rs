@@ -1,12 +1,14 @@
 use std::iter::Peekable;
 
 use gdtk_lexer::Token;
+use gdtk_span::Span;
 
-/// A wrapper around token iterator to add conditional token emitting.
+/// A wrapper around token iterator with additional functionality.
 #[derive(Debug)]
 pub struct Parser<I> {
     pub iter: I,
     pub is_inside_parens: bool,
+    pub current_token_span: Option<Span>,
 }
 
 impl<'a, I> Parser<Peekable<I>>
@@ -17,7 +19,18 @@ where
         Self {
             iter: iter.peekable(),
             is_inside_parens: false,
+            current_token_span: None,
         }
+    }
+
+    pub fn span_start(&mut self) -> usize {
+        self.peek().as_ref().map(|t| t.span.start).unwrap_or(0)
+    }
+
+    pub fn finish_span(&mut self, start: usize) -> Span {
+        let end = self.current_token_span.as_ref().map(|r| r.end).unwrap_or(0);
+
+        start..end
     }
 
     pub fn peek(&mut self) -> Option<&Token<'a>> {
@@ -62,6 +75,28 @@ where
 
     fn next(&mut self) -> Option<Self::Item> {
         self.skip_blanks();
+        self.current_token_span = self.iter.peek().map(|t| t.span.start..t.span.end);
         self.iter.next()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::test_utils::create_parser;
+
+    #[test]
+    fn test_span_tracking() {
+        let mut parser = create_parser("var hello = 2");
+
+        assert!(parser.next().unwrap().kind.is_var());
+
+        let start = parser.span_start();
+
+        assert!(parser.next().unwrap().kind.is_identifier());
+        assert!(parser.next().unwrap().kind.is_assignment());
+
+        let span = parser.finish_span(start);
+
+        assert_eq!(span, 4..11); // 'hello ='
     }
 }

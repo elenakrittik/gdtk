@@ -1,3 +1,0 @@
-- "namespace" is a currently unusable keyword reserved for future compatibility; see the associated GIP: https://github.com/godotengine/godot-proposals/issues/1566
-- "trait" is a currently unusable keyword reserved for future compatibility; see the associated GIP: https://github.com/godotengine/godot-proposals/issues/6416
-- "yield" is a Godot 3.0-only keyword, but `gdtk` only supports GDScript 2.0 (introduced with Godot 4.0). Use `await` instead.

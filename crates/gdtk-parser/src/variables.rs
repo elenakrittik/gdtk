@@ -3,15 +3,15 @@ use gdtk_lexer::{Token, TokenKind};
 
 use crate::expressions::parse_expr;
 use crate::misc::parse_type;
-use crate::utils::expect;
+use crate::utils::parse_ident;
 use crate::Parser;
 
 /// Parses variable body, i.e. any variable without preceding keywords.
 pub fn parse_variable_body<'a>(
-    iter: &mut Parser<impl Iterator<Item = Token<'a>>>,
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
     kind: ASTVariableKind,
 ) -> ASTVariable<'a> {
-    let identifier = expect!(iter, TokenKind::Identifier(s), s);
+    let identifier = parse_ident(parser);
     let mut typehint = None;
     let mut infer_type = false;
     let mut value = None;
@@ -23,30 +23,30 @@ pub fn parse_variable_body<'a>(
     // [var] ident: type = val
     // [var] ident: type
 
-    match iter.peek().map(|t| &t.kind) {
+    match parser.peek().map(|t| &t.kind) {
         Some(TokenKind::Colon) => {
-            iter.next();
+            parser.next();
 
-            match iter.peek().expect("unexpected EOF").kind {
+            match parser.peek().expect("unexpected EOF").kind {
                 TokenKind::Assignment => {
-                    iter.next();
+                    parser.next();
                     infer_type = true;
-                    value = Some(parse_expr(iter));
+                    value = Some(parse_expr(parser));
                 }
                 _ => {
-                    typehint = Some(parse_type(iter));
+                    typehint = Some(parse_type(parser));
 
-                    if let Some(TokenKind::Assignment) = iter.peek().map(|t| &t.kind) {
-                        iter.next();
+                    if let Some(TokenKind::Assignment) = parser.peek().map(|t| &t.kind) {
+                        parser.next();
 
-                        value = Some(parse_expr(iter));
+                        value = Some(parse_expr(parser));
                     }
                 }
             };
         }
         Some(TokenKind::Assignment) => {
-            iter.next();
-            value = Some(parse_expr(iter))
+            parser.next();
+            value = Some(parse_expr(parser))
         }
         _ => (),
     }
@@ -64,7 +64,7 @@ pub fn parse_variable_body<'a>(
 mod tests {
     use gdtk_ast::*;
 
-    use crate::test_utils::create_parser;
+    use crate::test_utils::{create_parser, make_ident, make_number};
     use crate::variables::parse_variable_body;
 
     #[test]
@@ -72,7 +72,7 @@ mod tests {
         let mut parser = create_parser("ident");
         let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
-            identifier: "ident",
+            identifier: make_ident("ident"),
             infer_type: false,
             typehint: None,
             value: None,
@@ -87,9 +87,9 @@ mod tests {
         let mut parser = create_parser("ident: type");
         let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
-            identifier: "ident",
+            identifier: make_ident("ident"),
             infer_type: false,
-            typehint: Some(ASTExpr::Identifier("type")),
+            typehint: Some(make_ident("type")),
             value: None,
             kind: ASTVariableKind::Regular,
         };
@@ -102,10 +102,10 @@ mod tests {
         let mut parser = create_parser("ident = 0");
         let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
-            identifier: "ident",
+            identifier: make_ident("ident"),
             infer_type: false,
             typehint: None,
-            value: Some(ASTExpr::Number(0)),
+            value: Some(make_number(0)),
             kind: ASTVariableKind::Regular,
         };
 
@@ -117,10 +117,10 @@ mod tests {
         let mut parser = create_parser("ident := 0");
         let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
-            identifier: "ident",
+            identifier: make_ident("ident"),
             infer_type: true,
             typehint: None,
-            value: Some(ASTExpr::Number(0)),
+            value: Some(make_number(0)),
             kind: ASTVariableKind::Regular,
         };
 
@@ -132,10 +132,10 @@ mod tests {
         let mut parser = create_parser("ident: type = 0");
         let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
         let expected = ASTVariable {
-            identifier: "ident",
+            identifier: make_ident("ident"),
             infer_type: false,
-            typehint: Some(ASTExpr::Identifier("type")),
-            value: Some(ASTExpr::Number(0)),
+            typehint: Some(make_ident("type")),
+            value: Some(make_number(0)),
             kind: ASTVariableKind::Regular,
         };
 

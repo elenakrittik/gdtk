@@ -22,6 +22,11 @@ pub enum Commands {
         #[command(subcommand)]
         command: GodotCommands,
     },
+    /// Lint GDScript code.
+    Lint {
+        /// The GDScript file to lint.
+        file: PathBuf,
+    },
 }
 
 #[derive(Subcommand)]
