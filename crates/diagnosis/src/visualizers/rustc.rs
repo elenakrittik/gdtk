@@ -7,11 +7,12 @@ use crate::{
     Highlight, Span,
 };
 
-const ERROR: yansi::Style = yansi::Style::new().red();
+const MAIN_TEXT: yansi::Style = yansi::Style::new().white().bold();
+const ERROR: yansi::Style = yansi::Style::new().bright_red().bold();
 const WARNING: yansi::Style = yansi::Style::new().yellow();
 const CUSTOM: yansi::Style = yansi::Style::new().green();
-const HELP: yansi::Style = yansi::Style::new().blue();
-const BORDER: yansi::Style = yansi::Style::new().cyan();
+const HELP: yansi::Style = yansi::Style::new().cyan().bold();
+const BORDER: yansi::Style = yansi::Style::new().bright_blue().bold();
 
 #[derive(thiserror::Error, Debug)]
 pub enum RustcVisualizerError {
@@ -24,6 +25,7 @@ pub enum RustcVisualizerError {
 
 /// Styles to apply to parts of the output.
 pub struct Styles {
+    pub main_text: yansi::Style,
     pub error: yansi::Style,
     pub warning: yansi::Style,
     pub custom: yansi::Style,
@@ -34,6 +36,7 @@ pub struct Styles {
 impl Default for Styles {
     fn default() -> Self {
         Self {
+            main_text: MAIN_TEXT,
             error: ERROR,
             warning: WARNING,
             custom: CUSTOM,
@@ -96,6 +99,8 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
             help_messages,
         } = diag;
 
+        let (_, sev_style) = severity_styles(self, severity);
+
         self.visualize_primary_error(severity, code, message, f)?;
         writeln!(f)?;
         self.visualize_source_pointer(span, f)?;
@@ -113,7 +118,7 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
             writeln!(f)?;
             self.visualize_source_line(line, f)?;
             writeln!(f)?;
-            self.visualize_highlight(offset, span.end - span.start, message, f)?;
+            self.visualize_highlight(offset, span.end - span.start, message, sev_style, f)?;
         }
 
         if !help_messages.is_empty() {
@@ -146,11 +151,7 @@ impl<'a> RustcVisualizer<'a> {
         message: &str,
         f: &mut impl std::io::Write,
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        let (directive, style) = match severity {
-            Severity::Error => ("error", ERROR),
-            Severity::Warning => ("warning", WARNING),
-            Severity::Custom(kind) => (kind, CUSTOM),
-        };
+        let (directive, style) = severity_styles(self, severity);
 
         write!(f, "{}", directive.paint(style))?;
 
@@ -160,8 +161,8 @@ impl<'a> RustcVisualizer<'a> {
             write!(f, "{}", ']'.paint(style))?;
         }
 
-        write!(f, "{}", ": ".paint(style))?;
-        write!(f, "{}", message.paint(style))?;
+        write!(f, "{}", ": ".paint(self.styles.main_text))?;
+        write!(f, "{}", message.paint(self.styles.main_text))?;
 
         Ok(())
     }
@@ -177,7 +178,7 @@ impl<'a> RustcVisualizer<'a> {
         span: Option<&Span>,
         f: &mut impl std::io::Write,
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        write!(f, " {}", "--> ".paint(BORDER))?;
+        write!(f, " {}", "--> ".paint(self.styles.border))?;
         write!(f, "{}", self.source_name)?;
 
         // #![feature(let_chains)], i miss you so much
@@ -222,15 +223,16 @@ impl<'a> RustcVisualizer<'a> {
         offset: usize,
         len: usize,
         message: Option<&str>,
+        style: yansi::Style,
         f: &mut impl std::io::Write,
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
         self.visualize_border(None, f)?;
         // std::iter::repeat_n but stable
         write!(f, "{}", " ".repeat(offset))?;
-        write!(f, "{}", "-".repeat(len).paint(BORDER))?;
+        write!(f, "{}", "-".repeat(len).paint(style))?;
 
         if let Some(message) = message {
-            write!(f, " {}", message.paint(BORDER))?;
+            write!(f, " {}", message.paint(style))?;
         }
 
         Ok(())
@@ -247,8 +249,8 @@ impl<'a> RustcVisualizer<'a> {
         message: &str,
         f: &mut impl std::io::Write,
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        write!(f, "{}", "  = help: ".paint(HELP))?;
-        write!(f, "{}", message.paint(HELP))?;
+        write!(f, "{}", "  = help: ".paint(self.styles.help))?;
+        write!(f, "{}", message.paint(self.styles.help))?;
 
         Ok(())
     }
@@ -265,13 +267,24 @@ impl<'a> RustcVisualizer<'a> {
         f: &mut impl std::io::Write,
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
         if let Some(num) = num {
-            write!(f, "{}", num.paint(BORDER))?;
+            write!(f, "{}", num.paint(self.styles.border))?;
         } else {
             write!(f, " ")?;
         }
 
-        write!(f, " {} ", "|".paint(BORDER))?;
+        write!(f, " {} ", "|".paint(self.styles.border))?;
 
         Ok(())
+    }
+}
+
+const fn severity_styles<'a>(
+    viz: &RustcVisualizer<'a>,
+    severity: Severity<'a>,
+) -> (&'a str, yansi::Style) {
+    match severity {
+        Severity::Error => ("error", viz.styles.error),
+        Severity::Warning => ("warning", viz.styles.warning),
+        Severity::Custom(kind) => (kind, viz.styles.custom),
     }
 }

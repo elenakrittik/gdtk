@@ -50,6 +50,7 @@ impl<'a> Diagnostic<'a> {
 }
 
 /// The severity of a diagnostic.
+#[derive(Debug, Copy, Clone)]
 pub enum Severity<'a> {
     /// A critical error that prevents the program from doing job.
     Error,

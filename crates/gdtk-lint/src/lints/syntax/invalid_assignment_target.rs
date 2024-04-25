@@ -12,7 +12,7 @@ impl<'s> Visitor<'s> for InvalidAssignmentTarget<'s> {
         _span: &'s gdtk_span::Span,
     ) {
         if op.is_any_assignment() && !is_valid_assignment_target(lhs) {
-            let mut diag = Diagnostic::new("Invalid assignment target.", Severity::Warning)
+            let mut diag = Diagnostic::new("Invalid assignment target.", Severity::Error)
                 .with_code("invalid-assignment-target")
                 .with_span(&lhs.span)
                 .add_highlight(
