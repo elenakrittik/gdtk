@@ -10,6 +10,3 @@ gdtk-span = { path = "../gdtk-span", version = "0.1.0" }
 logos = "0.14.0"
 thiserror = "1.0.43"
 enum-as-inner = "0.6.0"
-
-[dev-dependencies]
-assert_approx_eq = "1.1.0"
