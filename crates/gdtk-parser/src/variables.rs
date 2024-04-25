@@ -1,9 +1,10 @@
-use gdtk_ast::{ASTVariable, ASTVariableKind};
+use gdtk_ast::{ASTFunction, ASTFunctionKind, ASTVariable, ASTVariableKind};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::expressions::parse_expr;
+use crate::functions::{parse_func, ParseFuncOptions};
 use crate::misc::parse_type;
-use crate::utils::parse_ident;
+use crate::utils::{expect, parse_ident};
 use crate::Parser;
 
 /// Parses variable body, i.e. any variable without preceding keywords.
@@ -15,6 +16,8 @@ pub fn parse_variable_body<'a>(
     let mut typehint = None;
     let mut infer_type = false;
     let mut value = None;
+    let mut getter = None;
+    let mut setter = None;
 
     // Possible cases:
     // [var] ident
@@ -36,10 +39,19 @@ pub fn parse_variable_body<'a>(
                 _ => {
                     typehint = Some(parse_type(parser));
 
-                    if let Some(TokenKind::Assignment) = parser.peek().map(|t| &t.kind) {
-                        parser.next();
+                    match parser.peek().map(|t| &t.kind) {
+                        Some(TokenKind::Assignment) => {
+                            parser.next();
 
-                        value = Some(parse_expr(parser));
+                            value = Some(parse_expr(parser));
+                        }
+                        Some(TokenKind::Colon) => {
+                            parser.next();
+
+                            (getter, setter) = parser
+                                .with_parens_ctx(false, |parser| parse_variable_etters(parser));
+                        }
+                        _ => (),
                     }
                 }
             };
@@ -57,7 +69,40 @@ pub fn parse_variable_body<'a>(
         typehint,
         value,
         kind,
+        getter,
+        setter,
     }
+}
+
+fn parse_variable_etters<'a>(
+    parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
+) -> (Option<ASTFunction<'a>>, Option<ASTFunction<'a>>) {
+    expect!(parser, TokenKind::Newline);
+    expect!(parser, TokenKind::Indent);
+
+    const OPTIONS: ParseFuncOptions = ParseFuncOptions {
+        kind: ASTFunctionKind::Regular,
+        is_lambda: false,
+    };
+
+    let mut getter = None;
+    let mut setter = None;
+
+    while let Some(Token {
+        kind: TokenKind::Identifier(ident),
+        ..
+    }) = parser.peek()
+    {
+        match *ident {
+            "get" => getter = Some(parse_func(parser, OPTIONS)),
+            "set" => setter = Some(parse_func(parser, OPTIONS)),
+            _ => panic!("only 'get' and 'set' are valid associated function names"),
+        }
+    }
+
+    expect!(parser, TokenKind::Dedent);
+
+    (getter, setter)
 }
 
 #[cfg(test)]
@@ -77,6 +122,8 @@ mod tests {
             typehint: None,
             value: None,
             kind: ASTVariableKind::Regular,
+            getter: None,
+            setter: None,
         };
 
         assert_eq!(result, expected);
@@ -92,6 +139,8 @@ mod tests {
             typehint: Some(make_ident("type")),
             value: None,
             kind: ASTVariableKind::Regular,
+            getter: None,
+            setter: None,
         };
 
         assert_eq!(result, expected);
@@ -107,6 +156,8 @@ mod tests {
             typehint: None,
             value: Some(make_number(0)),
             kind: ASTVariableKind::Regular,
+            getter: None,
+            setter: None,
         };
 
         assert_eq!(result, expected);
@@ -122,6 +173,8 @@ mod tests {
             typehint: None,
             value: Some(make_number(0)),
             kind: ASTVariableKind::Regular,
+            getter: None,
+            setter: None,
         };
 
         assert_eq!(result, expected);
@@ -137,6 +190,8 @@ mod tests {
             typehint: Some(make_ident("type")),
             value: Some(make_number(0)),
             kind: ASTVariableKind::Regular,
+            getter: None,
+            setter: None,
         };
 
         assert_eq!(result, expected);

@@ -1,9 +1,9 @@
-use gdtk_ast::ASTStatement;
+use gdtk_ast::{ASTFunctionKind, ASTStatement};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::classes::{parse_class, parse_enum};
 use crate::expressions::parse_expr;
-use crate::functions::parse_func;
+use crate::functions::{parse_func, ParseFuncOptions};
 use crate::match_::parse_match;
 use crate::misc::{parse_annotation, parse_signal};
 use crate::statements::{
@@ -34,8 +34,10 @@ pub fn parse_statement<'a>(
         TokenKind::Pass => parse_pass_stmt(parser),
         TokenKind::Func => ASTStatement::Func(parse_func(
             parser,
-            gdtk_ast::ASTFunctionKind::Regular,
-            false,
+            ParseFuncOptions {
+                kind: ASTFunctionKind::Regular,
+                is_lambda: false,
+            },
         )),
         TokenKind::Return => parse_return_stmt(parser),
         TokenKind::Signal => ASTStatement::Signal(parse_signal(parser)),
@@ -52,9 +54,13 @@ pub fn parse_statement<'a>(
                 .kind
             {
                 TokenKind::Var => parse_static_var_stmt(parser),
-                TokenKind::Func => {
-                    ASTStatement::Func(parse_func(parser, gdtk_ast::ASTFunctionKind::Static, false))
-                }
+                TokenKind::Func => ASTStatement::Func(parse_func(
+                    parser,
+                    ParseFuncOptions {
+                        kind: ASTFunctionKind::Static,
+                        is_lambda: false,
+                    },
+                )),
                 _ => panic!("expected `var` or `func`, found `{:?}`", parser.peek()),
             }
         }

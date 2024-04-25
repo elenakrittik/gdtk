@@ -32,6 +32,8 @@ pub struct ASTVariable<'a> {
     pub typehint: Option<ASTExpr<'a>>,
     pub value: Option<ASTExpr<'a>>,
     pub kind: ASTVariableKind,
+    pub getter: Option<ASTFunction<'a>>,
+    pub setter: Option<ASTFunction<'a>>,
 }
 
 impl<'a> ASTVariable<'a> {
@@ -43,6 +45,8 @@ impl<'a> ASTVariable<'a> {
             typehint: None,
             value: None,
             kind: ASTVariableKind::Binding,
+            getter: None,
+            setter: None,
         }
     }
 }
@@ -96,7 +100,7 @@ pub struct ASTFunction<'a> {
 }
 
 /// A function's kind.
-#[derive(Debug, Clone, PartialEq, enum_as_inner::EnumAsInner)]
+#[derive(Debug, Copy, Clone, PartialEq, enum_as_inner::EnumAsInner)]
 pub enum ASTFunctionKind {
     /// A normal `func`.
     Regular,
