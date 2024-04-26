@@ -94,7 +94,10 @@ impl<'s> Visitor<'s> for IdentifierCase<'s> {
             }
         }
 
-        walk_parameters(self, func.parameters.as_slice());
+        if let Some(parameters) = &func.parameters {
+            walk_parameters(self, parameters.as_slice());
+        }
+
         walk_block(self, func.body.as_slice());
     }
 

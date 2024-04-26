@@ -92,9 +92,7 @@ mod tests {
     use gdtk_ast::*;
 
     use crate::classes::{parse_class, parse_enum};
-    use crate::test_utils::{create_parser, make_ident, make_number, make_string};
-
-    const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { span: 0..0 });
+    use crate::test_utils::{create_parser, make_ident, make_number, make_string, PASS_STMT};
 
     #[test]
     fn test_parse_class() {

@@ -395,7 +395,9 @@ pub fn walk_func<'a>(visitor: &mut impl Visitor<'a>, func: &'a ast::ASTFunction<
         visitor.visit_expr(identifier)
     }
 
-    visitor.visit_parameters(func.parameters.as_slice());
+    if let Some(parameters) = &func.parameters {
+        visitor.visit_parameters(parameters.as_slice());
+    }
 
     if let Some(return_type) = &func.return_type {
         visitor.visit_expr(return_type);

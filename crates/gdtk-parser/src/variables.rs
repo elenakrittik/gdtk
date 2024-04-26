@@ -36,6 +36,10 @@ pub fn parse_variable_body<'a>(
                     infer_type = true;
                     value = Some(parse_expr(parser));
                 }
+                TokenKind::Newline => {
+                    (getter, setter) =
+                        parser.with_parens_ctx(false, |parser| parse_variable_etters(parser));
+                }
                 _ => {
                     typehint = Some(parse_type(parser));
 
@@ -94,8 +98,20 @@ fn parse_variable_etters<'a>(
     }) = parser.peek()
     {
         match *ident {
-            "get" => getter = Some(parse_func(parser, OPTIONS)),
-            "set" => setter = Some(parse_func(parser, OPTIONS)),
+            "get" => {
+                let old = getter.replace(parse_func(parser, OPTIONS));
+
+                if old.is_some() {
+                    panic!("variables can only have one getter");
+                }
+            }
+            "set" => {
+                let old = setter.replace(parse_func(parser, OPTIONS));
+
+                if old.is_some() {
+                    panic!("variables can only have one setter");
+                }
+            }
             _ => panic!("only 'get' and 'set' are valid associated function names"),
         }
     }
@@ -109,7 +125,7 @@ fn parse_variable_etters<'a>(
 mod tests {
     use gdtk_ast::*;
 
-    use crate::test_utils::{create_parser, make_ident, make_number};
+    use crate::test_utils::{create_parser, make_ident, make_number, PASS_STMT};
     use crate::variables::parse_variable_body;
 
     #[test]
@@ -192,6 +208,93 @@ mod tests {
             kind: ASTVariableKind::Regular,
             getter: None,
             setter: None,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_untyped_variable_with_etter() {
+        let mut parser = create_parser("ident:\n    get:\n        pass");
+        let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: make_ident("ident"),
+            infer_type: false,
+            typehint: None,
+            value: None,
+            kind: ASTVariableKind::Regular,
+            getter: Some(ASTFunction {
+                identifier: Some(Box::new(make_ident("get"))),
+                parameters: None,
+                return_type: None,
+                kind: ASTFunctionKind::Regular,
+                body: vec![PASS_STMT],
+                span: 0..0,
+            }),
+            setter: None,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_typed_variable_with_etter() {
+        let mut parser = create_parser("ident: type:\n    get:\n        pass");
+        let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: make_ident("ident"),
+            infer_type: false,
+            typehint: Some(make_ident("type")),
+            value: None,
+            kind: ASTVariableKind::Regular,
+            getter: Some(ASTFunction {
+                identifier: Some(Box::new(make_ident("get"))),
+                parameters: None,
+                return_type: None,
+                kind: ASTFunctionKind::Regular,
+                body: vec![PASS_STMT],
+                span: 0..0,
+            }),
+            setter: None,
+        };
+
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn test_variable_with_multiple_etters() {
+        let mut parser = create_parser("ident:\n    get:\n        pass\n    set(x):\n        pass");
+        let result = parse_variable_body(&mut parser, ASTVariableKind::Regular);
+        let expected = ASTVariable {
+            identifier: make_ident("ident"),
+            infer_type: false,
+            typehint: None,
+            value: None,
+            kind: ASTVariableKind::Regular,
+            getter: Some(ASTFunction {
+                identifier: Some(Box::new(make_ident("get"))),
+                parameters: None,
+                return_type: None,
+                kind: ASTFunctionKind::Regular,
+                body: vec![PASS_STMT],
+                span: 0..0,
+            }),
+            setter: Some(ASTFunction {
+                identifier: Some(Box::new(make_ident("set"))),
+                parameters: Some(vec![ASTVariable {
+                    identifier: make_ident("x"),
+                    infer_type: false,
+                    typehint: None,
+                    value: None,
+                    kind: ASTVariableKind::Binding,
+                    getter: None,
+                    setter: None,
+                }]),
+                return_type: None,
+                kind: ASTFunctionKind::Regular,
+                body: vec![PASS_STMT],
+                span: 0..0,
+            }),
         };
 
         assert_eq!(result, expected);

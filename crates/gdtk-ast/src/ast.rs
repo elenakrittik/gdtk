@@ -91,7 +91,7 @@ pub struct ASTEnumVariant<'a> {
 #[derivative(PartialEq)]
 pub struct ASTFunction<'a> {
     pub identifier: Option<Box<ASTExpr<'a>>>,
-    pub parameters: Vec<ASTVariable<'a>>,
+    pub parameters: Option<Vec<ASTVariable<'a>>>,
     pub return_type: Option<Box<ASTExpr<'a>>>,
     pub kind: ASTFunctionKind,
     pub body: CodeBlock<'a>,
