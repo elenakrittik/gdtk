@@ -60,6 +60,8 @@ pub fn parse_for_stmt<'a>(
             typehint,
             value: None,
             kind: ASTVariableKind::Binding,
+            setter: None,
+            getter: None,
         },
         container,
         block,
@@ -273,6 +275,8 @@ mod tests {
             infer_type: false,
             typehint: None,
             value: Some(make_number(1)),
+            getter: None,
+            setter: None,
         });
         let result = parse_var_stmt(&mut parser);
 
@@ -288,6 +292,8 @@ mod tests {
             infer_type: false,
             typehint: None,
             value: Some(make_number(1)),
+            getter: None,
+            setter: None,
         });
         let result = parse_const_stmt(&mut parser);
 
@@ -303,6 +309,8 @@ mod tests {
             infer_type: false,
             typehint: None,
             value: Some(make_number(1)),
+            getter: None,
+            setter: None,
         });
 
         parser.next(); // simulate consuming `static`
@@ -393,6 +401,8 @@ mod tests {
                 infer_type: true,
                 typehint: None,
                 value: None,
+                getter: None,
+                setter: None,
             },
             container: ASTExpr {
                 kind: ASTExprKind::Array(vec![make_number(1), make_number(2)]),

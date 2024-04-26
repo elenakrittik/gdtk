@@ -204,6 +204,8 @@ mod tests {
                     infer_type: false,
                     typehint: None,
                     value: None,
+                    getter: None,
+                    setter: None,
                 },
                 ASTVariable {
                     kind: ASTVariableKind::Binding,
@@ -211,6 +213,8 @@ mod tests {
                     infer_type: false,
                     typehint: Some(make_ident("int")),
                     value: None,
+                    getter: None,
+                    setter: None,
                 },
             ]),
         };

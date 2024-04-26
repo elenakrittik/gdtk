@@ -1,9 +1,9 @@
-use gdtk_ast::{ASTExpr, ASTFunction, DictValue};
+use gdtk_ast::{ASTExpr, ASTFunction, ASTFunctionKind, DictValue};
 use gdtk_lexer::{Token, TokenKind};
 
 use crate::{
     expressions::parse_expr,
-    functions::parse_func,
+    functions::{parse_func, ParseFuncOptions},
     utils::{delemited_by, expect, parse_ident},
     Parser,
 };
@@ -98,7 +98,13 @@ fn parse_python_dict<'a>(
 /// Parse a lambda function.
 pub fn parse_lambda<'a>(parser: &mut Parser<impl Iterator<Item = Token<'a>>>) -> ASTFunction<'a> {
     parser.with_parens_ctx(false, |parser| {
-        parse_func(parser, gdtk_ast::ASTFunctionKind::Regular, true)
+        parse_func(
+            parser,
+            ParseFuncOptions {
+                kind: ASTFunctionKind::Regular,
+                is_lambda: true,
+            },
+        )
     })
 }
 
