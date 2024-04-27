@@ -8,6 +8,7 @@ use std::iter::Peekable;
 
 use logos::Logos;
 
+use crate::token::CommentLexerToken;
 pub use crate::token::{Token, TokenKind};
 
 pub fn lex(input: &str) -> impl Iterator<Item = Token<'_>> {
@@ -82,4 +83,30 @@ fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -
     }
 
     out
+}
+
+pub fn noqa_comments(input: &str) -> ahash::AHashMap<usize, Vec<&str>> {
+    let mut map = ahash::AHashMap::<usize, Vec<&str>>::new();
+    let mut line = 0usize;
+
+    let tokens = CommentLexerToken::lexer(input)
+        .spanned()
+        .filter_map(|(result, span)| Some((result.unwrap(), span)))
+        .peekable();
+
+    for (token, span) in tokens {
+        match token {
+            CommentLexerToken::Newline => line += 1,
+            CommentLexerToken::Comment(comm) if comm.trim_end().starts_with("noqa") => {
+                if let Some(v) = map.get_mut(&line) {
+                    v.push(comm);
+                } else {
+                    map.insert(line, vec![comm]);
+                }
+            },
+            _ => (),
+        }
+    }
+
+    map
 }
