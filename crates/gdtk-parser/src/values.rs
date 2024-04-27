@@ -32,11 +32,16 @@ pub fn parse_dictionary<'a>(
 ) -> Vec<DictValue<'a>> {
     expect!(parser, TokenKind::OpeningBrace);
 
-    let value = match parser.peek().expect("unexpected EOF").kind {
-        TokenKind::ClosingBrace => vec![], // empty dict
-        TokenKind::Identifier(_) => parse_lua_dict(parser),
-        _ => parse_python_dict(parser),
-    };
+    let value = parser.with_parens_ctx(true, |parser| {
+        match parser.peek().expect("unexpected EOF").kind {
+            TokenKind::ClosingBrace => vec![], // empty dict
+            TokenKind::Identifier(_) => parse_lua_dict(parser),
+            _ => {
+                eprintln!("{:?}", parser.peek());
+                parse_python_dict(parser)
+            }
+        }
+    });
 
     expect!(parser, TokenKind::ClosingBrace);
 
@@ -59,14 +64,12 @@ fn parse_lua_dict<'a>(
         (key, value)
     }
 
-    parser.with_parens_ctx(true, |parser| {
-        delemited_by(
-            parser,
-            TokenKind::Comma,
-            &[TokenKind::ClosingBrace],
-            parse_lua_key_value,
-        )
-    })
+    delemited_by(
+        parser,
+        TokenKind::Comma,
+        &[TokenKind::ClosingBrace],
+        parse_lua_key_value,
+    )
 }
 
 /// Parse a python-style dictionary body.
@@ -85,14 +88,12 @@ fn parse_python_dict<'a>(
         (key, value)
     }
 
-    parser.with_parens_ctx(true, |parser| {
-        delemited_by(
-            parser,
-            TokenKind::Comma,
-            &[TokenKind::ClosingBrace],
-            parse_python_key_value,
-        )
-    })
+    delemited_by(
+        parser,
+        TokenKind::Comma,
+        &[TokenKind::ClosingBrace],
+        parse_python_key_value,
+    )
 }
 
 /// Parse a lambda function.
