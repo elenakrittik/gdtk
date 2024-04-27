@@ -1,6 +1,6 @@
 use gdtk_ast::{ASTExpr, ASTFunction, ASTFunctionKind, DictValue};
-use gdtk_lexer::{Token, TokenKind};
 
+use crate::lexer::{Token, TokenKind};
 use crate::{
     expressions::parse_expr,
     functions::{parse_func, ParseFuncOptions},

@@ -1,12 +1,12 @@
 use gdtk_ast::{ASTExpr, ASTExprKind, ASTPassStmt, ASTStatement};
-use gdtk_lexer::{Token, TokenKind};
 
+use crate::lexer::{Token, TokenKind};
 use crate::Parser;
 
 pub(crate) const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { span: 0..0 });
 
 pub(crate) fn create_parser(input: &str) -> Parser<impl Iterator<Item = Token<'_>>> {
-    crate::parser::Parser::new(gdtk_lexer::lex(input))
+    crate::parser::Parser::new(crate::lexer::lex(input))
 }
 
 pub(crate) fn next_kind<'a>(

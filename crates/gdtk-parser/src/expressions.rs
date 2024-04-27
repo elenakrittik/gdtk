@@ -1,10 +1,10 @@
 use gdtk_ast::{
     ASTBinaryOp, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPostfixOpKind, ASTPrefixOp, ASTPrefixOpKind,
 };
-use gdtk_lexer::{Token, TokenKind};
 use gdtk_span::Span;
 use pratt::{Affix, Associativity, PrattParser, Precedence};
 
+use crate::lexer::{Token, TokenKind};
 use crate::{
     utils::{advance_and_parse, delemited_by, expect},
     values::{parse_array, parse_dictionary, parse_lambda},

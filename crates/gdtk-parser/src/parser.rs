@@ -1,7 +1,8 @@
 use std::iter::Peekable;
 
-use gdtk_lexer::Token;
 use gdtk_span::Span;
+
+use crate::lexer::Token;
 
 /// A wrapper around token iterator with additional functionality.
 #[derive(Debug)]

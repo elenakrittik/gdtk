@@ -1,16 +1,11 @@
-use crate::token::TokenKind;
+use crate::lexer::TokenKind;
 
 macro_rules! test_eq {
     ($input: expr, $($expected: expr),*) => {
         {
-            let lexed = $crate::lex($input);
-            let mut lexemes = vec![];
+            let lexed: Vec<_> = $crate::lexer::lex($input).map(|t| t.kind).collect();
 
-            for token in lexed {
-                lexemes.push(token.kind);
-            }
-
-            assert_eq!(lexemes, vec![$($expected),*]);
+            assert_eq!(lexed, vec![$($expected),*]);
         }
     };
 }
@@ -355,16 +350,15 @@ fn test_indents() {
         TokenKind::Dedent
     );
 
-    // TODO: properly emit indents in these cases (or trim blankets?)
-    // test_eq!("\t\t", TokenKind::Indent);
-    // test_eq!("\t  ", TokenKind::Indent);
-    // test_eq!("  \t", TokenKind::Indent);
-    // test_eq!("    ", TokenKind::Indent);
-    // test_eq!("    pass", TokenKind::Indent, TokenKind::Pass);
-    // test_eq!("    pass\n", TokenKind::Indent, TokenKind::Pass);
+    test_eq!("\t\t", TokenKind::Indent);
+    test_eq!("\t  ", TokenKind::Indent);
+    test_eq!("  \t", TokenKind::Indent);
+    test_eq!("    ", TokenKind::Indent);
+    test_eq!("    pass", TokenKind::Indent, TokenKind::Pass);
+    test_eq!("    pass\n", TokenKind::Indent, TokenKind::Pass);
 }
 
-// #[test]
-// fn test_edge_cases() {
-//     test_eq!("not info", TokenKind::Not, TokenKind::Identifier("info"));
-// }
+#[test]
+fn test_edge_cases() {
+    test_eq!("not info", TokenKind::Not, TokenKind::Identifier("info"));
+}
