@@ -108,11 +108,9 @@ pub fn noqas(input: &str) -> ahash::AHashMap<usize, Vec<&str>> {
 }
 
 fn find_noqas(input: &str) -> Vec<&str> {
-    const REGEX: LazyCell<Regex> =
-        LazyCell::new(|| Regex::new(r"noqa:[ \t]*([a-zA-Z-]+)").unwrap());
+    let re = LazyCell::new(|| Regex::new(r"noqa:[ \t]*([a-zA-Z-]+)").unwrap());
 
-    REGEX
-        .captures_iter(input)
+    re.captures_iter(input)
         .filter_map(|c| c.get(1).map(|m| m.as_str()))
         .collect()
 }
