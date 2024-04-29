@@ -31,14 +31,12 @@ impl<'a> Token<'a> {
 #[logos(subpattern string = "(\"[^\"\r\n]*\")|('[^'\r\n]*')")]
 #[logos(subpattern newline = "(\r\n)|(\n)")]
 pub enum TokenKind<'a> {
-    /* Essentials */
-
-    #[regex(r"(\p{XID_Start}|_)\p{XID_Continue}*")]
-    Identifier(&'a str),
-
     /* Literals */
 
     // TODO: multiline strings
+
+    #[regex(r"(\p{XID_Start}|_)\p{XID_Continue}*")]
+    Identifier(&'a str),
 
     #[regex("(?&int)", convert)]
     Integer(u64),
@@ -156,6 +154,23 @@ pub enum TokenKind<'a> {
     #[token("%")]
     Remainder,
 
+    /* Other operators */
+
+    #[token("as")]
+    As,
+
+    #[token("await")]
+    Await,
+
+    #[token("in")]
+    In,
+
+    // NOTE: `not in` is generated manually in `crate::lex`
+    NotIn,
+
+    #[token("is")]
+    Is,
+
     /* Assignment */
 
     #[token("=")]
@@ -231,14 +246,8 @@ pub enum TokenKind<'a> {
 
     /* Keywords */
 
-    #[token("as")]
-    As,
-
     #[token("assert")]
     Assert,
-
-    #[token("await")]
-    Await,
 
     #[token("breakpoint")]
     Breakpoint,
@@ -260,15 +269,6 @@ pub enum TokenKind<'a> {
 
     #[token("func")]
     Func,
-
-    #[token("in")]
-    In,
-
-    #[token("not in")]
-    NotIn,
-
-    #[token("is")]
-    Is,
 
     #[token("signal")]
     Signal,
@@ -399,7 +399,8 @@ impl TokenKind<'_> {
             | TokenKind::ClosingBrace
             | TokenKind::ClosingBracket
             | TokenKind::ClosingParenthesis
-            | TokenKind::Semicolon => true,
+            | TokenKind::Semicolon
+            | TokenKind::Dedent => true,
             _ => false,
         }
     }

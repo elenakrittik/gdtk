@@ -8,6 +8,7 @@ pub mod token;
 
 use std::{cell::LazyCell, iter::Peekable};
 
+use itertools::Itertools;
 use logos::Logos;
 use regex::Regex;
 use token::CommentLexer;
@@ -20,7 +21,16 @@ pub fn lex(input: &str) -> impl Iterator<Item = Token<'_>> {
         .filter_map(|(result, span)| result.ok().map(|kind| Token { span, kind }))
         .peekable();
 
-    generate_indents(tokens).into_iter()
+    generate_indents(tokens).into_iter().coalesce(|prev, curr| {
+        if prev.kind.is_not() && curr.kind.is_in() {
+            Ok(Token {
+                kind: TokenKind::NotIn,
+                span: prev.span.start..curr.span.end,
+            })
+        } else {
+            Err((prev, curr))
+        }
+    })
 }
 
 // I wish there was a way to make it 100% iterator-based, but last time i tried it turned out
