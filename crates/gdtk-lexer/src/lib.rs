@@ -1,12 +1,16 @@
+#![feature(lazy_cell)]
+
 pub mod callbacks;
 pub mod error;
 #[cfg(test)]
 mod tests;
 pub mod token;
 
-use std::iter::Peekable;
+use std::{cell::LazyCell, iter::Peekable};
 
 use logos::Logos;
+use regex::Regex;
+use token::CommentLexer;
 
 pub use crate::token::{Token, TokenKind};
 
@@ -84,25 +88,31 @@ fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -
     out
 }
 
-pub fn noqa_comments(input: &str) -> ahash::AHashMap<usize, Vec<&str>> {
+pub fn noqas(input: &str) -> ahash::AHashMap<usize, Vec<&str>> {
     let mut map = ahash::AHashMap::<usize, Vec<&str>>::new();
     let mut line = 0usize;
 
-    let tokens = TokenKind::lexer(input).filter_map(Result::ok);
+    let tokens = CommentLexer::lexer(input).filter_map(Result::ok);
 
     for token in tokens {
         match token {
-            TokenKind::Newline => line += 1,
-            TokenKind::Comment(comm) if comm.trim_end().starts_with("noqa") => {
-                if let Some(v) = map.get_mut(&line) {
-                    v.push(comm);
-                } else {
-                    map.insert(line, vec![comm]);
-                }
-            },
+            CommentLexer::Newline => line += 1,
+            CommentLexer::Comment(comm) if comm.contains("noqa") => {
+                map.insert(line, find_noqas(comm));
+            }
             _ => (),
         }
     }
 
     map
+}
+
+fn find_noqas(input: &str) -> Vec<&str> {
+    const REGEX: LazyCell<Regex> =
+        LazyCell::new(|| Regex::new(r"noqa:[ \t]*([a-zA-Z-]+)").unwrap());
+
+    REGEX
+        .captures_iter(input)
+        .filter_map(|c| c.get(1).map(|m| m.as_str()))
+        .collect()
 }

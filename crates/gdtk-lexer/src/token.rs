@@ -32,7 +32,7 @@ impl<'a> Token<'a> {
 #[logos(subpattern newline = "(\r\n)|(\n)")]
 pub enum TokenKind<'a> {
     /* Essentials */
-    
+
     #[regex(r"(\p{XID_Start}|_)\p{XID_Continue}*")]
     Identifier(&'a str),
 
@@ -92,7 +92,7 @@ pub enum TokenKind<'a> {
 
     #[token("==")]
     Equal,
-    
+
     #[token("!=")]
     NotEqual,
 
@@ -117,7 +117,7 @@ pub enum TokenKind<'a> {
     SymbolizedNot,
 
     /* Bitwise operators */
-    
+
     #[token("&")]
     BitwiseAnd,
 
@@ -137,7 +137,7 @@ pub enum TokenKind<'a> {
     BitwiseShiftRight,
 
     /* Math */
-    
+
     #[token("+")]
     Plus,
 
@@ -166,7 +166,7 @@ pub enum TokenKind<'a> {
 
     #[token("-=")]
     MinusAssignment,
-    
+
     #[token("*=")]
     MultiplyAssignment,
 
@@ -184,7 +184,7 @@ pub enum TokenKind<'a> {
 
     #[token("|=")]
     BitwiseOrAssignment,
-    
+
     #[token("~=")]
     BitwiseNotAssignment,
 
@@ -198,7 +198,7 @@ pub enum TokenKind<'a> {
     BitwiseShiftRightAssignment,
 
     /* Control flow */
-    
+
     #[token("if")]
     If,
 
@@ -283,7 +283,7 @@ pub enum TokenKind<'a> {
     When,
 
     /* Punctuation */
-    
+
     #[regex("@")]
     Annotation,
 
@@ -358,7 +358,7 @@ pub enum TokenKind<'a> {
     Yield,
 
     /* We don't do that here */
-    
+
     // #[token("preload")]
     // Preload,
 
@@ -407,4 +407,13 @@ impl TokenKind<'_> {
     pub fn same_as(&self, other: &TokenKind<'_>) -> bool {
         std::mem::discriminant(self) == std::mem::discriminant(other)
     }
+}
+
+#[derive(Logos, Debug)]
+pub(crate) enum CommentLexer<'a> {
+    #[regex("(\\\\)?((\r\n)|(\n))")]
+    Newline,
+
+    #[regex("#[^\n]*")]
+    Comment(&'a str),
 }
