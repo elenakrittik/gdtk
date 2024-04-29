@@ -36,10 +36,7 @@ pub fn parse_dictionary<'a>(
         match parser.peek().expect("unexpected EOF").kind {
             TokenKind::ClosingBrace => vec![], // empty dict
             TokenKind::Identifier(_) => parse_lua_dict(parser),
-            _ => {
-                eprintln!("{:?}", parser.peek());
-                parse_python_dict(parser)
-            }
+            _ => parse_python_dict(parser),
         }
     });
 

@@ -364,7 +364,7 @@ fn test_indents() {
     // test_eq!("    pass\n", TokenKind::Indent, TokenKind::Pass);
 }
 
-// #[test]
-// fn test_edge_cases() {
-//     test_eq!("not info", TokenKind::Not, TokenKind::Identifier("info"));
-// }
+#[test]
+fn test_edge_cases() {
+    test_eq!("not info", TokenKind::Not, TokenKind::Identifier("info"));
+}

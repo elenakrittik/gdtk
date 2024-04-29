@@ -165,7 +165,7 @@ pub enum TokenKind<'a> {
     #[token("in")]
     In,
 
-    #[token("not in")]
+    // NOTE: `not in` is generated manually in `crate::lex`
     NotIn,
 
     #[token("is")]
