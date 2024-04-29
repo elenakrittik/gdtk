@@ -29,6 +29,15 @@ impl<'a> Iterator for Lexer<'a> {
                 ';' | '.' | ':' | '$' => {
                     self.lex_symbol()
                 }
+                '\n' | '\r' | '\t' | ' ' => {
+                    self.lex_blanket()
+                },
+                '0'..='9' => {
+                    self.lex_number(),
+                }
+                'A'..='Z' | 'a'..='z' | '_' => {
+                    self.lex_identifier()
+                }
                 other => {
                     eprintln!("WARNING: skipping lexing char '{other}'");
                     self.cursor.next();

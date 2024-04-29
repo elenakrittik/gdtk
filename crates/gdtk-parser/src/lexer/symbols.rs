@@ -1,11 +1,11 @@
-use super::TokenKind;
-use crate::lexer::lexer::Lexer;
+use crate::lexer::{TokenKind, lexer::Lexer};
 
 impl<'a> Lexer<'a> {
     pub(super) fn lex_symbol(&mut self) -> TokenKind<'a> {
         let mut symbol = match self.cursor.next().unwrap() {
             '<' => {
                 if self.cursor.peek().is_some_and(|c| c == &'<') {
+                    self.cursor.next();
                     TokenKind::BitwiseShiftLeft
                 } else {
                     TokenKind::LessThan
@@ -13,6 +13,7 @@ impl<'a> Lexer<'a> {
             }
             '>' => {
                 if self.cursor.peek().is_some_and(|c| c == &'>') {
+                    self.cursor.next();
                     TokenKind::BitwiseShiftRight
                 } else {
                     TokenKind::GreaterThan
@@ -25,9 +26,17 @@ impl<'a> Lexer<'a> {
             '~' => TokenKind::BitwiseNot,
             '^' => TokenKind::BitwiseXor,
             '+' => TokenKind::Plus,
-            '-' => TokenKind::Minus,
+            '-' => {
+                if self.cursor.peek().is_some_and(|c| c == &'>') {
+                    self.cursor.next();
+                    TokenKind::Arrow
+                } else {
+                    TokenKind::Minus
+                }
+            }
             '*' => {
                 if self.cursor.peek().is_some_and(|c| c == &'*') {
+                    self.cursor.next();
                     TokenKind::Power
                 } else {
                     TokenKind::Multiply
@@ -44,7 +53,14 @@ impl<'a> Lexer<'a> {
             '}' => TokenKind::ClosingBrace,
             ',' => TokenKind::Comma,
             ';' => TokenKind::Semicolon,
-            '.' => TokenKind::Period,
+            '.' => {
+                if self.cursor.peek().is_some_and(|c| c == &'.') {
+                    self.cursor.next();
+                    TokenKind::Range
+                } else {
+                    TokenKind::Period
+                }
+            },
             ':' => TokenKind::Colon,
             '$' => TokenKind::Dollar,
             _ => unreachable!(),
@@ -53,6 +69,7 @@ impl<'a> Lexer<'a> {
         if self.cursor.peek().is_some_and(|c| c == &'=')
             && let Some(assigned) = assigned(&symbol)
         {
+            self.cursor.next();
             symbol = assigned;
         }
 

@@ -1,6 +1,9 @@
 mod cursor;
 mod lexer;
 mod symbols;
+mod blankets;
+mod identifier;
+mod number;
 #[cfg(test)]
 mod tests;
 mod token;
