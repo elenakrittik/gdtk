@@ -1,13 +1,17 @@
+#![feature(lazy_cell)]
+
 pub mod callbacks;
 pub mod error;
 #[cfg(test)]
 mod tests;
 pub mod token;
 
-use std::iter::Peekable;
+use std::{cell::LazyCell, iter::Peekable};
 
 use itertools::Itertools;
 use logos::Logos;
+use regex::Regex;
+use token::CommentLexer;
 
 pub use crate::token::{Token, TokenKind};
 
@@ -92,4 +96,31 @@ fn generate_indents<'a>(mut tokens: Peekable<impl Iterator<Item = Token<'a>>>) -
     }
 
     out
+}
+
+pub fn noqas(input: &str) -> ahash::AHashMap<usize, Vec<&str>> {
+    let mut map = ahash::AHashMap::<usize, Vec<&str>>::new();
+    let mut line = 0usize;
+
+    let tokens = CommentLexer::lexer(input).filter_map(Result::ok);
+
+    for token in tokens {
+        match token {
+            CommentLexer::Newline => line += 1,
+            CommentLexer::Comment(comm) if comm.contains("noqa") => {
+                map.insert(line, find_noqas(comm));
+            }
+            _ => (),
+        }
+    }
+
+    map
+}
+
+fn find_noqas(input: &str) -> Vec<&str> {
+    let re = LazyCell::new(|| Regex::new(r"noqa:[ \t]*([a-zA-Z-]+)").unwrap());
+
+    re.captures_iter(input)
+        .filter_map(|c| c.get(1).map(|m| m.as_str()))
+        .collect()
 }

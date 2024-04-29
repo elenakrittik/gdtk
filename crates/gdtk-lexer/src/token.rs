@@ -343,7 +343,7 @@ pub enum TokenKind<'a> {
 
     /* Specials */
 
-    #[regex("#[^\n]*", |lex| &lex.slice()[1..])]
+    #[regex("#[^\n]*")]
     Comment(&'a str),
 
     /* Reserved and deprecated tokens */
@@ -408,4 +408,13 @@ impl TokenKind<'_> {
     pub fn same_as(&self, other: &TokenKind<'_>) -> bool {
         std::mem::discriminant(self) == std::mem::discriminant(other)
     }
+}
+
+#[derive(Logos, Debug)]
+pub(crate) enum CommentLexer<'a> {
+    #[regex("(\\\\)?((\r\n)|(\n))")]
+    Newline,
+
+    #[regex("#[^\n]*")]
+    Comment(&'a str),
 }
