@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{io::Write, path::PathBuf};
 
 use diagnosis::protocol::Visualizer;
 
@@ -31,6 +31,7 @@ pub fn run(file: PathBuf) -> anyhow::Result<()> {
         }
 
         vis.visualize(diagnostic, &mut stderr)?;
+        writeln!(stderr)?;
     }
 
     Ok(())

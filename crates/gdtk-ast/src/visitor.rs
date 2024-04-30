@@ -95,6 +95,10 @@ pub trait Visitor<'a>: Sized {
         walk_signal_statement(self, signal);
     }
 
+    fn visit_expr_stmt(&mut self, expr: &'a ast::ASTExpr<'a>) {
+        walk_expr_stmt(self, expr);
+    }
+
     fn visit_match_statement(&mut self, stmt: &'a ast::ASTMatchStmt<'a>) {
         walk_match_statement(self, stmt);
     }
@@ -292,7 +296,7 @@ pub fn walk_statement<'a>(visitor: &mut impl Visitor<'a>, stmt: &'a ast::ASTStat
         ast::ASTStatement::Match(stmt) => visitor.visit_match_statement(stmt),
         ast::ASTStatement::While(stmt) => visitor.visit_while_statement(stmt),
         ast::ASTStatement::Variable(variable) => visitor.visit_variable(variable),
-        ast::ASTStatement::Expr(expr) => visitor.visit_expr(expr),
+        ast::ASTStatement::Expr(expr) => visitor.visit_expr_stmt(expr),
     }
 }
 
@@ -429,6 +433,10 @@ pub fn walk_signal_statement<'a>(
     if let Some(params) = &signal.parameters {
         visitor.visit_parameters(params.as_slice());
     }
+}
+
+pub fn walk_expr_stmt<'a>(visitor: &mut impl Visitor<'a>, expr: &'a ast::ASTExpr<'a>) {
+    visitor.visit_expr(expr);
 }
 
 pub fn walk_match_statement<'a>(visitor: &mut impl Visitor<'a>, stmt: &'a ast::ASTMatchStmt<'a>) {

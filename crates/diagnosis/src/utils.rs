@@ -24,11 +24,19 @@ impl<'a> Source<'a> {
                 break None;
             };
 
-            column += 1;
+            // dbg!(idx);
+            // dbg!(c);
+            // dbg!((line, column));
 
-            if c == '\n' {
-                line += 1;
-                column = 0;
+            match c {
+                '\n' => {
+                    line += 1;
+                    column = 0;
+                },
+                // TODO: do a proper fix
+                // best-effort approximation of visual width of a tab
+                '\t' => column += 4,
+                _ => column += 1,
             }
 
             if span.contains(&idx) {

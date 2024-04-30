@@ -16,18 +16,21 @@ pub fn run_builtin_lints<'s>(file: &'s gdtk_ast::ASTFile) -> Vec<diagnosis::Diag
     let mut invalid_assignment_target =
         syntax::invalid_assignment_target::InvalidAssignmentTarget::default();
     let mut self_in_static = syntax::self_in_static_func::SelfInStaticFunc::default();
+    let mut standalone_expression = redundancy::standalone_expression::StandaloneExpression::default();
 
     // Run lints.
     identifier_casing.visit_file(file);
     unnecessary_pass.visit_file(file);
     invalid_assignment_target.visit_file(file);
     self_in_static.visit_file(file);
+    standalone_expression.visit_file(file);
 
     // Collect diagnostics.
     diagnostics.extend(identifier_casing.0);
     diagnostics.extend(unnecessary_pass.0);
     diagnostics.extend(invalid_assignment_target.0);
     diagnostics.extend(self_in_static.diagnostics);
+    diagnostics.extend(standalone_expression.0);
 
     diagnostics
 }

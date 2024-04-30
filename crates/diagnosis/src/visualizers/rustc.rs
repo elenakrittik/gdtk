@@ -85,6 +85,7 @@ impl<'a> RustcVisualizer<'a> {
 impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
     type Error = RustcVisualizerError;
 
+    // FIXME: this is slower than needed right now
     fn visualize(
         &self,
         diag: Diagnostic<'_>,
@@ -118,7 +119,7 @@ impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
             writeln!(f)?;
             self.visualize_source_line(line, f)?;
             writeln!(f)?;
-            self.visualize_highlight(offset, span.end - span.start, message, sev_style, f)?;
+            self.visualize_highlight((line, offset), span.end - span.start, message, sev_style, f)?;
         }
 
         if !help_messages.is_empty() {
@@ -220,7 +221,7 @@ impl<'a> RustcVisualizer<'a> {
     /// ```
     fn visualize_highlight(
         &self,
-        offset: usize,
+        (line, offset): (usize, usize),
         len: usize,
         message: Option<&str>,
         style: yansi::Style,
@@ -228,7 +229,7 @@ impl<'a> RustcVisualizer<'a> {
     ) -> Result<(), <Self as Visualizer<'a>>::Error> {
         self.visualize_border(None, f)?;
         // std::iter::repeat_n but stable
-        write!(f, "{}", " ".repeat(offset))?;
+        write!(f, "{}", &self.source.line(line).unwrap()[0..offset])?;
         write!(f, "{}", "-".repeat(len).paint(style))?;
 
         if let Some(message) = message {
