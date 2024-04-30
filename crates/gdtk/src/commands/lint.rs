@@ -23,8 +23,8 @@ pub fn run(file: PathBuf) -> anyhow::Result<()> {
     for diagnostic in diagnostics {
         if let Some(code) = diagnostic.code
             && let Some(span) = diagnostic.span
-            && let Some((human_line, _)) = source.locate(span)
-            && let Some(noqas) = noqas.get(&(human_line - 1))
+            && let Some(line) = source.locate(span)
+            && let Some(noqas) = noqas.get(&line)
             && noqas.contains(&code)
         {
             continue;

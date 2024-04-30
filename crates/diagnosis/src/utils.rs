@@ -11,11 +11,10 @@ impl<'a> Source<'a> {
         Self { source }
     }
 
-    /// Gives a human-friendly representation of a span: `(line, column)`.
-    /// Returns `None` if the span exists out of source's bounds.
-    pub fn locate(&self, span: &Span) -> Option<(usize, usize)> {
-        let mut line = 1usize;
-        let mut column = 0usize;
+    /// Gives the first line that contains the given span (zero-indexed).
+    /// Returns `None` if the span is out of source's bounds.
+    pub fn locate(&self, span: &Span) -> Option<usize> {
+        let mut line = 0usize;
 
         let mut chars = self.source.chars().enumerate();
 
@@ -24,23 +23,12 @@ impl<'a> Source<'a> {
                 break None;
             };
 
-            // dbg!(idx);
-            // dbg!(c);
-            // dbg!((line, column));
-
-            match c {
-                '\n' => {
-                    line += 1;
-                    column = 0;
-                },
-                // TODO: do a proper fix
-                // best-effort approximation of visual width of a tab
-                '\t' => column += 4,
-                _ => column += 1,
+            if c == '\n' {
+                line += 1;
             }
 
             if span.contains(&idx) {
-                break Some((line, column - 1));
+                break Some(line);
             }
         }
     }
