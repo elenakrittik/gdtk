@@ -23,7 +23,7 @@ pub fn run(file: PathBuf) -> anyhow::Result<()> {
     for diagnostic in diagnostics {
         if let Some(code) = diagnostic.code
             && let Some(span) = diagnostic.span
-            && let Some(line) = source.locate(span)
+            && let Some((line, _)) = source.locate(span)
             && let Some(noqas) = noqas.get(&line)
             && noqas.contains(&code)
         {
@@ -31,7 +31,7 @@ pub fn run(file: PathBuf) -> anyhow::Result<()> {
         }
 
         vis.visualize(diagnostic, &mut stderr)?;
-        writeln!(stderr)?;
+        write!(stderr, "\n\n")?;
     }
 
     Ok(())

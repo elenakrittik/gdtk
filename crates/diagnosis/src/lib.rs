@@ -1,4 +1,5 @@
 #![doc = include_str!("../README.md")]
+#![cfg_attr(feature = "rustc", feature(let_chains))]
 
 pub mod diagnostic;
 pub mod protocol;
