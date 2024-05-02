@@ -1,5 +1,5 @@
 use diagnosis::{Diagnostic, Highlight, Severity};
-use gdtk_ast::{ast, Visitor, visitor::walk_block};
+use gdtk_ast::{ast, visitor::walk_block, Visitor};
 
 #[derive(Default, Debug)]
 struct BranchGroup<'a> {
@@ -25,7 +25,7 @@ impl<'a> BranchGroups<'a> {
     }
 
     fn last(&mut self) -> &mut BranchGroup<'a> {
-        if self.inner.len() == 0 {
+        if self.inner.is_empty() {
             self.create();
         }
 
@@ -94,8 +94,9 @@ impl<'s> Visitor<'s> for UnnecessaryBranch<'s> {
             {
                 self.0.push(
                     Diagnostic::new("Unnecessary `else`.", Severity::Warning)
-                        .with_code("unnecessary-branch"), // .with_span(else_.span)
-                                                          // .add_highlight(Highlight::new(else_.span))
+                        .with_code("unnecessary-branch")
+                        .with_span(&else_.span)
+                        .add_highlight(Highlight::new(&else_.span)),
                 )
             }
         }
@@ -106,16 +107,19 @@ fn always_returns(block: &[ast::ASTStatement]) -> bool {
     // A block always returns only if either:
     // - it has an unconditional `return`
     // - it has an `if/elif/else` chain all blocks of which always return
+    // - it has a `match` all arms of which always return (not implemented)
 
     if block.iter().any(|stmt| stmt.is_return()) {
         return true;
     }
 
-    BranchGroups::from(block)
-        .into_iter()
-        .any(|group| {
-            (group.if_.is_none() || always_returns(group.if_.unwrap().block.as_slice()))
-            && (group.elifs.is_empty() || group.elifs.into_iter().all(|elif| always_returns(elif.block.as_slice()))
+    BranchGroups::from(block).into_iter().any(|group| {
+        (group.if_.is_none() || always_returns(group.if_.unwrap().block.as_slice()))
+            && (group.elifs.is_empty()
+                || group
+                    .elifs
+                    .into_iter()
+                    .all(|elif| always_returns(elif.block.as_slice())))
             && (group.else_.is_none() || always_returns(group.else_.unwrap().block.as_slice()))
-        })
+    })
 }
