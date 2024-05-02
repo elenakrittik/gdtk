@@ -1,4 +1,4 @@
-use std::path::PathBuf;
+use std::{io::Write, path::PathBuf};
 
 use diagnosis::protocol::Visualizer;
 
@@ -23,14 +23,15 @@ pub fn run(file: PathBuf) -> anyhow::Result<()> {
     for diagnostic in diagnostics {
         if let Some(code) = diagnostic.code
             && let Some(span) = diagnostic.span
-            && let Some((human_line, _)) = source.locate(span)
-            && let Some(noqas) = noqas.get(&(human_line - 1))
+            && let Some((line, _)) = source.locate(span)
+            && let Some(noqas) = noqas.get(&line)
             && noqas.contains(&code)
         {
             continue;
         }
 
         vis.visualize(diagnostic, &mut stderr)?;
+        write!(stderr, "\n\n")?;
     }
 
     Ok(())

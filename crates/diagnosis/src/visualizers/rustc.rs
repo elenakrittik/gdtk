@@ -1,16 +1,16 @@
+use count_digits::CountDigits;
 use yansi::Paint;
 
 use crate::{
     diagnostic::{Diagnostic, Severity},
     protocol::Visualizer,
     utils::Source,
-    Highlight, Span,
 };
 
 const MAIN_TEXT: yansi::Style = yansi::Style::new().white().bold();
 const ERROR: yansi::Style = yansi::Style::new().bright_red().bold();
-const WARNING: yansi::Style = yansi::Style::new().yellow();
-const CUSTOM: yansi::Style = yansi::Style::new().green();
+const WARNING: yansi::Style = yansi::Style::new().yellow().bold();
+const CUSTOM: yansi::Style = yansi::Style::new().green().bold();
 const HELP: yansi::Style = yansi::Style::new().cyan().bold();
 const BORDER: yansi::Style = yansi::Style::new().bright_blue().bold();
 
@@ -85,206 +85,129 @@ impl<'a> RustcVisualizer<'a> {
 impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
     type Error = RustcVisualizerError;
 
+    // TODO: Handle multiple highlights on the same line.
     fn visualize(
         &self,
         diag: Diagnostic<'_>,
         f: &mut impl std::io::Write,
     ) -> Result<(), Self::Error> {
-        let Diagnostic {
-            message,
-            severity,
-            code,
-            span,
-            highlights,
-            help_messages,
-        } = diag;
+        // A map of highlight spans to their positions.
+        let span_to_pos = ahash::AHashMap::from_iter(
+            diag.highlights
+                .iter()
+                .filter_map(|h| Some(h.span).zip(self.source.locate(h.span))),
+        );
 
-        let (_, sev_style) = severity_styles(self, severity);
+        // Offset from the right to account for the line number.
+        let line_number_offset = span_to_pos
+            .values()
+            .map(|(line, _)| line)
+            .max()
+            .unwrap_or(&0)
+            .count_digits();
 
-        self.visualize_primary_error(severity, code, message, f)?;
-        writeln!(f)?;
-        self.visualize_source_pointer(span, f)?;
+        let (directive, directive_style) = match diag.severity {
+            Severity::Error => ("error", self.styles.error),
+            Severity::Warning => ("warning", self.styles.warning),
+            Severity::Custom(directive) => (directive, self.styles.custom),
+        };
 
-        if !highlights.is_empty() {
-            writeln!(f)?;
-            self.visualize_border(None, f)?;
+        // Step 1. Draw the primary messsage.
+        write!(f, "{}", directive.paint(directive_style))?;
+
+        if let Some(code) = diag.code {
+            write!(f, "{}", '['.paint(directive_style))?;
+
+            write!(f, "{}", code.paint(directive_style))?;
+            write!(f, "{}", ']'.paint(directive_style))?;
         }
 
-        for Highlight { span, message } in highlights {
-            let Some((line, offset)) = self.source.locate(span) else {
+        write!(f, "{}", ":".paint(self.styles.main_text))?;
+        write!(f, " ")?;
+        write!(f, "{}", diag.message.paint(self.styles.main_text))?;
+        writeln!(f)?;
+
+        // Step 2. Draw the source pointer.
+        write!(f, "{}", " ".repeat(line_number_offset))?;
+        write!(f, "{}", "-->".paint(self.styles.border))?;
+        write!(f, " ")?;
+        write!(f, "{}", self.source_name)?;
+
+        if let Some(span) = diag.span
+            && let Some((line, column)) = self.source.locate(span)
+        {
+            write!(f, ":{}:{}", line, column)?;
+        }
+
+        // Step 3. Draw highlights.
+
+        for highlight in diag.highlights {
+            let Some((line, column)) = span_to_pos.get(&highlight.span) else {
                 continue;
             };
 
+            let Some(line_source) = self.source.line(*line) else {
+                continue;
+            };
+
+            let local_line_number_offset = line_number_offset + 1 - line.count_digits();
+
             writeln!(f)?;
-            self.visualize_source_line(line, f)?;
+
+            // Step 3.1. Draw an empty "separator" border.
+            write!(f, "{}", " ".repeat(line_number_offset + 1))?;
+            write!(f, "{}", "|".paint(self.styles.border))?;
             writeln!(f)?;
-            self.visualize_highlight(offset, span.end - span.start, message, sev_style, f)?;
-        }
 
-        if !help_messages.is_empty() {
+            // Step 3.2. Draw the highlighted source line.
+            write!(f, "{}", line.paint(self.styles.border))?;
+            write!(f, "{}", " ".repeat(local_line_number_offset))?;
+            write!(f, "{}", "|".paint(self.styles.border))?;
+            write!(f, " ")?;
+            write!(f, "{}", line_source)?;
             writeln!(f)?;
-            self.visualize_border(None, f)?;
-        }
 
-        for help_message in help_messages {
-            writeln!(f)?;
-            self.visualize_help_message(help_message, f)?;
-        }
+            // Step 3.3. Draw the highlight.
+            write!(f, "{}", " ".repeat(line_number_offset + 1))?;
+            write!(f, "{}", "|".paint(self.styles.border))?;
 
-        writeln!(f)?;
+            // God did not intend for tabs to exist (joke (or is it?))
+            // Tabs are displayed differently in every terminal, thus
+            // simply using `" ".repeat(column + 1)` won't work as a tab
+            // is rarely of the same width as a space. To fix this, we
+            // need to emit `(column - n_tabs)` spaces and `(n_tabs)`
+            // tabs (under the assumption that all other characters are
+            // "1-wide"), so that the total visible width is the same as
+            // in the line source.
+            let n_tabs = line_source[..*column]
+                .chars()
+                .filter(|c| c == &'\t')
+                .count();
 
-        Ok(())
-    }
-}
+            write!(f, "{}", " ".repeat(column - n_tabs))?;
+            write!(f, "{}", "\t".repeat(n_tabs))?;
 
-impl<'a> RustcVisualizer<'a> {
-    /// Visualize a primary error message.
-    ///
-    /// Example output may look like this:
-    /// ```md
-    /// warning[invalid-assignment-target]: Invalid assignment target.
-    /// ```
-    fn visualize_primary_error(
-        &self,
-        severity: Severity,
-        code: Option<&str>,
-        message: &str,
-        f: &mut impl std::io::Write,
-    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        let (directive, style) = severity_styles(self, severity);
+            let span_length = highlight.span.end - highlight.span.start;
+            write!(f, "{}", "-".repeat(span_length).paint(directive_style))?;
 
-        write!(f, "{}", directive.paint(style))?;
-
-        if let Some(code) = code {
-            write!(f, "{}", '['.paint(style))?;
-            write!(f, "{}", code.paint(style))?;
-            write!(f, "{}", ']'.paint(style))?;
-        }
-
-        write!(f, "{}", ": ".paint(self.styles.main_text))?;
-        write!(f, "{}", message.paint(self.styles.main_text))?;
-
-        Ok(())
-    }
-
-    /// Visualize a "source pointer".
-    ///
-    /// Example output may look like this:
-    /// ```md
-    ///  --> .\quick.gd:2:4
-    /// ```
-    fn visualize_source_pointer(
-        &self,
-        span: Option<&Span>,
-        f: &mut impl std::io::Write,
-    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        write!(f, " {}", "--> ".paint(self.styles.border))?;
-        write!(f, "{}", self.source_name)?;
-
-        // #![feature(let_chains)], i miss you so much
-        if let Some(span) = span {
-            if let Some((line, column)) = self.source.locate(span) {
-                write!(f, ":{}:{}", line, column)?;
+            if let Some(message) = highlight.message {
+                write!(f, " ")?;
+                write!(f, "{}", message.paint(directive_style))?;
             }
         }
 
-        Ok(())
-    }
+        // Step 4. Draw help messages.
+        for help_message in diag.help_messages {
+            writeln!(f)?;
 
-    /// Visualize a source line (one-based).
-    ///
-    /// Example output may look like this:
-    /// ```md
-    /// 2 |     2 + 2 = 5
-    /// ```
-    fn visualize_source_line(
-        &self,
-        line: usize,
-        f: &mut impl std::io::Write,
-    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        let Some(line_source) = self.source.line(line - 1) else {
-            return Err(RustcVisualizerError::LineNotFound(line - 1));
-        };
-
-        self.visualize_border(Some(line), f)?;
-        write!(f, "{}", line_source)?;
-
-        Ok(())
-    }
-
-    /// Visualize a source line (one-based).
-    ///
-    /// Example output may look like this:
-    /// ```md
-    ///   |             - ..while trying to assign this expression
-    /// ```
-    fn visualize_highlight(
-        &self,
-        offset: usize,
-        len: usize,
-        message: Option<&str>,
-        style: yansi::Style,
-        f: &mut impl std::io::Write,
-    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        self.visualize_border(None, f)?;
-        // std::iter::repeat_n but stable
-        write!(f, "{}", " ".repeat(offset))?;
-        write!(f, "{}", "-".repeat(len).paint(style))?;
-
-        if let Some(message) = message {
-            write!(f, " {}", message.paint(style))?;
-        }
-
-        Ok(())
-    }
-
-    /// Visualize a help message.
-    ///
-    /// Example output may look like this:
-    /// ```md
-    ///    = help: assignment chains are not valid syntax
-    /// ```
-    fn visualize_help_message(
-        &self,
-        message: &str,
-        f: &mut impl std::io::Write,
-    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        write!(f, "{}", "  = help: ".paint(self.styles.help))?;
-        write!(f, "{}", message.paint(self.styles.help))?;
-
-        Ok(())
-    }
-
-    /// Visualize a help message.
-    ///
-    /// Example output may look like this:
-    /// ```md
-    ///  2 |
-    /// ```
-    fn visualize_border(
-        &self,
-        num: Option<usize>,
-        f: &mut impl std::io::Write,
-    ) -> Result<(), <Self as Visualizer<'a>>::Error> {
-        if let Some(num) = num {
-            write!(f, "{}", num.paint(self.styles.border))?;
-        } else {
+            write!(f, "{}", " ".repeat(line_number_offset + 1))?;
+            write!(f, "{}", "=".paint(self.styles.help))?;
             write!(f, " ")?;
+            write!(f, "{}", "help:".paint(self.styles.help))?;
+            write!(f, " ")?;
+            write!(f, "{}", help_message.paint(self.styles.help))?;
         }
 
-        write!(f, " {} ", "|".paint(self.styles.border))?;
-
         Ok(())
-    }
-}
-
-const fn severity_styles<'a>(
-    viz: &RustcVisualizer<'a>,
-    severity: Severity<'a>,
-) -> (&'a str, yansi::Style) {
-    match severity {
-        Severity::Error => ("error", viz.styles.error),
-        Severity::Warning => ("warning", viz.styles.warning),
-        Severity::Custom(kind) => (kind, viz.styles.custom),
     }
 }

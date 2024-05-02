@@ -11,19 +11,17 @@ impl<'a> Source<'a> {
         Self { source }
     }
 
-    /// Gives a human-friendly representation of a span: `(line, column)`.
-    /// Returns `None` if the span exists out of source's bounds.
+    /// Gives the first `(line, column)` that the given span contains (zero-indexed).
+    /// Returns `None` if the span is out of source's bounds.
     pub fn locate(&self, span: &Span) -> Option<(usize, usize)> {
-        let mut line = 1usize;
+        if span.start >= self.source.len() {
+            return None;
+        }
+
+        let mut line = 0usize;
         let mut column = 0usize;
 
-        let mut chars = self.source.chars().enumerate();
-
-        loop {
-            let Some((idx, c)) = chars.next() else {
-                break None;
-            };
-
+        for (idx, c) in self.source.chars().enumerate() {
             column += 1;
 
             if c == '\n' {
@@ -32,9 +30,11 @@ impl<'a> Source<'a> {
             }
 
             if span.contains(&idx) {
-                break Some((line, column - 1));
+                break;
             }
         }
+
+        Some((line, column))
     }
 
     /// Get the `n`th (zero-indexed) line in the source code.
