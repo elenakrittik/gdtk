@@ -24,8 +24,8 @@ pub enum Commands {
     },
     /// Lint GDScript code.
     Lint {
-        /// The GDScript file to lint.
-        file: PathBuf,
+        /// The GDScript file(s) to lint.
+        input: String,
     },
 }
 

@@ -2,9 +2,23 @@ use std::{io::Write, path::PathBuf};
 
 use diagnosis::protocol::Visualizer;
 
-use crate::utils::get_content;
+use crate::utils::{find_files, get_content};
 
-pub fn run(file: PathBuf) -> anyhow::Result<()> {
+pub fn run(input: &str) -> anyhow::Result<()> {
+    let matcher = match input {
+        "." => globset::Glob::new("*.gd")?,
+        other => globset::Glob::new(other)?,
+    }
+    .compile_matcher();
+
+    for file in find_files(matcher)? {
+        run_on_file(file)?;
+    }
+
+    Ok(())
+}
+
+fn run_on_file(file: PathBuf) -> anyhow::Result<()> {
     let content = get_content(file.as_path())?;
     let lexed = gdtk_lexer::lex(&content);
     let noqas = gdtk_lexer::noqas(&content);

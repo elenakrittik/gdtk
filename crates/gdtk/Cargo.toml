@@ -19,6 +19,8 @@ itertools = "0.12.1"
 reqwest = "0.12.2"
 tabled = { version = "0.15.0", features = ["std"] }
 spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
+jwalk = { version = "0.8.1", default-features = false }
+globset = { version = "0.4.14", default-features = false }
 
 [lib]
 name = "gdtk"
