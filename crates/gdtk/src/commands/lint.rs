@@ -2,12 +2,22 @@ use std::{io::Write, path::PathBuf};
 
 use diagnosis::protocol::Visualizer;
 
-use crate::utils::get_content;
+use crate::utils::{get_content, resolve_files_by_ext};
 
-pub fn run(file: PathBuf) -> anyhow::Result<()> {
+pub fn run(files: Vec<PathBuf>) -> anyhow::Result<()> {
+    let files = resolve_files_by_ext(files, "gd")?;
+
+    for file in files {
+        run_on_file(file)?;
+    }
+
+    Ok(())
+}
+
+fn run_on_file(file: PathBuf) -> anyhow::Result<()> {
     let content = get_content(file.as_path())?;
-    let lexed = gdtk_lexer::lex(&content);
     let noqas = gdtk_lexer::noqas(&content);
+    let lexed = gdtk_lexer::lex(&content);
     let parsed = gdtk_parser::parse_file(lexed);
 
     let source = diagnosis::utils::Source::new(&content);
