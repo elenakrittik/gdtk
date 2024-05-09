@@ -8,6 +8,7 @@ on:
     paths:
       - "*"
 
+
 jobs:
   update_nightly:
     runs-on: ubuntu-latest
