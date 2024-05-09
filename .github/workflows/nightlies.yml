@@ -25,12 +25,14 @@ jobs:
 
       - name: Replace nightly versions.
         run: |
-          RUSTC_VERSION='${{ steps.rust.outputs.rustc-version }}'
+          RAW_RUSTC_VERSION='${{ steps.rust.outputs.rustc-version }}'
+          RUSTC_VERSION=$(echo "$RAW_RUSTC_VERSION" | rg 'rustc [^-]+-nightly \([^ ]+ ([^)]+)\)' -r 'nightly-$1' --color=never)
           NIGHTLY_REGEX='nightly-[0-9]{4}(?:-[0-9]{2}){2}'
 
           for workflow_file in .github/workflows/*; do
             rg --passthru "$NIGHTLY_REGEX" -r "$RUSTC_VERSION" "$workflow_file" | sponge "$workflow_file"
           done
+
       - name: Archive production artifacts
         uses: actions/upload-artifact@v4
         with:
