@@ -8,19 +8,22 @@ anyhow = "1.0.71"
 clap = { version = "4.3.11", features = ["derive"] }
 diagnosis = { version = "0.1.0", path = "../diagnosis", features = ["rustc"] }
 gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm" }
-gdtk-dialoguer = { path = "../gdtk-dialoguer", version = "0.11.0", features = ["fuzzy-select"], default-features = false }
+gdtk-dialoguer = { path = "../gdtk-dialoguer", version = "0.11.0", features = [
+    "fuzzy-select",
+], default-features = false }
 gdtk-lexer = { version = "0.1.0", path = "../gdtk-lexer" }
 gdtk-lint = { version = "0.1.0", path = "../gdtk-lint" }
 gdtk-parser = { version = "0.1.0", path = "../gdtk-parser" }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
 tokio = { version = "1.34.0", features = ["full"] }
-zip-extract = { version = "0.1.2", default-features = false, features = ["deflate"] }
+zip-extract = { version = "0.1.2", default-features = false, features = [
+    "deflate",
+] }
 itertools = "0.12.1"
 reqwest = "0.12.2"
 tabled = { version = "0.15.0", features = ["std"] }
 spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
-jwalk = { version = "0.8.1", default-features = false }
-globset = { version = "0.4.14", default-features = false }
+ignore = { version = "0.4.22", features = ["simd-accel"] }
 
 [lib]
 name = "gdtk"

@@ -21,7 +21,7 @@ async fn main() -> anyhow::Result<()> {
             GodotCommands::Uninstall { version } => cmds::godot::uninstall::run(version).await?,
             GodotCommands::Run { version } => cmds::godot::run::run(version).await?,
         },
-        Commands::Lint { input } => cmds::lint::run(&input)?,
+        Commands::Lint { files } => cmds::lint::run(files)?,
     }
 
     Ok(())

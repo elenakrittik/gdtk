@@ -25,7 +25,8 @@ pub enum Commands {
     /// Lint GDScript code.
     Lint {
         /// The GDScript file(s) to lint.
-        input: String,
+        #[clap(default_value = "./")]
+        files: Vec<PathBuf>,
     },
 }
 
