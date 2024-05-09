@@ -1,8 +1,6 @@
 **/*.rs.bk
 **/*.pdb
 
-
-Cargo.lock
 target/
 
 out.txt
