@@ -35,3 +35,13 @@ jobs:
 
             rg --passthru "$NIGHTLY_REGEX" -r "$RUSTC_VERSION" "$FILENAME" | sponge "$FILENAME"
           done
+
+      - name: Submit changes.
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: "deps: Automated nightly version update."
+          body: ""
+          commit-message: "Update nightly version."
+          branch: "deps/weekly-update"
+          delete-branch: true
+          labels: "a: deps"

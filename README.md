@@ -25,7 +25,6 @@ this is essentially a public roadmap
 
 ## Credits
 
-
 Greatly inspired by these projects:
 - Pawel Lampe's [godot-gdscript-toolkit](https;//github.com/Scony/godot-gdscript-toolkit)
 - Paul Hocker's [gs-project-manager](https://gitlab.com/godot-stuff/gs-project-manager/)
