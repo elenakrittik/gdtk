@@ -1,0 +1,51 @@
+name: Weekly nightly rotation.
+
+on:
+  schedule:
+    - cron: 0 7 * * 1
+  workflow_dispatch:
+  push:
+    paths:
+      - "./github/workflows/nightlies.yml"
+
+jobs:
+  update_nightly:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.NIGHTLIES_TOKEN }}
+
+      - id: rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly
+
+      - name: Install ripgrep and sponge.
+        run: sudo apt-get install -y ripgrep moreutils
+
+      - name: Replace nightly versions.
+        run: |
+          RAW_RUSTC_VERSION='${{ steps.rust.outputs.rustc-version }}'
+          RUSTC_VERSION=$(echo "$RAW_RUSTC_VERSION" | rg 'rustc [^-]+-nightly \([^ ]+ ([^)]+)\)' -r 'nightly-$1' --color=never)
+          NIGHTLY_REGEX='nightly-[0-9]{4}(?:-[0-9]{2}){2}'
+
+          for workflow_file in .github/workflows/*; do
+            rg --passthru "$NIGHTLY_REGEX" -r "$RUSTC_VERSION" "$workflow_file" | sponge "$workflow_file"
+          done
+
+      - name: Submit changes.
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.NIGHTLIES_TOKEN }}
+          title: "deps: Automated nightly version update."
+          body: ""
+          commit-message: "Update nightly version."
+          branch: "deps/weekly-update"
+          delete-branch: true
+          labels: "a: deps"
