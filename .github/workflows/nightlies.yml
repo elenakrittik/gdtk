@@ -2,7 +2,7 @@ name: Weekly nightly rotation.
 
 on:
   schedule:
-    - cron: 0 0 * * 0
+    - cron: 0 7 * * 1
   workflow_dispatch:
   push:
     paths:
@@ -38,12 +38,6 @@ jobs:
           for workflow_file in .github/workflows/*; do
             rg --passthru "$NIGHTLY_REGEX" -r "$RUSTC_VERSION" "$workflow_file" | sponge "$workflow_file"
           done
-
-      - name: Archive production artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: cur
-          path: ./
 
       - name: Submit changes.
         uses: peter-evans/create-pull-request@v6
