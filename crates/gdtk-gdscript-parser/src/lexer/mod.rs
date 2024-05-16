@@ -1,19 +1,17 @@
-#![feature(lazy_cell)]
-
 pub mod callbacks;
 pub mod error;
 #[cfg(test)]
 mod tests;
 pub mod token;
 
-use std::{cell::LazyCell, iter::Peekable};
+use std::iter::Peekable;
 
 use itertools::Itertools;
 use logos::Logos;
 use regex::Regex;
-use token::CommentLexer;
 
-pub use crate::token::{Token, TokenKind};
+use crate::lexer::token::CommentLexer;
+pub use crate::lexer::token::{Token, TokenKind};
 
 pub fn lex(input: &str) -> impl Iterator<Item = Token<'_>> {
     let tokens = TokenKind::lexer(input)
@@ -118,9 +116,9 @@ pub fn noqas(input: &str) -> ahash::AHashMap<usize, Vec<&str>> {
 }
 
 fn find_noqas(input: &str) -> Vec<&str> {
-    let re = LazyCell::new(|| Regex::new(r"noqa:[ \t]*([a-zA-Z-]+)").unwrap());
-
-    re.captures_iter(input)
+    Regex::new(r"noqa:[ \t]*([a-zA-Z-]+)")
+        .unwrap()
+        .captures_iter(input)
         .filter_map(|c| c.get(1).map(|m| m.as_str()))
         .collect()
 }

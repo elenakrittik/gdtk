@@ -11,9 +11,8 @@ gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm" }
 gdtk-dialoguer = { path = "../gdtk-dialoguer", version = "0.11.0", features = [
     "fuzzy-select",
 ], default-features = false }
-gdtk-lexer = { version = "0.1.0", path = "../gdtk-lexer" }
 gdtk-lint = { version = "0.1.0", path = "../gdtk-lint" }
-gdtk-parser = { version = "0.1.0", path = "../gdtk-parser" }
+gdtk-gdscript-parser = { version = "0.1.0", path = "../gdtk-gdscript-parser" }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
 tokio = { version = "1.34.0", features = ["full"] }
 zip-extract = { version = "0.1.2", default-features = false, features = [

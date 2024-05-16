@@ -5,7 +5,7 @@
 use std::iter::Peekable;
 
 use gdtk_ast::{ASTFile, CodeBlock};
-use gdtk_lexer::{token::TokenKind, Token};
+use crate::lexer::{token::TokenKind, Token};
 
 use crate::statement::parse_statement;
 
@@ -13,6 +13,7 @@ pub mod block;
 pub mod classes;
 pub mod expressions;
 pub mod functions;
+pub mod lexer;
 pub mod match_;
 pub mod misc;
 pub mod parser;

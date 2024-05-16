@@ -1,7 +1,7 @@
 use logos::Logos;
 
-use crate::callbacks::{convert, convert_radix, trim_quotes};
-use crate::error::Error;
+use crate::lexer::callbacks::{convert, convert_radix, trim_quotes};
+use crate::lexer::error::Error;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {

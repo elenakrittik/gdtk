@@ -3,7 +3,7 @@ use gdtk_ast::{
     ASTElseStmt, ASTExpr, ASTExtendsStmt, ASTForStmt, ASTIfStmt, ASTPassStmt, ASTReturnStmt,
     ASTStatement, ASTVariable, ASTVariableKind, ASTWhileStmt, CodeBlock,
 };
-use gdtk_lexer::{Token, TokenKind};
+use crate::lexer::{Token, TokenKind};
 
 use crate::{
     block::parse_block,

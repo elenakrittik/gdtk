@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use crate::token::TokenKind;
+use crate::lexer::token::TokenKind;
 
 pub(crate) fn convert<'a, T: std::str::FromStr>(
     lexer: &logos::Lexer<'a, TokenKind<'a>>,

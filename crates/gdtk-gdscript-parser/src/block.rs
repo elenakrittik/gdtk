@@ -1,5 +1,5 @@
 use gdtk_ast::CodeBlock;
-use gdtk_lexer::{Token, TokenKind};
+use crate::lexer::{Token, TokenKind};
 
 use crate::statement::parse_statement;
 use crate::utils::expect;

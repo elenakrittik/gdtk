@@ -1,5 +1,5 @@
 use gdtk_ast::{ASTFunction, ASTFunctionKind, ASTVariableKind};
-use gdtk_lexer::{Token, TokenKind};
+use crate::lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::misc::parse_type;

@@ -1,6 +1,6 @@
 use gdtk_ast::{ASTExpr, ASTExprKind};
-use gdtk_lexer::{Token, TokenKind};
 
+use crate::lexer::{Token, TokenKind};
 use crate::Parser;
 
 /// Assert that the next token is of the given variant, and optionally
@@ -10,7 +10,7 @@ pub macro expect {
         $crate::utils::expect!($iter, $variant, ())
     },
     ($iter:expr, $variant:pat, $ret:expr) => {{
-        type Token<'a> = ::gdtk_lexer::Token<'a>;
+        type Token<'a> = $crate::lexer::Token<'a>;
 
         match $iter.next() {
             Some(Token { kind: $variant, .. }) => $ret,
@@ -70,8 +70,7 @@ pub fn parse_ident<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>)
 
 #[cfg(test)]
 mod tests {
-    use gdtk_lexer::TokenKind;
-
+    use crate::lexer::TokenKind;
     use crate::test_utils::{create_parser, next_kind};
     use crate::utils::{advance_and_parse, delemited_by, expect};
 

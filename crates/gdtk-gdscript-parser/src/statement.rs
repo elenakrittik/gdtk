@@ -1,5 +1,5 @@
 use gdtk_ast::{ASTFunctionKind, ASTStatement};
-use gdtk_lexer::{Token, TokenKind};
+use crate::lexer::{Token, TokenKind};
 
 use crate::classes::{parse_class, parse_enum};
 use crate::expressions::parse_expr;

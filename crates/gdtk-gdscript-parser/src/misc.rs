@@ -2,7 +2,7 @@ use gdtk_ast::{
     ASTAnnotationStmt, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPostfixOpKind, ASTSignalStmt,
     ASTVariableKind,
 };
-use gdtk_lexer::{Token, TokenKind};
+use crate::lexer::{Token, TokenKind};
 
 use crate::{
     expressions::parse_expr,

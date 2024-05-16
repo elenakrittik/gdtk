@@ -579,10 +579,9 @@ dependencies = [
  "clap",
  "diagnosis",
  "gdtk-dialoguer",
+ "gdtk-gdscript-parser",
  "gdtk-gvm",
- "gdtk-lexer",
  "gdtk-lint",
- "gdtk-parser",
  "gdtk-paths",
  "ignore",
  "itertools",
@@ -615,6 +614,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "gdtk-gdscript-parser"
+version = "0.1.0"
+dependencies = [
+ "ahash",
+ "enum-as-inner",
+ "gdtk-ast",
+ "gdtk-span",
+ "itertools",
+ "logos",
+ "pratt",
+ "regex",
+ "thiserror",
+]
+
+[[package]]
 name = "gdtk-gvm"
 version = "0.1.0"
 dependencies = [
@@ -631,36 +645,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "gdtk-lexer"
-version = "0.1.0"
-dependencies = [
- "ahash",
- "enum-as-inner",
- "gdtk-span",
- "itertools",
- "logos",
- "regex",
- "thiserror",
-]
-
-[[package]]
 name = "gdtk-lint"
 version = "0.1.0"
 dependencies = [
  "diagnosis",
  "gdtk-ast",
  "gdtk-span",
-]
-
-[[package]]
-name = "gdtk-parser"
-version = "0.1.0"
-dependencies = [
- "enum-as-inner",
- "gdtk-ast",
- "gdtk-lexer",
- "gdtk-span",
- "pratt",
 ]
 
 [[package]]

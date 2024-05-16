@@ -1,9 +1,9 @@
-use crate::token::TokenKind;
+use crate::lexer::token::TokenKind;
 
 macro_rules! test_eq {
     ($input: expr, $($expected: expr),*) => {
         {
-            let lexed = $crate::lex($input);
+            let lexed = $crate::lexer::lex($input);
             let mut lexemes = vec![];
 
             for token in lexed {
