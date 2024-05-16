@@ -629,6 +629,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gdtk-godotcfg-parser"
+version = "0.1.0"
+dependencies = [
+ "ahash",
+ "enum-as-inner",
+ "logos",
+ "thiserror",
+]
+
+[[package]]
 name = "gdtk-gvm"
 version = "0.1.0"
 dependencies = [

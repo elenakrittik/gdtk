@@ -1,0 +1,10 @@
+[package]
+name = "gdtk-godotcfg-parser"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ahash = "0.8.11"
+enum-as-inner = "0.6.0"
+logos = "0.14.0"
+thiserror = "1.0.43"
