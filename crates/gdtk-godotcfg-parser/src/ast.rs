@@ -1,5 +1,6 @@
 /// A file in godotcfg format.
-type File<'a> = Vec<Line<'a>>;
+pub type File<'a> = Vec<Line<'a>>;
+
 type Map<'a, K = Value<'a>> = ahash::AHashMap<K, Value<'a>>;
 
 #[derive(Debug)]

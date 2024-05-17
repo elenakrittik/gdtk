@@ -9,4 +9,6 @@ pub enum Error<'a> {
     UnrecognisedToken,
     #[error("Unexpected {0:?}, expected {1}.")]
     Unexpected(Token<'a>, &'a str),
+    #[error("Unexpected EOF.")]
+    UnexpectedEof,
 }

@@ -10,10 +10,17 @@ impl<'a> Token<'a> {
     pub fn new(kind: TokenKind<'a>, span: Span) -> Self {
         Self { kind, span }
     }
+
+    pub fn into_identifier(self) -> Result<&'a str, Self> {
+        match self.kind {
+            TokenKind::Identifier(ident) => Ok(ident),
+            _ => Err(self),
+        }
+    }
 }
 
 #[rustfmt::skip]
-#[derive(Debug, Clone, PartialEq, logos::Logos)]
+#[derive(Debug, Clone, PartialEq, logos::Logos, enum_as_inner::EnumAsInner)]
 #[logos(error = crate::error::Error<'s>)]
 #[logos(subpattern segment = "[a-zA-Z_][a-zA-Z0-9_]*")]
 pub enum TokenKind<'a> {
