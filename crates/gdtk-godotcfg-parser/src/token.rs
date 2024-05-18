@@ -1,3 +1,5 @@
+use crate::error::Error;
+
 pub type Span = std::ops::Range<usize>;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -6,15 +8,57 @@ pub struct Token<'a> {
     pub span: Span,
 }
 
+macro_rules! expectation {
+    ($($fun:ident -> ($ret:ty): $arm:pat => $val:expr, _ => $msg:expr,)*) => {
+        $(pub fn $fun(self) -> Result<$ret, Error<'a>> {
+            match self.kind {
+                $arm => Ok($val),
+                _ => Err(Error::Unexpected(self, $msg)),
+            }
+        })*
+    };
+}
+
 impl<'a> Token<'a> {
     pub fn new(kind: TokenKind<'a>, span: Span) -> Self {
         Self { kind, span }
     }
 
-    pub fn into_identifier(self) -> Result<&'a str, Self> {
+    expectation! {
+        expect_identifier -> (&'a str):
+            TokenKind::Identifier(ident) => ident,
+            _ => "an identifier",
+
+        expect_colon -> (()):
+            TokenKind::Colon => (),
+            _ => "a colon",
+    }
+
+    pub fn expect_identifier_like(self) -> Result<&'a str, Error<'a>> {
         match self.kind {
-            TokenKind::Identifier(ident) => Ok(ident),
-            _ => Err(self),
+            TokenKind::Identifier(ident) | TokenKind::Path(ident) => Ok(ident),
+            _ => Err(Error::Unexpected(self, "an identifier or a path")),
+        }
+    }
+
+    pub fn expect_assignment(self) -> Result<(), Error<'a>> {
+        match self.kind {
+            TokenKind::Assignment => Ok(()),
+            _ => Err(Error::Unexpected(self, "an opening bracket")),
+        }
+    }
+
+    pub fn expect_opening_bracket(self) -> Result<(), Error<'a>> {
+        match self.kind {
+            TokenKind::OpeningBracket => Ok(()),
+            _ => Err(Error::Unexpected(self, "an opening bracket")),
+        }
+    }
+
+    pub fn expect_closing_bracket(self) -> Result<(), Error<'a>> {
+        match self.kind {
+            TokenKind::ClosingBracket => Ok(()),
+            _ => Err(Error::Unexpected(self, "a closing bracket")),
         }
     }
 }
@@ -32,17 +76,17 @@ pub enum TokenKind<'a> {
     #[regex("(?&segment)(/(?&segment))+")]
     Path(&'a str),
 
-    #[regex("-*[0-9]+")]
-    Integer,
+    #[regex("-*[0-9]+", |lex| lex.slice().parse::<i32>().ok())]
+    Integer(i32),
 
-    #[regex("-*[0-9]+\\.[0-9]+")]
-    Float,
+    #[regex("-*[0-9]+\\.[0-9]+", |lex| lex.slice().parse::<f32>().ok())]
+    Float(f32),
 
-    #[regex("\"[^\"]*\"")]
-    String,
+    #[regex("\"[^\"]*\"", |lex| lex.slice().trim_matches('"'))]
+    String(&'a str),
 
-    #[regex("true|false")]
-    Boolean,
+    #[regex("true|false", |lex| lex.slice().parse::<bool>().ok())]
+    Boolean(bool),
 
     #[token("null")]
     Null,
@@ -78,6 +122,6 @@ pub enum TokenKind<'a> {
 
     /* Specials */
 
-    #[regex(";[^\n]*")]
+    #[regex(";[^\n]*", |lex| &lex.slice()[1..])]
     Comment(&'a str),
 }
