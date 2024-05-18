@@ -12,6 +12,7 @@ gdtk-dialoguer = { path = "../gdtk-dialoguer", version = "0.11.0", features = [
     "fuzzy-select",
 ], default-features = false }
 gdtk-lint = { version = "0.1.0", path = "../gdtk-lint" }
+gdtk-godotcfg-parser = { version = "0.1.0", path = "../gdtk-godotcfg-parser" }
 gdtk-gdscript-parser = { version = "0.1.0", path = "../gdtk-gdscript-parser" }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
 tokio = { version = "1.34.0", features = ["full"] }

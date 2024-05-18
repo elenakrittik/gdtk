@@ -602,6 +602,7 @@ dependencies = [
  "diagnosis",
  "gdtk-dialoguer",
  "gdtk-gdscript-parser",
+ "gdtk-godotcfg-parser",
  "gdtk-gvm",
  "gdtk-lint",
  "gdtk-paths",

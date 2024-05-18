@@ -42,6 +42,13 @@ pub enum DevCommands {
         /// The GDScript file to parse.
         file: PathBuf,
     },
+    /// Print the result of parsing the specified GodotCfg file.
+    #[clap(name = "godotcfg")]
+    GodotCfg {
+        /// The GodotCfg file to parse. Defaults to "project.godot".
+        #[clap(default_value = "project.godot")]
+        file: PathBuf,
+    },
 }
 
 #[derive(Subcommand)]

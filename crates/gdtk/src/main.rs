@@ -14,6 +14,7 @@ async fn main() -> anyhow::Result<()> {
         Commands::Dev { command } => match command {
             DevCommands::Lex { file } => cmds::dev::lex::run(file)?,
             DevCommands::Parse { file } => cmds::dev::parse::run(file)?,
+            DevCommands::GodotCfg { file } => cmds::dev::godotcfg::run(file)?,
         },
         Commands::Godot { command } => match command {
             GodotCommands::List => cmds::godot::list::run()?,

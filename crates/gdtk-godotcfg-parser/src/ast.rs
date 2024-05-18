@@ -1,7 +1,7 @@
 /// A file in godotcfg format.
 pub type File<'a> = Vec<Line<'a>>;
 
-type Map<'a, K = Value<'a>> = ahash::AHashMap<K, Value<'a>>;
+type Map<'a, K = Value<'a>> = Vec<(K, Value<'a>)>;
 
 #[derive(Debug)]
 pub enum Line<'a> {
@@ -22,7 +22,7 @@ pub enum Value<'a> {
     /// An integer literal.
     Integer(i32),
     /// A float literal.
-    Float(f32),
+    Float(f64),
     /// A string literal.
     String(&'a str),
     /// An array expression.

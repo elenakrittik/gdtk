@@ -8,7 +8,7 @@ pub struct Token<'a> {
     pub span: Span,
 }
 
-macro_rules! expectation {
+macro_rules! expectations {
     ($($fun:ident -> ($ret:ty): $arm:pat => $val:expr, _ => $msg:expr,)*) => {
         $(pub fn $fun(self) -> Result<$ret, Error<'a>> {
             match self.kind {
@@ -24,48 +24,81 @@ impl<'a> Token<'a> {
         Self { kind, span }
     }
 
-    expectation! {
+    expectations! {
         expect_identifier -> (&'a str):
             TokenKind::Identifier(ident) => ident,
             _ => "an identifier",
 
+        expect_path -> (&'a str):
+            TokenKind::Path(path) => path,
+            _ => "a path",
+
+        expect_path_like -> (&'a str):
+            TokenKind::Identifier(path) | TokenKind::Path(path) => path,
+            _ => "an identifier or a path",
+
+        expect_integer -> (i32):
+            TokenKind::Integer(int) => int,
+            _ => "an integer",
+
+        expect_float -> (f64):
+            TokenKind::Float(float) => float,
+            _ => "a float",
+
+        expect_string -> (&'a str):
+            TokenKind::String(string) => string,
+            _ => "a string",
+
+        expect_boolean -> (bool):
+            TokenKind::Boolean(boolean) => boolean,
+            _ => "a boolean",
+
+        expect_null -> (()):
+            TokenKind::Null => (),
+            _ => "null",
+
         expect_colon -> (()):
             TokenKind::Colon => (),
             _ => "a colon",
-    }
 
-    pub fn expect_identifier_like(self) -> Result<&'a str, Error<'a>> {
-        match self.kind {
-            TokenKind::Identifier(ident) | TokenKind::Path(ident) => Ok(ident),
-            _ => Err(Error::Unexpected(self, "an identifier or a path")),
-        }
-    }
+        expect_comma -> (()):
+            TokenKind::Comma => (),
+            _ => "a comma",
 
-    pub fn expect_assignment(self) -> Result<(), Error<'a>> {
-        match self.kind {
-            TokenKind::Assignment => Ok(()),
-            _ => Err(Error::Unexpected(self, "an opening bracket")),
-        }
-    }
+        expect_assignment -> (()):
+            TokenKind::Assignment => (),
+            _ => "an assignment",
 
-    pub fn expect_opening_bracket(self) -> Result<(), Error<'a>> {
-        match self.kind {
-            TokenKind::OpeningBracket => Ok(()),
-            _ => Err(Error::Unexpected(self, "an opening bracket")),
-        }
-    }
+        expect_opening_parenthesis -> (()):
+            TokenKind::OpeningParenthesis => (),
+            _ => "a parenthesis",
 
-    pub fn expect_closing_bracket(self) -> Result<(), Error<'a>> {
-        match self.kind {
-            TokenKind::ClosingBracket => Ok(()),
-            _ => Err(Error::Unexpected(self, "a closing bracket")),
-        }
+        expect_closing_parenthesis -> (()):
+            TokenKind::ClosingParenthesis => (),
+            _ => "a parenthesis",
+
+        expect_opening_bracket -> (()):
+            TokenKind::OpeningBracket => (),
+            _ => "a bracket",
+
+        expect_closing_bracket -> (()):
+            TokenKind::ClosingBracket => (),
+            _ => "a bracket",
+
+        expect_opening_brace -> (()):
+            TokenKind::OpeningBrace => (),
+            _ => "a brace",
+
+        expect_closing_brace -> (()):
+            TokenKind::ClosingBrace => (),
+            _ => "a brace",
     }
 }
 
 #[rustfmt::skip]
 #[derive(Debug, Clone, PartialEq, logos::Logos, enum_as_inner::EnumAsInner)]
 #[logos(error = crate::error::Error<'s>)]
+#[logos(skip r"[ \t\n\f]+")]
 #[logos(subpattern segment = "[a-zA-Z_][a-zA-Z0-9_]*")]
 pub enum TokenKind<'a> {
     /* Literals */
@@ -79,8 +112,8 @@ pub enum TokenKind<'a> {
     #[regex("-*[0-9]+", |lex| lex.slice().parse::<i32>().ok())]
     Integer(i32),
 
-    #[regex("-*[0-9]+\\.[0-9]+", |lex| lex.slice().parse::<f32>().ok())]
-    Float(f32),
+    #[regex("-*[0-9]+\\.[0-9]+", |lex| lex.slice().parse::<f64>().ok())]
+    Float(f64),
 
     #[regex("\"[^\"]*\"", |lex| lex.slice().trim_matches('"'))]
     String(&'a str),
