@@ -1,5 +1,5 @@
 #[cfg(any(debug_assertions, feature = "dev"))]
-use gdtk::cli::DevCommands;
+use gdtk::cli::dev::{DevCommands, DevGDScriptCommands, DevGodotCfgCommands};
 use gdtk::{
     cli::{Commands, GodotCommands},
     commands as cmds,
@@ -7,14 +7,26 @@ use gdtk::{
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(tracing::level_filters::LevelFilter::TRACE)
+        .with_ansi(false)
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber)?;
+
     let cli = gdtk::cli::cli();
 
     match cli.command {
         #[cfg(any(debug_assertions, feature = "dev"))]
         Commands::Dev { command } => match command {
-            DevCommands::Lex { file } => cmds::dev::lex::run(file)?,
-            DevCommands::Parse { file } => cmds::dev::parse::run(file)?,
-            DevCommands::GodotCfg { file } => cmds::dev::godotcfg::run(file)?,
+            DevCommands::GDScript { command } => match command {
+                DevGDScriptCommands::Lex { file } => cmds::dev::gdscript::lex::run(file)?,
+                DevGDScriptCommands::Parse { file } => cmds::dev::gdscript::parse::run(file)?,
+            },
+            DevCommands::GodotCfg { command } => match command {
+                DevGodotCfgCommands::Lex { file } => cmds::dev::godotcfg::lex::run(file)?,
+                DevGodotCfgCommands::Parse { file } => cmds::dev::godotcfg::parse::run(file)?,
+            },
         },
         Commands::Godot { command } => match command {
             GodotCommands::List => cmds::godot::list::run()?,

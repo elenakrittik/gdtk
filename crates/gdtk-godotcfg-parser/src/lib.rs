@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use logos::Logos;
 
 use crate::{
@@ -12,12 +14,17 @@ pub mod parser;
 pub mod token;
 pub mod utils;
 
-pub fn parser(source: &str) -> Parser<impl ResultIterator<Item = Token<'_>>> {
+pub fn tokens(source: &str) -> impl ResultIterator<Item = Token<'_>> + Debug {
+    TokenKind::lexer(source)
+        .spanned()
+        .filter_map(|(result, span)| result.ok().zip(Some(span)))
+        .map(|(token, span)| Token::new(token, span))
+        .peekable()
+}
+
+pub fn parser(source: &str) -> Parser<impl ResultIterator<Item = Token<'_>> + Debug> {
     Parser {
-        tokens: TokenKind::lexer(source)
-            .spanned()
-            .filter_map(|(result, span)| result.ok().zip(Some(span)))
-            .map(|(token, span)| Token::new(token, span))
-            .peekable(),
+        tokens: tokens(source),
+        had_error: false,
     }
 }

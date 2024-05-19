@@ -15,4 +15,5 @@ debug = true
 
 [patch.crates-io]
 # Contains unstable fixes that we need.
-logos = { git = "https://github.com/elenakrittik/logos", rev = "148b6a0" }
+# logos = { git = "https://github.com/elenakrittik/logos", rev = "148b6a0" }
+logos = { path = "../logos" }

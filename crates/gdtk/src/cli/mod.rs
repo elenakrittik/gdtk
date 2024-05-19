@@ -2,9 +2,16 @@ use std::path::PathBuf;
 
 use clap::{Parser, Subcommand};
 
+#[cfg(any(debug_assertions, feature = "dev"))]
+pub mod dev;
+pub mod verbosity;
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
+    #[command(flatten)]
+    pub verbosity: crate::cli::verbosity::Verbosity,
+
     #[command(subcommand)]
     pub command: Commands,
 }
@@ -15,7 +22,7 @@ pub enum Commands {
     #[cfg(any(debug_assertions, feature = "dev"))]
     Dev {
         #[command(subcommand)]
-        command: DevCommands,
+        command: crate::cli::dev::DevCommands,
     },
     /// Manage your Godot installations.
     Godot {
@@ -27,27 +34,6 @@ pub enum Commands {
         /// The GDScript file(s) to lint.
         #[clap(default_value = "./")]
         files: Vec<PathBuf>,
-    },
-}
-
-#[derive(Subcommand)]
-pub enum DevCommands {
-    /// Print the result of lexing the specified GDScript file.
-    Lex {
-        /// The GDScript file to lex.
-        file: PathBuf,
-    },
-    /// Print the result of parsing the specified GDScript file.
-    Parse {
-        /// The GDScript file to parse.
-        file: PathBuf,
-    },
-    /// Print the result of parsing the specified GodotCfg file.
-    #[clap(name = "godotcfg")]
-    GodotCfg {
-        /// The GodotCfg file to parse. Defaults to "project.godot".
-        #[clap(default_value = "project.godot")]
-        file: PathBuf,
     },
 }
 

@@ -4,9 +4,11 @@ use crate::utils::get_content;
 
 pub fn run(file: PathBuf) -> anyhow::Result<()> {
     let content = get_content(file.as_path())?;
-    let parsed = gdtk_godotcfg_parser::parser(&content);
+    let parsed = gdtk_godotcfg_parser::tokens(&content);
 
-    dbg!("{:#?}", parsed.collect::<Vec<_>>());
+    for token in parsed {
+        println!("{:?}", token);
+    }
 
     Ok(())
 }
