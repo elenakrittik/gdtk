@@ -3,18 +3,14 @@ use gdtk::cli::dev::{DevCommands, DevGDScriptCommands, DevGodotCfgCommands};
 use gdtk::{
     cli::{Commands, GodotCommands},
     commands as cmds,
+    utils::setup_tracing,
 };
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = gdtk::cli::cli();
 
-    let subscriber = tracing_subscriber::FmtSubscriber::builder()
-        .with_max_level(cli.verbosity.level()?)
-        .with_ansi(false)
-        .finish();
-
-    tracing::subscriber::set_global_default(subscriber)?;
+    setup_tracing(&cli)?;
 
     match cli.command {
         #[cfg(any(debug_assertions, feature = "dev"))]

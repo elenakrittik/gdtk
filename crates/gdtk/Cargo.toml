@@ -25,7 +25,8 @@ tabled = { version = "0.15.0", features = ["std"] }
 spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
 ignore = { version = "0.4.22", features = ["simd-accel"] }
 tracing = "0.1.40"
-tracing-subscriber = "0.3.18"
+tracing-subscriber = { version = "0.3.18", default-features = false, features = ["fmt", "ansi", "smallvec", "parking_lot"] }
+tracing-appender = "0.2.3"
 
 [lib]
 name = "gdtk"

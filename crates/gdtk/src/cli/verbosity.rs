@@ -1,13 +1,5 @@
 use clap::{ArgAction, Args};
-use tracing::Level;
-
-// N => level
-// ----------
-// 5 => trace
-// 4 => debug
-// 3 => info
-// 2 => warn
-// 1 => error
+use tracing::level_filters::LevelFilter;
 
 #[derive(Args)]
 pub struct VerbosityArg {
@@ -15,8 +7,6 @@ pub struct VerbosityArg {
         short = 'v',
         long = "verbose",
         global = true,
-        required = false,
-        default_value_t = 3,
         action = ArgAction::Count,
         help = "Set log verbosity level.",
     )]
@@ -24,14 +14,14 @@ pub struct VerbosityArg {
 }
 
 impl VerbosityArg {
-    pub fn level(&self) -> anyhow::Result<Level> {
+    pub fn level(&self) -> anyhow::Result<LevelFilter> {
         match self.verbosity {
-            1 => Ok(Level::ERROR),
-            2 => Ok(Level::WARN),
-            3 => Ok(Level::INFO),
-            4 => Ok(Level::DEBUG),
-            5 => Ok(Level::TRACE),
-            // TODO: move this check into clap's value_parser
+            0 => Ok(LevelFilter::INFO),
+            1 => Ok(LevelFilter::ERROR),
+            2 => Ok(LevelFilter::WARN),
+            3 => Ok(LevelFilter::INFO),
+            4 => Ok(LevelFilter::DEBUG),
+            5 => Ok(LevelFilter::TRACE),
             _ => Err(anyhow::anyhow!(
                 "Verbosity must be specified from 1 to 5 times."
             )),

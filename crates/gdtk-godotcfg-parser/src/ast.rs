@@ -32,6 +32,7 @@ pub enum Value<'a> {
     /// An object expression. ``.0`` is object's identifier,
     /// ``.1`` is object's properties.
     Object(&'a str, Map<'a, &'a str>),
+    // TODO: handle arbitrary types as .tscn supports them
     /// A ``PackedByteArray``.
     PackedByteArray(Vec<u8>),
     /// A ``PackedStringArray``.
