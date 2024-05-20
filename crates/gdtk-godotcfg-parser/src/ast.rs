@@ -1,4 +1,4 @@
-/// A file in godotcfg format.
+/// A file in GodotCfg format.
 pub type File<'a> = Vec<Line<'a>>;
 
 type Map<'a, K = Value<'a>> = Vec<(K, Value<'a>)>;
@@ -7,8 +7,8 @@ type Map<'a, K = Value<'a>> = Vec<(K, Value<'a>)>;
 pub enum Line<'a> {
     /// A ``// comment`` line.
     Comment(&'a str),
-    /// A ``[section]``.
-    Section(&'a str),
+    /// A ``[section param="value"]``.
+    Section(&'a str, Map<'a, &'a str>),
     /// A ``parameter=value``.
     Parameter(&'a str, Value<'a>),
 }

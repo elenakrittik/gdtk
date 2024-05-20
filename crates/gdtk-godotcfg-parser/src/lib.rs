@@ -14,7 +14,7 @@ pub mod parser;
 pub mod token;
 pub mod utils;
 
-pub fn tokens(source: &str) -> impl ResultIterator<Item = Token<'_>> + Debug {
+pub fn lexer(source: &str) -> impl ResultIterator<Item = Token<'_>> + Debug {
     TokenKind::lexer(source)
         .spanned()
         .filter_map(|(result, span)| result.ok().zip(Some(span)))
@@ -24,7 +24,7 @@ pub fn tokens(source: &str) -> impl ResultIterator<Item = Token<'_>> + Debug {
 
 pub fn parser(source: &str) -> Parser<impl ResultIterator<Item = Token<'_>> + Debug> {
     Parser {
-        tokens: tokens(source),
+        tokens: lexer(source),
         had_error: false,
     }
 }

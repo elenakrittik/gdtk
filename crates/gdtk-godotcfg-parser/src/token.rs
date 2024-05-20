@@ -1,13 +1,18 @@
 use crate::error::Error;
 
+/// A range in the source.
 pub type Span = std::ops::Range<usize>;
 
+/// A GodotCfg token.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Token<'a> {
+    /// Token's kind.
     pub kind: TokenKind<'a>,
+    /// Token's span.
     pub span: Span,
 }
 
+/// An utility macro to reduce boilerplate.
 macro_rules! expectations {
     ($($vis:vis fn $fun:ident -> ($ret:ty) { $arm:pat => $val:expr, _ => $msg:expr, })*) => {
         $($vis fn $fun(self) -> Result<$ret, Error<'a>> {
@@ -20,6 +25,7 @@ macro_rules! expectations {
 }
 
 impl<'a> Token<'a> {
+    /// Create a new token.
     pub fn new(kind: TokenKind<'a>, span: Span) -> Self {
         Self { kind, span }
     }
@@ -139,6 +145,7 @@ impl<'a> Token<'a> {
     }
 }
 
+/// A [Token]'s kind.
 #[rustfmt::skip]
 #[derive(Debug, Clone, PartialEq, logos::Logos, enum_as_inner::EnumAsInner)]
 #[logos(error = crate::error::Error<'s>)]
@@ -147,58 +154,75 @@ impl<'a> Token<'a> {
 pub enum TokenKind<'a> {
     /* Literals */
 
+    /// An identifier.
     #[regex("(?&segment)")]
     Identifier(&'a str),
 
+    /// A path identifier.
     #[regex("(?&segment)(/(?&segment))+")]
     Path(&'a str),
 
+    /// An integer literal.
     #[regex("-*[0-9]+", |lex| lex.slice().parse::<i32>().ok())]
     Integer(i32),
 
+    /// A float literal.
     #[regex("-*[0-9]+\\.[0-9]+", |lex| lex.slice().parse::<f64>().ok())]
     Float(f64),
 
+    /// A string literal.
     #[regex("\"[^\"]*\"", |lex| lex.slice().trim_matches('"'))]
     String(&'a str),
 
+    /// A boolean literal.
     #[regex("true|false", |lex| lex.slice().parse::<bool>().ok())]
     Boolean(bool),
 
+    /// A `null`.
     #[token("null")]
     Null,
 
     /* Symbols */
 
+    /// An `=`.
     #[token("=")]
     Assignment,
 
+    /// A `:`.
     #[token(":")]
     Colon,
 
+    /// A `,`.
     #[token(",")]
     Comma,
 
+    /// An `(`.
     #[token("(")]
     OpeningParenthesis,
 
+    /// A `)`.
     #[token(")")]
     ClosingParenthesis,
 
+    /// An `[`.
     #[token("[")]
     OpeningBracket,
 
+    /// A `]`.
     #[token("]")]
     ClosingBracket,
 
+    /// An `{`.
     #[token("{")]
     OpeningBrace,
 
+    /// A `}`.
     #[token("}")]
     ClosingBrace,
 
     /* Specials */
 
+    /// A comment.
     #[regex(";[^\r\n]*\n?", |lex| &lex.slice()[1..])]
     Comment(&'a str),
 }

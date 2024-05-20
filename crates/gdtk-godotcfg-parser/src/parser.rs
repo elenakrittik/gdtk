@@ -9,6 +9,20 @@ use crate::{
     utils::ResultIterator,
 };
 
+/// A GodotCfg parser.
+///
+/// GodofCfg is an unofficial name for textual configuration
+/// format Godot uses for it's `.godot`, `.tscn` and `.tres`
+/// files.
+///
+/// The parser is a recursive-descent parser modelled as an
+/// iterator. This is possible (and makes sense) because
+/// GodotCfg is a "flat" format (i.e., statements cannot
+/// appear inside other statements), so each iteration
+/// intuitively maps to an "entry" (a "line", a statement).
+///
+/// The primary (and only) way to construct a [Parser] is
+/// through [crate::parser].
 #[derive(Debug)]
 pub struct Parser<I> {
     pub(crate) tokens: I,
@@ -70,11 +84,23 @@ where
 
         let identifier = self.tokens.next_ok()?.expect_identifier()?;
 
+        let mut parameters = Vec::new();
+
+        while !self.tokens.peek_ok()?.is_closing_bracket() {
+            let parameter = self.tokens.next_ok()?.expect_identifier()?;
+
+            self.tokens.next_ok()?.expect_assignment()?;
+
+            let value = self.parse_value()?;
+
+            parameters.push((parameter, value));
+        }
+
         trace!("Parser::parse_section - expect_closing_bracket");
 
         self.tokens.next_ok()?.expect_closing_bracket()?;
 
-        Ok(Line::Section(identifier))
+        Ok(Line::Section(identifier, parameters))
     }
 
     #[tracing::instrument(skip(self))]

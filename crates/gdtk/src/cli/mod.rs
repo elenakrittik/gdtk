@@ -10,7 +10,7 @@ pub mod verbosity;
 #[command(author, version, about, long_about = None)]
 pub struct Cli {
     #[command(flatten)]
-    pub verbosity: crate::cli::verbosity::Verbosity,
+    pub verbosity: crate::cli::verbosity::VerbosityArg,
 
     #[command(subcommand)]
     pub command: Commands,

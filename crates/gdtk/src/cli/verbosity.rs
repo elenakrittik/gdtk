@@ -1,38 +1,40 @@
-use clap::{Args, FromArgMatches, Id};
+use clap::{ArgAction, Args};
+use tracing::Level;
 
-pub struct Verbosity(pub tracing::Level);
+// N => level
+// ----------
+// 5 => trace
+// 4 => debug
+// 3 => info
+// 2 => warn
+// 1 => error
 
-impl Args for Verbosity {
-    fn augment_args(_cmd: clap::Command) -> clap::Command {
-        todo!()
-    }
-
-    fn augment_args_for_update(_cmd: clap::Command) -> clap::Command {
-        todo!()
-    }
-
-    fn group_id() -> Option<Id> {
-        None
-    }
+#[derive(Args)]
+pub struct VerbosityArg {
+    #[arg(
+        short = 'v',
+        long = "verbose",
+        global = true,
+        required = false,
+        default_value_t = 3,
+        action = ArgAction::Count,
+        help = "Set log verbosity level.",
+    )]
+    verbosity: u8,
 }
 
-impl FromArgMatches for Verbosity {
-    fn from_arg_matches(_matches: &clap::ArgMatches) -> Result<Self, clap::Error> {
-        todo!()
-    }
-
-    fn update_from_arg_matches(&mut self, _matches: &clap::ArgMatches) -> Result<(), clap::Error> {
-        todo!()
-    }
-
-    fn from_arg_matches_mut(matches: &mut clap::ArgMatches) -> Result<Self, clap::Error> {
-        Self::from_arg_matches(matches)
-    }
-
-    fn update_from_arg_matches_mut(
-        &mut self,
-        matches: &mut clap::ArgMatches,
-    ) -> Result<(), clap::Error> {
-        self.update_from_arg_matches(matches)
+impl VerbosityArg {
+    pub fn level(&self) -> anyhow::Result<Level> {
+        match self.verbosity {
+            1 => Ok(Level::ERROR),
+            2 => Ok(Level::WARN),
+            3 => Ok(Level::INFO),
+            4 => Ok(Level::DEBUG),
+            5 => Ok(Level::TRACE),
+            // TODO: move this check into clap's value_parser
+            _ => Err(anyhow::anyhow!(
+                "Verbosity must be specified from 1 to 5 times."
+            )),
+        }
     }
 }

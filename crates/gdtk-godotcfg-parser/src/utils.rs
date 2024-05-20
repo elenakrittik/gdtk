@@ -2,6 +2,7 @@ use std::iter::Peekable;
 
 use crate::error::Error;
 
+#[doc(hidden)]
 pub trait PeekableIterarator: Iterator {
     fn peek(&mut self) -> Option<&Self::Item>;
     fn peek_mut(&mut self) -> Option<&mut Self::Item>;
@@ -17,6 +18,7 @@ impl<I: Iterator> PeekableIterarator for Peekable<I> {
     }
 }
 
+#[doc(hidden)]
 pub trait ResultIterator: PeekableIterarator {
     fn next_ok(&mut self) -> Result<Self::Item, Error<'static>> {
         self.next().ok_or(Error::UnexpectedEof)
