@@ -5,8 +5,8 @@
 use std::iter::Peekable;
 
 use gdtk_ast::{ASTFile, CodeBlock};
-use crate::lexer::{token::TokenKind, Token};
 
+use crate::lexer::{token::TokenKind, Token};
 use crate::statement::parse_statement;
 
 pub mod block;

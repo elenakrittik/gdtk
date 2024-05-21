@@ -1,8 +1,8 @@
 use gdtk_ast::{ASTFunction, ASTFunctionKind, ASTVariable, ASTVariableKind};
-use crate::lexer::{Token, TokenKind};
 
 use crate::expressions::parse_expr;
 use crate::functions::{parse_func, ParseFuncOptions};
+use crate::lexer::{Token, TokenKind};
 use crate::misc::parse_type;
 use crate::utils::{expect, parse_ident};
 use crate::Parser;

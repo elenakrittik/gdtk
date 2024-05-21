@@ -1,9 +1,9 @@
 use gdtk_ast::{ASTFunctionKind, ASTStatement};
-use crate::lexer::{Token, TokenKind};
 
 use crate::classes::{parse_class, parse_enum};
 use crate::expressions::parse_expr;
 use crate::functions::{parse_func, ParseFuncOptions};
+use crate::lexer::{Token, TokenKind};
 use crate::match_::parse_match;
 use crate::misc::{parse_annotation, parse_signal};
 use crate::statements::{

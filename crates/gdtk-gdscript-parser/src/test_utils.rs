@@ -1,6 +1,6 @@
 use gdtk_ast::{ASTExpr, ASTExprKind, ASTPassStmt, ASTStatement};
-use crate::lexer::{Token, TokenKind};
 
+use crate::lexer::{Token, TokenKind};
 use crate::Parser;
 
 pub(crate) const PASS_STMT: ASTStatement = ASTStatement::Pass(ASTPassStmt { span: 0..0 });

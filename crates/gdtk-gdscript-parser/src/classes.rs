@@ -1,8 +1,8 @@
 use gdtk_ast::{ASTClassStmt, ASTEnumStmt, ASTEnumVariant};
-use crate::lexer::{Token, TokenKind};
 
 use crate::block::parse_block;
 use crate::expressions::parse_expr;
+use crate::lexer::{Token, TokenKind};
 use crate::utils::{advance_and_parse, delemited_by, expect, parse_ident};
 use crate::Parser;
 
