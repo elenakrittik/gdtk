@@ -30,14 +30,11 @@ pub enum Value<'a> {
     Array(Array<'a>),
     /// A map expression.
     Map(Map<'a>),
-    /// An object expression. ``.0`` is object's identifier,
-    /// ``.1`` is object's properties.
+    /// An object expression. ``.0`` is object's identifier, ``.1`` is object's properties.
     Object(&'a str, Map<'a, &'a str>),
-    /// An object instance expression. The difference between
-    /// this and [Value::Object] is that `Object` constructs
-    /// an object directly using a class name and a list of
-    /// properties, while `ObjectInstance` more resembles
-    /// how you would create an object instance in GDScript,
-    /// by passing arguments to a class' `_init()`.
-    ObjectInstance(&'a str, Array<'a>)
+    /// An object instance expression. The difference between this and [Value::Object] is
+    /// that `Object` constructs an object directly using a class name and a list of
+    /// properties, while `ObjectInstance` more resembles how you would create an object
+    /// instance in GDScript, by passing arguments to a class' `_init()`.
+    ObjectInstance(&'a str, Array<'a>),
 }

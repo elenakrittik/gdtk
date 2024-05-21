@@ -35,7 +35,7 @@ where
 {
     type Item = Result<Line<'a>, Error<'a>>;
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn next(&mut self) -> Option<Self::Item> {
         trace!("Parser::next");
 
@@ -65,14 +65,14 @@ impl<'a, I> Parser<I>
 where
     I: ResultIterator<Item = Token<'a>> + Debug,
 {
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_comment(&mut self) -> Result<Line<'a>, Error<'a>> {
         trace!("Parser::parse_comment");
 
         Ok(Line::Comment(self.tokens.next_ok()?.expect_comment()?))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_section(&mut self) -> Result<Line<'a>, Error<'a>> {
         trace!("Parser::parse_section");
 
@@ -103,7 +103,7 @@ where
         Ok(Line::Section(identifier, parameters))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_parameter(&mut self) -> Result<Line<'a>, Error<'a>> {
         trace!("Parser::parse_parameter");
 
@@ -122,7 +122,7 @@ where
         Ok(Line::Parameter(path, value))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_value(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_value");
 
@@ -139,35 +139,35 @@ where
         }
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_string(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_string");
 
         Ok(Value::String(self.tokens.next_ok()?.expect_string()?))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_integer(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_integer");
 
         Ok(Value::Integer(self.tokens.next_ok()?.expect_integer()?))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_float(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_float");
 
         Ok(Value::Float(self.tokens.next_ok()?.expect_float()?))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_boolean(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_boolean");
 
         Ok(Value::Boolean(self.tokens.next_ok()?.expect_boolean()?))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_null(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_null");
 
@@ -176,9 +176,11 @@ where
         Ok(Value::Null)
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_array(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_array");
+
+        trace!("Parser::parse_array - expect_opening_bracket");
 
         self.tokens.next_ok()?.expect_opening_bracket()?;
 
@@ -192,14 +194,18 @@ where
             }
         }
 
+        trace!("Parser::parse_array - expect_closing_bracket");
+
         self.tokens.next_ok()?.expect_closing_bracket()?;
 
         Ok(Value::Array(values))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_map(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_map");
+
+        trace!("Parser::parse_map - expect_opening_brace");
 
         self.tokens.next_ok()?.expect_opening_brace()?;
 
@@ -207,6 +213,8 @@ where
 
         while !self.tokens.peek_ok()?.is_closing_brace() {
             let key = self.parse_value()?;
+
+            trace!("Parser::parse_map - expect_colon");
 
             self.tokens.next_ok()?.expect_colon()?;
 
@@ -219,14 +227,18 @@ where
             }
         }
 
+        trace!("Parser::parse_map - expect_closing_brace");
+
         self.tokens.next_ok()?.expect_closing_brace()?;
 
         Ok(Value::Map(pairs))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_object_or_instance(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_object_or_instance");
+
+        trace!("Parser::parse_object_or_instance - expect_identifier");
 
         let identifier = self.tokens.next_ok()?.expect_identifier()?;
 
@@ -236,9 +248,11 @@ where
         }
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_object_instance(&mut self, identifier: &'a str) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_object_instance");
+
+        trace!("Parser::parse_object_instance - expect_opening_parenthesis");
 
         self.tokens.next_ok()?.expect_opening_parenthesis()?;
 
@@ -252,16 +266,22 @@ where
             }
         }
 
+        trace!("Parser::parse_object_instance - expect_closing_parenthesis");
+
         self.tokens.next_ok()?.expect_closing_parenthesis()?;
 
         Ok(Value::ObjectInstance(identifier, values))
     }
 
-    #[tracing::instrument(skip(self))]
+    #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_object(&mut self) -> Result<Value<'a>, Error<'a>> {
         trace!("Parser::parse_object");
 
+        trace!("Parser::parse_object - expect_opening_parenthesis");
+
         self.tokens.next_ok()?.expect_opening_parenthesis()?;
+
+        trace!("Parser::parse_object - expect_identifier");
 
         let identifier = self.tokens.next_ok()?.expect_identifier()?;
 
@@ -272,7 +292,11 @@ where
         let mut properties = Vec::new();
 
         while !self.tokens.peek_ok()?.is_closing_parenthesis() {
+            trace!("Parser::parse_object - expect_string");
+
             let property = self.tokens.next_ok()?.expect_string()?;
+
+            trace!("Parser::parse_object - expect_colon");
 
             self.tokens.next_ok()?.expect_colon()?;
 
@@ -284,6 +308,8 @@ where
                 self.tokens.next_ok()?;
             }
         }
+
+        trace!("Parser::parse_object - expect_closing_parenthesis");
 
         self.tokens.next_ok()?.expect_closing_parenthesis()?;
 
