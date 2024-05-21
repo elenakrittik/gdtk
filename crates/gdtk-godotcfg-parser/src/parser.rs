@@ -132,7 +132,7 @@ where
             TokenKind::Float(_) => self.parse_float(),
             TokenKind::Boolean(_) => self.parse_boolean(),
             TokenKind::Null => self.parse_null(),
-            TokenKind::Identifier(_) => self.parse_any_object(),
+            TokenKind::Identifier(_) => self.parse_object_or_instance(),
             TokenKind::OpeningBracket => self.parse_array(),
             TokenKind::OpeningBrace => self.parse_map(),
             _ => Err(Error::Unexpected(self.tokens.next_ok()?, "a value")),
@@ -225,29 +225,27 @@ where
     }
 
     #[tracing::instrument(skip(self))]
-    fn parse_any_object(&mut self) -> Result<Value<'a>, Error<'a>> {
-        trace!("Parser::parse_any_object");
+    fn parse_object_or_instance(&mut self) -> Result<Value<'a>, Error<'a>> {
+        trace!("Parser::parse_object_or_instance");
 
         let identifier = self.tokens.next_ok()?.expect_identifier()?;
 
         match identifier {
-            "PackedStringArray" => self.parse_packed_string_array(),
-            "PackedByteArray" => self.parse_packed_byte_array(),
             "Object" => self.parse_object(),
-            _ => Err(Error::UnrecognisedObject(identifier)),
+            other => self.parse_object_instance(other),
         }
     }
 
     #[tracing::instrument(skip(self))]
-    fn parse_packed_string_array(&mut self) -> Result<Value<'a>, Error<'a>> {
-        trace!("Parser::parse_packed_string_array");
+    fn parse_object_instance(&mut self, identifier: &'a str) -> Result<Value<'a>, Error<'a>> {
+        trace!("Parser::parse_object_instance");
 
         self.tokens.next_ok()?.expect_opening_parenthesis()?;
 
         let mut values = Vec::new();
 
         while !self.tokens.peek_ok()?.is_closing_parenthesis() {
-            values.push(self.tokens.next_ok()?.expect_string()?);
+            values.push(self.parse_value()?);
 
             if self.tokens.peek_ok()?.is_comma() {
                 self.tokens.next_ok()?;
@@ -256,37 +254,7 @@ where
 
         self.tokens.next_ok()?.expect_closing_parenthesis()?;
 
-        Ok(Value::PackedStringArray(values))
-    }
-
-    #[tracing::instrument(skip(self))]
-    fn parse_packed_byte_array(&mut self) -> Result<Value<'a>, Error<'a>> {
-        trace!("Parser::parse_packed_byte_array");
-
-        self.tokens.next_ok()?.expect_opening_parenthesis()?;
-
-        let mut values = Vec::new();
-
-        while !self.tokens.peek_ok()?.is_closing_parenthesis() {
-            let byte_token = self.tokens.next_ok()?;
-            let byte = match byte_token.kind.as_integer() {
-                Some(byte) => byte,
-                None => return Err(Error::Unexpected(byte_token, "a byte")),
-            };
-
-            match u8::try_from(*byte) {
-                Ok(byte) => values.push(byte),
-                Err(_) => return Err(Error::ByteDoesntFit(byte_token)),
-            }
-
-            if self.tokens.peek_ok()?.is_comma() {
-                self.tokens.next_ok()?;
-            }
-        }
-
-        self.tokens.next_ok()?.expect_closing_parenthesis()?;
-
-        Ok(Value::PackedByteArray(values))
+        Ok(Value::ObjectInstance(identifier, values))
     }
 
     #[tracing::instrument(skip(self))]

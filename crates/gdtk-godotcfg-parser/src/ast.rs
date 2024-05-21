@@ -1,11 +1,12 @@
 /// A file in GodotCfg format.
 pub type File<'a> = Vec<Line<'a>>;
 
-type Map<'a, K = Value<'a>> = Vec<(K, Value<'a>)>;
+type Array<'a, T = Value<'a>> = Vec<T>;
+type Map<'a, K = Value<'a>, V = Value<'a>> = Vec<(K, V)>;
 
 #[derive(Debug)]
 pub enum Line<'a> {
-    /// A ``// comment`` line.
+    /// A ``// comment``.
     Comment(&'a str),
     /// A ``[section param="value"]``.
     Section(&'a str, Map<'a, &'a str>),
@@ -26,15 +27,17 @@ pub enum Value<'a> {
     /// A string literal.
     String(&'a str),
     /// An array expression.
-    Array(Vec<Value<'a>>),
+    Array(Array<'a>),
     /// A map expression.
     Map(Map<'a>),
     /// An object expression. ``.0`` is object's identifier,
     /// ``.1`` is object's properties.
     Object(&'a str, Map<'a, &'a str>),
-    // TODO: handle arbitrary types as .tscn supports them
-    /// A ``PackedByteArray``.
-    PackedByteArray(Vec<u8>),
-    /// A ``PackedStringArray``.
-    PackedStringArray(Vec<&'a str>),
+    /// An object instance expression. The difference between
+    /// this and [Value::Object] is that `Object` constructs
+    /// an object directly using a class name and a list of
+    /// properties, while `ObjectInstance` more resembles
+    /// how you would create an object instance in GDScript,
+    /// by passing arguments to a class' `_init()`.
+    ObjectInstance(&'a str, Array<'a>)
 }
