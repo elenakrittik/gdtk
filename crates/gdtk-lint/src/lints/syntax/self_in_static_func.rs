@@ -1,5 +1,5 @@
 use diagnosis::{Diagnostic, Highlight, Severity};
-use gdtk_ast::{ast, visitor::walk_func, Visitor};
+use gdtk_gdscript_ast::{ast, visitor::walk_func, Visitor};
 
 #[derive(Default)]
 pub struct SelfInStaticFunc<'s> {

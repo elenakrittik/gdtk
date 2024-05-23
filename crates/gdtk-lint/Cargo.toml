@@ -5,5 +5,5 @@ edition = "2021"
 
 [dependencies]
 diagnosis = { version = "0.1.0", path = "../diagnosis" }
-gdtk-ast = { version = "0.1.0", path = "../gdtk-ast" }
+gdtk-gdscript-ast = { version = "0.1.0", path = "../gdtk-gdscript-ast" }
 gdtk-span = { path = "../gdtk-span", version = "0.1.0" }

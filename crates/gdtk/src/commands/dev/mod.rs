@@ -1,2 +1,2 @@
-pub mod lex;
-pub mod parse;
+pub mod gdscript;
+pub mod godotcfg;

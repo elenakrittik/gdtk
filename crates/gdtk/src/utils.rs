@@ -5,6 +5,24 @@ use std::{
 
 use itertools::Itertools;
 
+use crate::cli::Cli;
+
+pub fn setup_tracing(cli: &Cli) -> anyhow::Result<()> {
+    let logs = gdtk_paths::logs_path()?;
+    let writer = tracing_appender::rolling::daily(logs, "log");
+
+    let subscriber = tracing_subscriber::FmtSubscriber::builder()
+        .with_max_level(cli.verbosity.level()?)
+        .with_ansi(false)
+        .with_writer(writer)
+        .pretty()
+        .finish();
+
+    tracing::subscriber::set_global_default(subscriber)?;
+
+    Ok(())
+}
+
 pub fn resolve_files_by_ext(files: Vec<PathBuf>, ext: &str) -> anyhow::Result<Vec<PathBuf>> {
     if let [file] = files.as_slice() {
         if file.to_str().is_some_and(|p| p == "-") {

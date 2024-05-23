@@ -30,9 +30,9 @@ pub fn run(files: Vec<PathBuf>) -> anyhow::Result<()> {
 
 fn run_on_file(file: &Path) -> anyhow::Result<Counter> {
     let content = get_content(file)?;
-    let noqas = gdtk_lexer::noqas(&content);
-    let lexed = gdtk_lexer::lex(&content);
-    let parsed = gdtk_parser::parse_file(lexed);
+    let noqas = gdtk_gdscript_parser::lexer::noqas(&content);
+    let lexed = gdtk_gdscript_parser::lexer::lex(&content);
+    let parsed = gdtk_gdscript_parser::parse_file(lexed);
 
     let source = diagnosis::utils::Source::new(&content);
     let source_name = match file.to_str().unwrap() {
