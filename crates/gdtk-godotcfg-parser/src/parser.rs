@@ -6,7 +6,7 @@ use crate::{
     ast::{Line, Value},
     error::Error,
     token::{Token, TokenKind},
-    utils::ResultIterator,
+    utils::PeekableResultIterator,
 };
 
 /// A GodotCfg parser.
@@ -31,7 +31,7 @@ pub struct Parser<I> {
 
 impl<'a, I> Iterator for Parser<I>
 where
-    I: ResultIterator<Item = Token<'a>> + Debug,
+    I: PeekableResultIterator<Item = Token<'a>> + Debug,
 {
     type Item = Result<Line<'a>, Error<'a>>;
 
@@ -63,7 +63,7 @@ where
 
 impl<'a, I> Parser<I>
 where
-    I: ResultIterator<Item = Token<'a>> + Debug,
+    I: PeekableResultIterator<Item = Token<'a>> + Debug,
 {
     #[tracing::instrument(skip(self), level = tracing::Level::TRACE)]
     fn parse_comment(&mut self) -> Result<Line<'a>, Error<'a>> {
@@ -314,5 +314,53 @@ where
         self.tokens.next_ok()?.expect_closing_parenthesis()?;
 
         Ok(Value::Object(identifier, properties))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::ast::*;
+    use crate::utils::ResultIterator;
+
+    type Test = Result<(), crate::error::Error<'static>>;
+
+    macro_rules! parse {
+        ($input:expr) => {{
+            let mut parser = $crate::parser($input);
+
+            parser.next_ok()?.kind
+        }}
+    }
+
+    macro_rules! parse_val {
+        ($input:expr) => {{
+            let mut parser = $crate::parser($input);
+
+            parser.parse_value()?
+        }}
+    }
+
+    #[test]
+    fn test_line_comment() -> Test {
+        assert_eq!(parse!("; ok"), Line::Comment(" ok"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_line_section() -> Test {
+        assert_eq!(parse!("[section]"), Line::Section("section", vec![]));
+        assert_eq!(parse!("[section param=0]"), Line::Section("section", vec![("param", Value::Integer(0))]));
+    }
+
+    #[test]
+    fn test_line_parameter() -> Test {
+        assert_eq!(parse!("param=0"), Line::Parameter("param", Value::Integer(0)));
+        assert_eq!(parse!("path/to/param=0"), Line::Parameter("path/to/param", Value::Integer(0)));
+    }
+
+    #[test]
+    fn test_value_literals() -> Test {
+        assert_eq!(parse_val!("null"), Value::Null);
     }
 }

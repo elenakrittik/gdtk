@@ -226,3 +226,57 @@ pub enum TokenKind<'a> {
     #[regex(";[^\r\n]*\n?", |lex| &lex.slice()[1..])]
     Comment(&'a str),
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::token::TokenKind;
+    use crate::utils::ResultIterator;
+
+    type Test = Result<(), crate::error::Error<'static>>;
+
+    macro_rules! lex {
+        ($input:expr) => {{
+            let mut lexer = $crate::lexer($input);
+
+            lexer.next_ok()?.kind
+        }}
+    }
+
+    #[test]
+    fn test_literals() -> Test {
+        assert_eq!(lex!("ident"), TokenKind::Identifier("ident"));
+        assert_eq!(lex!("path/to/smth"), TokenKind::Path("path/to/smth"));
+        assert_eq!(lex!("01234"), TokenKind::Integer(01234));
+        assert_eq!(lex!("-0123"), TokenKind::Integer(-0123));
+        assert_eq!(lex!("1.0"), TokenKind::Float(1.0));
+        assert_eq!(lex!("-1.0"), TokenKind::Float(-1.0));
+        assert_eq!(lex!("\"ok\""), TokenKind::String("ok"));
+        assert_eq!(lex!("true"), TokenKind::Boolean(true));
+        assert_eq!(lex!("false"), TokenKind::Boolean(false));
+        assert_eq!(lex!("null"), TokenKind::Null);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_symbols() -> Test {
+        assert_eq!(lex!("="), TokenKind::Assignment);
+        assert_eq!(lex!(":"), TokenKind::Colon);
+        assert_eq!(lex!(","), TokenKind::Comma);
+        assert_eq!(lex!("("), TokenKind::OpeningParenthesis);
+        assert_eq!(lex!(")"), TokenKind::ClosingParenthesis);
+        assert_eq!(lex!("["), TokenKind::OpeningBracket);
+        assert_eq!(lex!("]"), TokenKind::ClosingBracket);
+        assert_eq!(lex!("{"), TokenKind::OpeningBrace);
+        assert_eq!(lex!("}"), TokenKind::ClosingBrace);
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_specials() -> Test {
+        assert_eq!(lex!("; ok"), TokenKind::Comment(" ok"));
+
+        Ok(())
+    }
+}
