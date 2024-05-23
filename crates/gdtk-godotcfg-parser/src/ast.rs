@@ -4,7 +4,7 @@ pub type File<'a> = Vec<Line<'a>>;
 type Array<'a, T = Value<'a>> = Vec<T>;
 type Map<'a, K = Value<'a>, V = Value<'a>> = Vec<(K, V)>;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Line<'a> {
     /// A ``// comment``.
     Comment(&'a str),
@@ -14,7 +14,7 @@ pub enum Line<'a> {
     Parameter(&'a str, Value<'a>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Value<'a> {
     /// A ``null``.
     Null,

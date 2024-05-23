@@ -239,15 +239,15 @@ mod tests {
             let mut lexer = $crate::lexer($input);
 
             lexer.next_ok()?.kind
-        }}
+        }};
     }
 
     #[test]
     fn test_literals() -> Test {
         assert_eq!(lex!("ident"), TokenKind::Identifier("ident"));
         assert_eq!(lex!("path/to/smth"), TokenKind::Path("path/to/smth"));
-        assert_eq!(lex!("01234"), TokenKind::Integer(01234));
-        assert_eq!(lex!("-0123"), TokenKind::Integer(-0123));
+        assert_eq!(lex!("01234"), TokenKind::Integer(1234));
+        assert_eq!(lex!("-0123"), TokenKind::Integer(-123));
         assert_eq!(lex!("1.0"), TokenKind::Float(1.0));
         assert_eq!(lex!("-1.0"), TokenKind::Float(-1.0));
         assert_eq!(lex!("\"ok\""), TokenKind::String("ok"));

@@ -328,8 +328,8 @@ mod tests {
         ($input:expr) => {{
             let mut parser = $crate::parser($input);
 
-            parser.next_ok()?.kind
-        }}
+            parser.next_ok()??
+        }};
     }
 
     macro_rules! parse_val {
@@ -337,7 +337,7 @@ mod tests {
             let mut parser = $crate::parser($input);
 
             parser.parse_value()?
-        }}
+        }};
     }
 
     #[test]
@@ -350,17 +350,89 @@ mod tests {
     #[test]
     fn test_line_section() -> Test {
         assert_eq!(parse!("[section]"), Line::Section("section", vec![]));
-        assert_eq!(parse!("[section param=0]"), Line::Section("section", vec![("param", Value::Integer(0))]));
+        assert_eq!(
+            parse!("[section param=0]"),
+            Line::Section("section", vec![("param", Value::Integer(0))])
+        );
+
+        Ok(())
     }
 
     #[test]
     fn test_line_parameter() -> Test {
-        assert_eq!(parse!("param=0"), Line::Parameter("param", Value::Integer(0)));
-        assert_eq!(parse!("path/to/param=0"), Line::Parameter("path/to/param", Value::Integer(0)));
+        assert_eq!(
+            parse!("param=0"),
+            Line::Parameter("param", Value::Integer(0))
+        );
+        assert_eq!(
+            parse!("path/to/param=0"),
+            Line::Parameter("path/to/param", Value::Integer(0))
+        );
+
+        Ok(())
     }
 
     #[test]
     fn test_value_literals() -> Test {
         assert_eq!(parse_val!("null"), Value::Null);
+        assert_eq!(parse_val!("true"), Value::Boolean(true));
+        assert_eq!(parse_val!("false"), Value::Boolean(false));
+        assert_eq!(parse_val!("01234"), Value::Integer(1234));
+        assert_eq!(parse_val!("-0123"), Value::Integer(-123));
+        assert_eq!(parse_val!("1.0"), Value::Float(1.0));
+        assert_eq!(parse_val!("-1.0"), Value::Float(-1.0));
+        assert_eq!(parse_val!("\"ok\""), Value::String("ok"));
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_value_array() -> Test {
+        assert_eq!(
+            parse_val!("[1, 2, 3]"),
+            Value::Array(vec![
+                Value::Integer(1),
+                Value::Integer(2),
+                Value::Integer(3)
+            ])
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_value_map() -> Test {
+        assert_eq!(
+            parse_val!("{0:1, 2:3}"),
+            Value::Map(vec![
+                (Value::Integer(0), Value::Integer(1)),
+                (Value::Integer(2), Value::Integer(3))
+            ])
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_value_object() -> Test {
+        assert_eq!(
+            parse_val!(r#"Object(Object, "prop": 0)"#),
+            Value::Object("Object", vec![("prop", Value::Integer(0))])
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_value_object_instance() -> Test {
+        assert_eq!(
+            parse_val!(r#"PackedByteArray(0,0,0)"#),
+            Value::ObjectInstance(
+                "PackedByteArray",
+                vec![Value::Integer(0), Value::Integer(0), Value::Integer(0)],
+            )
+        );
+
+        Ok(())
     }
 }
