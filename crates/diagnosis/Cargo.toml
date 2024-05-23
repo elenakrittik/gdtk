@@ -11,10 +11,9 @@ ahash = { version = "0.8.11", optional = true }
 count-digits = { version = "0.5.1", optional = true }
 
 # `MietteVisualizer`
-miette = { version = "7.2.0", features = [
-    "fancy-no-backtrace",
-], default-features = false, optional = true }
+miette = { version = "7.2.0", features = ["fancy-no-backtrace"], default-features = false, optional = true }
+itertools = { version = "0.13.0", optional = true }
 
 [features]
-rustc = ["dep:yansi", "dep:thiserror", "dep:ahash", "dep:count-digits"]
+rustc = ["dep:yansi", "dep:thiserror", "dep:ahash", "dep:count-digits", "dep:itertools"]
 miette = ["dep:miette", "dep:thiserror"]

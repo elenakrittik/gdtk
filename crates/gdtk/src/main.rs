@@ -18,6 +18,7 @@ async fn main() -> anyhow::Result<()> {
             DevCommands::GDScript { command } => match command {
                 DevGDScriptCommands::Lex { file } => cmds::dev::gdscript::lex::run(file)?,
                 DevGDScriptCommands::Parse { file } => cmds::dev::gdscript::parse::run(file)?,
+                DevGDScriptCommands::Render => cmds::dev::gdscript::render::run()?,
             },
             DevCommands::GodotCfg { command } => match command {
                 DevGodotCfgCommands::Lex { file } => cmds::dev::godotcfg::lex::run(file)?,

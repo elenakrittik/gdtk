@@ -1,3 +1,4 @@
+use ahash::AHashMap;
 use count_digits::CountDigits;
 use yansi::Paint;
 
@@ -5,6 +6,7 @@ use crate::{
     diagnostic::{Diagnostic, Severity},
     protocol::Visualizer,
     utils::Source,
+    Highlight,
 };
 
 const MAIN_TEXT: yansi::Style = yansi::Style::new().white().bold();
@@ -13,6 +15,8 @@ const WARNING: yansi::Style = yansi::Style::new().yellow().bold();
 const CUSTOM: yansi::Style = yansi::Style::new().green().bold();
 const HELP: yansi::Style = yansi::Style::new().cyan().bold();
 const BORDER: yansi::Style = yansi::Style::new().bright_blue().bold();
+
+type Result<'a, T = ()> = std::result::Result<T, <RustcVisualizer<'a> as Visualizer<'a>>::Error>;
 
 #[derive(thiserror::Error, Debug)]
 pub enum RustcVisualizerError {
@@ -85,127 +89,167 @@ impl<'a> RustcVisualizer<'a> {
 impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
     type Error = RustcVisualizerError;
 
-    // TODO: Handle multiple highlights on the same line.
-    fn visualize(
-        &self,
-        diag: Diagnostic<'_>,
-        f: &mut impl std::io::Write,
-    ) -> Result<(), Self::Error> {
-        // A map of highlight spans to their positions.
-        let span_to_pos = ahash::AHashMap::from_iter(
-            diag.highlights
-                .iter()
-                .filter_map(|h| Some(h.span).zip(self.source.locate(h.span))),
-        );
+    fn visualize(&self, diag: Diagnostic<'_>, fmt: &mut impl std::io::Write) -> Result {
+        RustcDiagnosticRenderer::new(self, diag, fmt).render()?;
 
+        Ok(())
+    }
+}
+
+struct RustcDiagnosticRenderer<'a, F: std::io::Write> {
+    source_name: &'a str,
+    source: &'a Source<'a>,
+    styles: &'a Styles,
+    diag: Diagnostic<'a>,
+    fmt: &'a mut F,
+    line_number_offset: usize,
+}
+
+impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
+    fn new(visualizer: &'a RustcVisualizer<'a>, diag: Diagnostic<'a>, fmt: &'a mut F) -> Self {
         // Offset from the right to account for the line number.
-        let line_number_offset = span_to_pos
-            .values()
+        let line_number_offset = diag
+            .highlights
+            .iter()
+            .filter_map(|h| visualizer.source.locate(h.span))
             .map(|(line, _)| line)
             .max()
-            .unwrap_or(&0)
+            .unwrap_or(0)
             .count_digits();
 
-        let (directive, directive_style) = match diag.severity {
+        Self {
+            source_name: visualizer.source_name,
+            source: &visualizer.source,
+            styles: &visualizer.styles,
+            diag,
+            fmt,
+            line_number_offset,
+        }
+    }
+
+    fn render(&mut self) -> Result {
+        self.render_primary_message()?;
+        self.render_source_pointer()?;
+        self.render_highlights()?;
+        self.render_help_messages()?;
+
+        Ok(())
+    }
+
+    fn render_primary_message(&mut self) -> Result {
+        let (directive, directive_style) = match self.diag.severity {
             Severity::Error => ("error", self.styles.error),
             Severity::Warning => ("warning", self.styles.warning),
             Severity::Custom(directive) => (directive, self.styles.custom),
         };
 
-        // Step 1. Draw the primary messsage.
-        write!(f, "{}", directive.paint(directive_style))?;
+        write!(self.fmt, "{}", directive.paint(directive_style))?;
 
-        if let Some(code) = diag.code {
-            write!(f, "{}", '['.paint(directive_style))?;
-
-            write!(f, "{}", code.paint(directive_style))?;
-            write!(f, "{}", ']'.paint(directive_style))?;
+        if let Some(code) = self.diag.code {
+            write!(self.fmt, "{}", '['.paint(directive_style))?;
+            write!(self.fmt, "{}", code.paint(directive_style))?;
+            write!(self.fmt, "{}", ']'.paint(directive_style))?;
         }
 
-        write!(f, "{}", ":".paint(self.styles.main_text))?;
-        write!(f, " ")?;
-        write!(f, "{}", diag.message.paint(self.styles.main_text))?;
-        writeln!(f)?;
+        write!(self.fmt, "{}", ":".paint(self.styles.main_text))?;
+        write!(self.fmt, " ")?;
+        write!(
+            self.fmt,
+            "{}",
+            self.diag.message.paint(self.styles.main_text)
+        )?;
+        writeln!(self.fmt)?;
 
-        // Step 2. Draw the source pointer.
-        write!(f, "{}", " ".repeat(line_number_offset))?;
-        write!(f, "{}", "-->".paint(self.styles.border))?;
-        write!(f, " ")?;
-        write!(f, "{}", self.source_name)?;
+        Ok(())
+    }
 
-        if let Some(span) = diag.span
+    fn render_source_pointer(&mut self) -> Result {
+        write!(self.fmt, "{}", " ".repeat(self.line_number_offset))?;
+        write!(self.fmt, "{}", "-->".paint(self.styles.border))?;
+        write!(self.fmt, " ")?;
+        write!(self.fmt, "{}", self.source_name)?;
+
+        if let Some(span) = self.diag.span
             && let Some((line, column)) = self.source.locate(span)
         {
-            write!(f, ":{}:{}", line, column)?;
+            write!(self.fmt, ":{}:{}", line, column)?;
         }
 
-        // Step 3. Draw highlights.
+        Ok(())
+    }
 
-        for highlight in diag.highlights {
-            let Some((line, column)) = span_to_pos.get(&highlight.span) else {
+    fn render_highlights(&mut self) -> Result {
+        let groups = self.multiline_groups();
+
+        dbg!(&groups);
+
+        Ok(())
+    }
+
+    fn multiline_groups(&'a self) -> ahash::AHashMap<&'a Highlight<'a>, Vec<&'a Highlight<'a>>> {
+        // First, divide all highlight into multiline groups. To do that, we
+        // first identify highlights that are multiline, and then sort the
+        // remaining ones either into a "standalone" category or into one of
+        // the multiline groups. Each standalone highlight is then added to
+        // as a separate multiline group.
+        let mut standalones: Vec<&Highlight<'a>> = vec![];
+        let mut multilines = self.find_multilines();
+
+        for a_highlight in self.diag.highlights.iter() {
+            if multilines.contains_key(a_highlight) {
                 continue;
-            };
+            }
 
-            let Some(line_source) = self.source.line(*line) else {
-                continue;
-            };
-
-            let local_line_number_offset = line_number_offset + 1 - line.count_digits();
-
-            writeln!(f)?;
-
-            // Step 3.1. Draw an empty "separator" border.
-            write!(f, "{}", " ".repeat(line_number_offset + 1))?;
-            write!(f, "{}", "|".paint(self.styles.border))?;
-            writeln!(f)?;
-
-            // Step 3.2. Draw the highlighted source line.
-            write!(f, "{}", line.paint(self.styles.border))?;
-            write!(f, "{}", " ".repeat(local_line_number_offset))?;
-            write!(f, "{}", "|".paint(self.styles.border))?;
-            write!(f, " ")?;
-            write!(f, "{}", line_source)?;
-            writeln!(f)?;
-
-            // Step 3.3. Draw the highlight.
-            write!(f, "{}", " ".repeat(line_number_offset + 1))?;
-            write!(f, "{}", "|".paint(self.styles.border))?;
-
-            // God did not intend for tabs to exist (joke (or is it?))
-            // Tabs are displayed differently in every terminal, thus
-            // simply using `" ".repeat(column + 1)` won't work as a tab
-            // is rarely of the same width as a space. To fix this, we
-            // need to emit `(column - n_tabs)` spaces and `(n_tabs)`
-            // tabs (under the assumption that all other characters are
-            // "1-wide"), so that the total visible width is the same as
-            // in the line source.
-            let n_tabs = line_source[..*column]
-                .chars()
-                .filter(|c| c == &'\t')
-                .count();
-
-            write!(f, "{}", " ".repeat(column - n_tabs))?;
-            write!(f, "{}", "\t".repeat(n_tabs))?;
-
-            let span_length = highlight.span.end - highlight.span.start;
-            write!(f, "{}", "-".repeat(span_length).paint(directive_style))?;
-
-            if let Some(message) = highlight.message {
-                write!(f, " ")?;
-                write!(f, "{}", message.paint(directive_style))?;
+            for (m_highlight, m_values) in multilines.iter_mut() {
+                if m_highlight.span.start >= a_highlight.span.start
+                    && m_highlight.span.end <= a_highlight.span.end
+                {
+                    m_values.push(a_highlight);
+                } else {
+                    standalones.push(a_highlight);
+                }
             }
         }
 
-        // Step 4. Draw help messages.
-        for help_message in diag.help_messages {
-            writeln!(f)?;
+        for standalone in standalones {
+            multilines.insert(standalone, vec![]);
+        }
 
-            write!(f, "{}", " ".repeat(line_number_offset + 1))?;
-            write!(f, "{}", "=".paint(self.styles.help))?;
-            write!(f, " ")?;
-            write!(f, "{}", "help:".paint(self.styles.help))?;
-            write!(f, " ")?;
-            write!(f, "{}", help_message.paint(self.styles.help))?;
+        multilines
+    }
+
+    fn find_multilines(&'a self) -> ahash::AHashMap<&'a Highlight<'a>, Vec<&'a Highlight<'a>>> {
+        let multilines_iter = self
+            .diag
+            .highlights
+            .iter()
+            .filter(|h| {
+                let left = h.span.start..h.span.start;
+                let right = h.span.end..h.span.end;
+
+                if let Some((left, _)) = self.source.locate(&left)
+                    && let Some((right, _)) = self.source.locate(&right)
+                {
+                    return left != right;
+                }
+
+                false
+            })
+            .map(|h| (h, Vec::<&'a Highlight<'a>>::new()));
+
+        AHashMap::from_iter(multilines_iter)
+    }
+
+    fn render_help_messages(&mut self) -> Result {
+        for help_message in &self.diag.help_messages {
+            writeln!(self.fmt)?;
+
+            write!(self.fmt, "{}", " ".repeat(self.line_number_offset + 1))?;
+            write!(self.fmt, "{}", "=".paint(self.styles.help))?;
+            write!(self.fmt, " ")?;
+            write!(self.fmt, "{}", "help:".paint(self.styles.help))?;
+            write!(self.fmt, " ")?;
+            write!(self.fmt, "{}", help_message.paint(self.styles.help))?;
         }
 
         Ok(())

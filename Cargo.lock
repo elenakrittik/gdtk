@@ -397,6 +397,7 @@ version = "0.1.0"
 dependencies = [
  "ahash",
  "count-digits",
+ "itertools 0.13.0",
  "miette",
  "thiserror",
  "yansi",

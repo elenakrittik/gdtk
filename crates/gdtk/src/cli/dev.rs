@@ -29,6 +29,8 @@ pub enum DevGDScriptCommands {
         /// The GDScript file to parse.
         file: PathBuf,
     },
+    /// Stress-test the diagnostic renderer.
+    Render,
 }
 
 #[derive(Subcommand)]
