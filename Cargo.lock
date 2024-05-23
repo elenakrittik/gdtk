@@ -1040,7 +1040,7 @@ checksum = "90ed8c1e510134f979dbc4f070f87d4313098b704861a105fe34231c70a3901c"
 [[package]]
 name = "logos"
 version = "0.14.0"
-source = "git+https://github.com/elenakrittik/logos?rev=148b6a0#148b6a0144237cfe57886a12a8138ce8d38c8219"
+source = "git+https://github.com/elenakrittik/logos?rev=d79f8e736239fb5e6b972a54463095d44bc494bc#d79f8e736239fb5e6b972a54463095d44bc494bc"
 dependencies = [
  "logos-derive",
 ]
@@ -1048,7 +1048,7 @@ dependencies = [
 [[package]]
 name = "logos-codegen"
 version = "0.14.0"
-source = "git+https://github.com/elenakrittik/logos?rev=148b6a0#148b6a0144237cfe57886a12a8138ce8d38c8219"
+source = "git+https://github.com/elenakrittik/logos?rev=d79f8e736239fb5e6b972a54463095d44bc494bc#d79f8e736239fb5e6b972a54463095d44bc494bc"
 dependencies = [
  "beef",
  "fnv",
@@ -1062,7 +1062,7 @@ dependencies = [
 [[package]]
 name = "logos-derive"
 version = "0.14.0"
-source = "git+https://github.com/elenakrittik/logos?rev=148b6a0#148b6a0144237cfe57886a12a8138ce8d38c8219"
+source = "git+https://github.com/elenakrittik/logos?rev=d79f8e736239fb5e6b972a54463095d44bc494bc#d79f8e736239fb5e6b972a54463095d44bc494bc"
 dependencies = [
  "logos-codegen",
 ]
