@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTExpr, ASTExprKind};
+use gdtk_gdscript_ast::{ASTExpr, ASTExprKind};
 
 use crate::lexer::{Token, TokenKind};
 use crate::Parser;

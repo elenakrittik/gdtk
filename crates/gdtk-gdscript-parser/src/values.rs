@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTExpr, ASTFunction, ASTFunctionKind, DictValue};
+use gdtk_gdscript_ast::{ASTExpr, ASTFunction, ASTFunctionKind, DictValue};
 
 use crate::lexer::{Token, TokenKind};
 use crate::{

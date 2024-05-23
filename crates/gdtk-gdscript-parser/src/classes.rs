@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTClassStmt, ASTEnumStmt, ASTEnumVariant};
+use gdtk_gdscript_ast::{ASTClassStmt, ASTEnumStmt, ASTEnumVariant};
 
 use crate::block::parse_block;
 use crate::expressions::parse_expr;
@@ -89,7 +89,7 @@ pub fn parse_class<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::*;
+    use gdtk_gdscript_ast::*;
 
     use crate::classes::{parse_class, parse_enum};
     use crate::test_utils::{create_parser, make_ident, make_number, make_string, PASS_STMT};

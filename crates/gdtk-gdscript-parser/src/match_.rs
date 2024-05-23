@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, DictPattern};
+use gdtk_gdscript_ast::{ASTMatchArm, ASTMatchPattern, ASTMatchStmt, ASTVariable, DictPattern};
 
 use crate::block::parse_block;
 use crate::expressions::parse_expr;
@@ -157,7 +157,7 @@ fn parse_match_dict_pattern<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::*;
+    use gdtk_gdscript_ast::*;
 
     use crate::match_::{parse_match, parse_match_arm, parse_match_pattern};
     use crate::test_utils::{create_parser, make_ident, make_number, PASS_STMT};

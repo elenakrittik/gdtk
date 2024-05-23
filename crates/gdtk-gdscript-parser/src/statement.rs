@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTFunctionKind, ASTStatement};
+use gdtk_gdscript_ast::{ASTFunctionKind, ASTStatement};
 
 use crate::classes::{parse_class, parse_enum};
 use crate::expressions::parse_expr;

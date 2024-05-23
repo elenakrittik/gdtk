@@ -632,15 +632,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "gdtk-ast"
-version = "0.1.0"
-dependencies = [
- "derivative",
- "enum-as-inner",
- "gdtk-span",
-]
-
-[[package]]
 name = "gdtk-dialoguer"
 version = "0.11.0"
 dependencies = [
@@ -653,12 +644,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "gdtk-gdscript-ast"
+version = "0.1.0"
+dependencies = [
+ "derivative",
+ "enum-as-inner",
+ "gdtk-span",
+]
+
+[[package]]
 name = "gdtk-gdscript-parser"
 version = "0.1.0"
 dependencies = [
  "ahash",
  "enum-as-inner",
- "gdtk-ast",
+ "gdtk-gdscript-ast",
  "gdtk-span",
  "itertools 0.13.0",
  "logos",
@@ -699,7 +699,7 @@ name = "gdtk-lint"
 version = "0.1.0"
 dependencies = [
  "diagnosis",
- "gdtk-ast",
+ "gdtk-gdscript-ast",
  "gdtk-span",
 ]
 

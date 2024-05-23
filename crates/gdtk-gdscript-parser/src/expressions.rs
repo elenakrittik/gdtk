@@ -1,4 +1,4 @@
-use gdtk_ast::{
+use gdtk_gdscript_ast::{
     ASTBinaryOp, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPostfixOpKind, ASTPrefixOp, ASTPrefixOpKind,
 };
 use gdtk_span::Span;
@@ -364,7 +364,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::*;
+    use gdtk_gdscript_ast::*;
 
     use crate::expressions::parse_expr;
     use crate::test_utils::{create_parser, make_ident, make_number, make_string};

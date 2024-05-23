@@ -3,11 +3,13 @@
 pub mod lints;
 pub mod utils;
 
-use gdtk_ast::Visitor;
+use gdtk_gdscript_ast::Visitor;
 
 use crate::lints::{redundancy, style, syntax};
 
-pub fn run_builtin_lints<'s>(file: &'s gdtk_ast::ASTFile) -> Vec<diagnosis::Diagnostic<'s>> {
+pub fn run_builtin_lints<'s>(
+    file: &'s gdtk_gdscript_ast::ASTFile,
+) -> Vec<diagnosis::Diagnostic<'s>> {
     let mut diagnostics = vec![];
 
     // Construct lints.

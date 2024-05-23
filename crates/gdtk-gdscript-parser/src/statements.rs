@@ -1,4 +1,4 @@
-use gdtk_ast::{
+use gdtk_gdscript_ast::{
     ASTAssertStmt, ASTBreakStmt, ASTBreakpointStmt, ASTClassNameStmt, ASTContinueStmt, ASTElifStmt,
     ASTElseStmt, ASTExpr, ASTExtendsStmt, ASTForStmt, ASTIfStmt, ASTPassStmt, ASTReturnStmt,
     ASTStatement, ASTVariable, ASTVariableKind, ASTWhileStmt, CodeBlock,
@@ -257,7 +257,7 @@ pub fn parse_assert_stmt<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::*;
+    use gdtk_gdscript_ast::*;
 
     use crate::statements::{
         parse_classname_stmt, parse_const_stmt, parse_elif_stmt, parse_else_stmt,

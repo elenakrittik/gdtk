@@ -1,5 +1,5 @@
 use diagnosis::{Diagnostic, Highlight, Severity};
-use gdtk_ast::{ast, visitor::walk_block, Visitor};
+use gdtk_gdscript_ast::{ast, visitor::walk_block, Visitor};
 
 crate::lint!(UnnecessaryPass);
 

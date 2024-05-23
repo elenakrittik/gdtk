@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTFunction, ASTFunctionKind, ASTVariable, ASTVariableKind};
+use gdtk_gdscript_ast::{ASTFunction, ASTFunctionKind, ASTVariable, ASTVariableKind};
 
 use crate::expressions::parse_expr;
 use crate::functions::{parse_func, ParseFuncOptions};
@@ -123,7 +123,7 @@ fn parse_variable_etters<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::*;
+    use gdtk_gdscript_ast::*;
 
     use crate::test_utils::{create_parser, make_ident, make_number, PASS_STMT};
     use crate::variables::parse_variable_body;

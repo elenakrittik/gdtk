@@ -1,4 +1,4 @@
-use gdtk_ast::{
+use gdtk_gdscript_ast::{
     ASTAnnotationStmt, ASTExpr, ASTExprKind, ASTPostfixOp, ASTPostfixOpKind, ASTSignalStmt,
     ASTVariableKind,
 };
@@ -114,7 +114,7 @@ pub fn parse_type<'a>(parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>) 
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::*;
+    use gdtk_gdscript_ast::*;
 
     use super::*;
     use crate::test_utils::{create_parser, make_ident, make_number};

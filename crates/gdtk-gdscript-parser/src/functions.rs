@@ -1,4 +1,4 @@
-use gdtk_ast::{ASTFunction, ASTFunctionKind, ASTVariableKind};
+use gdtk_gdscript_ast::{ASTFunction, ASTFunctionKind, ASTVariableKind};
 
 use crate::block::parse_block;
 use crate::lexer::{Token, TokenKind};
@@ -84,7 +84,7 @@ pub fn parse_func<'a>(
 
 #[cfg(test)]
 mod tests {
-    use gdtk_ast::*;
+    use gdtk_gdscript_ast::*;
 
     use crate::functions::{parse_func, ParseFuncOptions};
     use crate::test_utils::{create_parser, make_ident, make_number, PASS_STMT};
