@@ -5,6 +5,7 @@ use clap::Subcommand;
 #[derive(Subcommand)]
 pub enum DevCommands {
     /// GDScript-related dev commands.
+    #[clap(name = "gdscript")]
     GDScript {
         #[command(subcommand)]
         command: DevGDScriptCommands,
