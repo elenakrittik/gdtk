@@ -1,5 +1,6 @@
 use ahash::AHashMap;
 use count_digits::CountDigits;
+use itertools::Itertools;
 use yansi::Paint;
 
 use crate::{
@@ -111,7 +112,7 @@ enum Annotation<'a> {
     Singleline(Vec<&'a Highlight<'a>>),
     Multiline {
         highlight: &'a Highlight<'a>,
-        children: Vec<&'a Highlight<'a>>,
+        children: Vec<Annotation<'a>>,
     },
 }
 
@@ -197,10 +198,38 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
     }
 
     fn annotations(&'a self) -> Vec<Annotation<'a>> {
-        self.multiline_groups()
+        let multiline_groups = self.multiline_groups();
+        let mut groups = vec![];
+
+        groups.extend(self.singleline_groups(multiline_groups.0));
+
+        for (highlight, children) in multiline_groups.1 {
+            let singleline = self.singleline_groups(children);
+
+            groups.push(Annotation::Multiline {
+                highlight,
+                children: singleline,
+            });
+        }
+
+        groups
     }
 
-    fn multiline_groups(&'a self) -> Vec<Annotation<'a>> {
+    fn singleline_groups(&'a self, highlights: Vec<&'a Highlight<'a>>) -> Vec<Annotation<'a>> {
+        highlights
+            .into_iter()
+            .chunk_by(|h| self.source.locate(h.span).map(|(line, _)| line))
+            .into_iter()
+            .map(|(_, group)| Annotation::Singleline(group.collect()))
+            .collect()
+    }
+
+    fn multiline_groups(
+        &'a self,
+    ) -> (
+        Vec<&'a Highlight<'a>>,
+        Vec<(&'a Highlight<'a>, Vec<&'a Highlight<'a>>)>,
+    ) {
         // First, divide all highlight into multiline groups. To do that, we
         // first identify highlights that are multiline, and then sort the
         // remaining ones either into a "standalone" category or into one of
@@ -224,20 +253,7 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
             }
         }
 
-        let mut annotations = vec![];
-
-        for (highlight, children) in multilines {
-            annotations.push(Annotation::Multiline {
-                highlight,
-                children,
-            });
-        }
-
-        for standalone in standalones {
-            annotations.push(Annotation::Standalone(standalone));
-        }
-
-        annotations
+        (standalones, multilines.into_iter().collect())
     }
 
     fn find_multilines(&'a self) -> ahash::AHashMap<&'a Highlight<'a>, Vec<&'a Highlight<'a>>> {
