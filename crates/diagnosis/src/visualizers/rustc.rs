@@ -105,6 +105,16 @@ struct RustcDiagnosticRenderer<'a, F: std::io::Write> {
     line_number_offset: usize,
 }
 
+#[derive(Debug)]
+enum Annotation<'a> {
+    Standalone(&'a Highlight<'a>),
+    Singleline(Vec<&'a Highlight<'a>>),
+    Multiline {
+        highlight: &'a Highlight<'a>,
+        children: Vec<&'a Highlight<'a>>,
+    },
+}
+
 impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
     fn new(visualizer: &'a RustcVisualizer<'a>, diag: Diagnostic<'a>, fmt: &'a mut F) -> Self {
         // Offset from the right to account for the line number.
@@ -179,19 +189,22 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
     }
 
     fn render_highlights(&mut self) -> Result {
-        let groups = self.multiline_groups();
+        let annotations = self.annotations();
 
-        dbg!(&groups);
+        dbg!(&annotations);
 
         Ok(())
     }
 
-    fn multiline_groups(&'a self) -> ahash::AHashMap<&'a Highlight<'a>, Vec<&'a Highlight<'a>>> {
+    fn annotations(&'a self) -> Vec<Annotation<'a>> {
+        self.multiline_groups()
+    }
+
+    fn multiline_groups(&'a self) -> Vec<Annotation<'a>> {
         // First, divide all highlight into multiline groups. To do that, we
         // first identify highlights that are multiline, and then sort the
         // remaining ones either into a "standalone" category or into one of
-        // the multiline groups. Each standalone highlight is then added to
-        // as a separate multiline group.
+        // the multiline groups.
         let mut standalones: Vec<&Highlight<'a>> = vec![];
         let mut multilines = self.find_multilines();
 
@@ -211,11 +224,20 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
             }
         }
 
-        for standalone in standalones {
-            multilines.insert(standalone, vec![]);
+        let mut annotations = vec![];
+
+        for (highlight, children) in multilines {
+            annotations.push(Annotation::Multiline {
+                highlight,
+                children,
+            });
         }
 
-        multilines
+        for standalone in standalones {
+            annotations.push(Annotation::Standalone(standalone));
+        }
+
+        annotations
     }
 
     fn find_multilines(&'a self) -> ahash::AHashMap<&'a Highlight<'a>, Vec<&'a Highlight<'a>>> {
@@ -224,20 +246,20 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
             .highlights
             .iter()
             .filter(|h| {
-                let left = h.span.start..h.span.start;
-                let right = h.span.end..h.span.end;
+                let left = h.span.start..=h.span.start;
+                let right = h.span.end..=h.span.end;
 
                 if let Some((left, _)) = self.source.locate(&left)
                     && let Some((right, _)) = self.source.locate(&right)
                 {
-                    return left != right;
+                    return left == right;
                 }
 
                 false
             })
             .map(|h| (h, Vec::<&'a Highlight<'a>>::new()));
 
-        AHashMap::from_iter(multilines_iter)
+        dbg!(AHashMap::from_iter(multilines_iter))
     }
 
     fn render_help_messages(&mut self) -> Result {

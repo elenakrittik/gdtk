@@ -18,7 +18,7 @@ pub struct Diagnostic<'a> {
 }
 
 impl<'a> Diagnostic<'a> {
-    pub fn new(message: &'a str, severity: Severity<'a>) -> Self {
+    pub const fn new(message: &'a str, severity: Severity<'a>) -> Self {
         Self {
             message,
             severity,
@@ -29,12 +29,12 @@ impl<'a> Diagnostic<'a> {
         }
     }
 
-    pub fn with_code(mut self, code: &'a str) -> Self {
+    pub const fn with_code(mut self, code: &'a str) -> Self {
         self.code = Some(code);
         self
     }
 
-    pub fn with_span(mut self, span: &'a Span) -> Self {
+    pub const fn with_span(mut self, span: &'a Span) -> Self {
         self.span = Some(span);
         self
     }
@@ -71,14 +71,14 @@ pub struct Highlight<'a> {
 }
 
 impl<'a> Highlight<'a> {
-    pub fn new(span: &'a Span) -> Self {
+    pub const fn new(span: &'a Span) -> Self {
         Self {
             span,
             message: None,
         }
     }
 
-    pub fn with_message(mut self, message: &'a str) -> Self {
+    pub const fn with_message(mut self, message: &'a str) -> Self {
         self.message = Some(message);
         self
     }
