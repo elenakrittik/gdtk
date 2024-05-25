@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.86"
 clap = { version = "4.3.11", features = ["derive"] }
-diagnosis = { version = "0.1.0", path = "../diagnosis", features = ["rustc"] }
+diagnosis = { version = "0.1.0", path = "../diagnosis", features = ["codespan-reporting"] }
 gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm" }
 gdtk-dialoguer = { path = "../gdtk-dialoguer", version = "0.11.0", features = [
     "fuzzy-select",

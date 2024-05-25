@@ -15,6 +15,10 @@ miette = { version = "7.2.0", features = [
     "fancy-no-backtrace",
 ], default-features = false, optional = true }
 
+# `CodespanVisualizer`
+codespan-reporting = { version = "0.11.1", optional = true }
+
 [features]
 rustc = ["dep:yansi", "dep:thiserror", "dep:ahash", "dep:count-digits"]
 miette = ["dep:miette", "dep:thiserror"]
+codespan-reporting = ["dep:codespan-reporting"]
