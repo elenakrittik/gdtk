@@ -82,15 +82,11 @@ impl<'a> RustcVisualizer<'a> {
     }
 }
 
-impl<'a> Visualizer<'a> for RustcVisualizer<'a> {
+impl<'a, F: std::io::Write> Visualizer<'a, F> for RustcVisualizer<'a> {
     type Error = RustcVisualizerError;
 
     // TODO: Handle multiple highlights on the same line.
-    fn visualize(
-        &self,
-        diag: Diagnostic<'_>,
-        f: &mut impl std::io::Write,
-    ) -> Result<(), Self::Error> {
+    fn visualize(&self, diag: Diagnostic<'_>, f: &mut F) -> Result<(), Self::Error> {
         // A map of highlight spans to their positions.
         let span_to_pos = ahash::AHashMap::from_iter(
             diag.highlights

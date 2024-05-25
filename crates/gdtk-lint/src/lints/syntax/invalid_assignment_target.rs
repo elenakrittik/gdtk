@@ -1,5 +1,5 @@
 use diagnosis::{Diagnostic, Highlight, Severity};
-use gdtk_ast::{ast, visitor::walk_expr, Visitor};
+use gdtk_gdscript_ast::{ast, visitor::walk_expr, Visitor};
 
 crate::lint!(InvalidAssignmentTarget);
 

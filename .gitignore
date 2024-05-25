@@ -1,14 +1,13 @@
 **/*.rs.bk
 **/*.pdb
 
-
-Cargo.lock
 target/
-
-out.txt
-flamegraph.svg
 
 .idea/
 .vscode/
 
+# Test files. Messy, i know
 /*.gd
+/*.txt
+/*.godot
+/*.svg

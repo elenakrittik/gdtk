@@ -1,6 +1,7 @@
 use crate::Span;
 
 /// A diagnostic.
+#[derive(Debug)]
 pub struct Diagnostic<'a> {
     /// The primary message of the diagnostic.
     pub message: &'a str,
@@ -50,7 +51,7 @@ impl<'a> Diagnostic<'a> {
 }
 
 /// The severity of a diagnostic.
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug)]
 pub enum Severity<'a> {
     /// A critical error that prevents the program from doing job.
     Error,
@@ -61,6 +62,7 @@ pub enum Severity<'a> {
 }
 
 /// A hightlight attached to a diagnostic.
+#[derive(Debug)]
 pub struct Highlight<'a> {
     /// The source span of the highlight.
     pub span: &'a Span,

@@ -6,20 +6,19 @@
 
 this is essentially a public roadmap
 
-- [x] Parser
-- - [x] Lexer
-- - [x] Actual parser
+- [x] GDScript and GodotCfg (.godot, .tscn and .tres) parsers
 - [ ] Formatter
 - [x] Linter
+  - The foundantions are there, but there is shortage on rules 🙂
 - [ ] Project and dependency manager
-- - [ ] Addon dependencies
-- - [ ] Native dependencies
-- - [ ] GPM dependencies
+  - [ ] Addon dependencies
+  - [ ] Native dependencies
+  - [ ] GPM dependencies
 - [x] Godot version manager
 - [ ] Interpreter
-- - [ ] REPL
+  - [ ] REPL
 - [ ] Testing framework
-- - [ ] Godot integration
+  - [ ] Godot integration
 - [ ] Preprocessor
 - [ ] LSP implementation
 

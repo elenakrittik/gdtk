@@ -1,0 +1,17 @@
+[package]
+name = "gdtk-gdscript-parser"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+gdtk-span = { version = "0.1.0", path = "../gdtk-span" }
+gdtk-gdscript-ast = { version = "0.1.0", path = "../gdtk-gdscript-ast" }
+pratt = "0.4.0"
+enum-as-inner = "0.6.0"
+logos = "0.14.0"
+thiserror = "1.0.61"
+ahash = "0.8.11"
+regex = "1.10.4"
+itertools = "0.13.0"

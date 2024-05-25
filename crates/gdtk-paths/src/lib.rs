@@ -66,3 +66,13 @@ pub fn godots_path() -> Result<PathBuf, std::io::Error> {
 
     Ok(data_dir)
 }
+
+pub fn logs_path() -> Result<PathBuf, std::io::Error> {
+    let mut data_dir = base_data_dir()?;
+
+    data_dir.push("logs");
+
+    ensure_path(&data_dir, true)?;
+
+    Ok(data_dir)
+}
