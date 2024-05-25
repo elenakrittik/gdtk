@@ -20,6 +20,7 @@ pub fn run_builtin_lints<'s>(
     let mut self_in_static = syntax::self_in_static_func::SelfInStaticFunc::default();
     let mut standalone_expression =
         redundancy::standalone_expression::StandaloneExpression::default();
+    let mut unnecessary_branch = redundancy::unnecessary_branch::UnnecessaryBranch::default();
 
     // Run lints.
     identifier_casing.visit_file(file);
@@ -27,6 +28,7 @@ pub fn run_builtin_lints<'s>(
     invalid_assignment_target.visit_file(file);
     self_in_static.visit_file(file);
     standalone_expression.visit_file(file);
+    unnecessary_branch.visit_file(file);
 
     // Collect diagnostics.
     diagnostics.extend(identifier_casing.0);
@@ -34,6 +36,7 @@ pub fn run_builtin_lints<'s>(
     diagnostics.extend(invalid_assignment_target.0);
     diagnostics.extend(self_in_static.diagnostics);
     diagnostics.extend(standalone_expression.0);
+    diagnostics.extend(unnecessary_branch.0);
 
     diagnostics
 }

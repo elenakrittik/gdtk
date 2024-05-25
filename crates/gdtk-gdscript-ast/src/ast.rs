@@ -481,6 +481,7 @@ pub struct ASTElifStmt<'a> {
 #[derivative(PartialEq)]
 pub struct ASTElseStmt<'a> {
     pub block: CodeBlock<'a>,
+    pub span: Span,
 }
 
 /// A ``match`` statement.

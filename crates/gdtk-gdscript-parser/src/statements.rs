@@ -132,10 +132,14 @@ pub fn parse_static_var_stmt<'a>(
 pub fn parse_else_stmt<'a>(
     parser: &mut Parser<'a, impl Iterator<Item = Token<'a>>>,
 ) -> ASTStatement<'a> {
+    let start = parser.span_start();
+
     expect!(parser, TokenKind::Else);
     expect!(parser, TokenKind::Colon);
+
     ASTStatement::Else(ASTElseStmt {
         block: parse_block(parser, false),
+        span: parser.finish_span(start),
     })
 }
 
@@ -385,6 +389,7 @@ mod tests {
         let mut parser = create_parser("else:\n    2");
         let expected = ASTStatement::Else(ASTElseStmt {
             block: vec![ASTStatement::Expr(make_number(2))],
+            span: 0..0,
         });
         let result = parse_else_stmt(&mut parser);
 
