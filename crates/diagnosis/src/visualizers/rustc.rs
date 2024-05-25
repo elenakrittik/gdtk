@@ -138,7 +138,7 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
         }
     }
 
-    fn render(&mut self) -> Result {
+    fn render(&mut self) -> Result<'_> {
         self.render_primary_message()?;
         self.render_source_pointer()?;
         self.render_highlights()?;
@@ -147,12 +147,8 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
         Ok(())
     }
 
-    fn render_primary_message(&mut self) -> Result {
-        let (directive, directive_style) = match self.diag.severity {
-            Severity::Error => ("error", self.styles.error),
-            Severity::Warning => ("warning", self.styles.warning),
-            Severity::Custom(directive) => (directive, self.styles.custom),
-        };
+    fn render_primary_message(&mut self) -> Result<'_> {
+        let (directive, directive_style) = direct(self.styles, &self.diag.severity);
 
         write!(self.fmt, "{}", directive.paint(directive_style))?;
 
@@ -174,7 +170,7 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
         Ok(())
     }
 
-    fn render_source_pointer(&mut self) -> Result {
+    fn render_source_pointer(&mut self) -> Result<'_> {
         write!(self.fmt, "{}", " ".repeat(self.line_number_offset))?;
         write!(self.fmt, "{}", "-->".paint(self.styles.border))?;
         write!(self.fmt, " ")?;
@@ -189,52 +185,88 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
         Ok(())
     }
 
-    fn render_highlights(&mut self) -> Result {
+    fn render_highlights(&mut self) -> Result<'_> {
         let annotations = self.annotations();
 
-        dbg!(&annotations);
+        for ann in annotations {
+            let self_mut = force_mut(self);
+
+            match ann {
+                Annotation::Standalone(highlight) => {
+                    self_mut.render_standalone_highlight(highlight)?
+                }
+                Annotation::Singleline(_) => (),
+                Annotation::Multiline {
+                    highlight: _,
+                    children: _,
+                } => (),
+            }
+        }
 
         Ok(())
     }
 
-    fn annotations(&'a self) -> Vec<Annotation<'a>> {
-        let multiline_groups = self.multiline_groups();
-        let mut groups = vec![];
+    fn render_standalone_highlight(&mut self, highlight: &Highlight<'a>) -> Result {
+        let (line, column) = self.source.locate(highlight.span).unwrap();
 
-        groups.extend(self.singleline_groups(multiline_groups.0));
+        let line_source = self.source.line(line).unwrap();
 
-        for (highlight, children) in multiline_groups.1 {
-            let singleline = self.singleline_groups(children);
+        let local_line_number_offset = self.line_number_offset + 1 - line.count_digits();
 
-            groups.push(Annotation::Multiline {
-                highlight,
-                children: singleline,
-            });
+        // Step 3.1. Draw an empty "separator" border.
+        write!(self.fmt, "{}", " ".repeat(self.line_number_offset + 1))?;
+        write!(self.fmt, "{}", "|".paint(self.styles.border))?;
+        writeln!(self.fmt)?;
+
+        // Step 3.2. Draw the highlighted source line.
+        write!(self.fmt, "{}", line.paint(self.styles.border))?;
+        write!(self.fmt, "{}", " ".repeat(local_line_number_offset))?;
+        write!(self.fmt, "{}", "|".paint(self.styles.border))?;
+        write!(self.fmt, " ")?;
+        write!(self.fmt, "{}", line_source.replace('\t', "    "))?;
+        writeln!(self.fmt)?;
+
+        // Step 3.3. Draw the highlight.
+        write!(self.fmt, "{}", " ".repeat(self.line_number_offset + 1))?;
+        write!(self.fmt, "{}", "|".paint(self.styles.border))?;
+
+        // God did not intend for tabs to exist (joke (or is it?))
+        // Tabs are displayed differently in every terminal, thus
+        // simply using `" ".repeat(column + 1)` won't work as a tab
+        // is rarely of the same width as a space. To fix this, we
+        // need to emit `(column - n_tabs)` spaces and `(n_tabs)`
+        // tabs (under the assumption that all other characters are
+        // "1-wide"), so that the total visible width is the same as
+        // in the line source.
+        let n_tabs = line_source[..column].chars().filter(|c| c == &'\t').count();
+
+        write!(self.fmt, "{}", " ".repeat(column - n_tabs))?;
+        write!(self.fmt, "{}", "    ".repeat(n_tabs))?;
+
+        let directive_style = direct(self.styles, &self.diag.severity).1;
+
+        let span_length = highlight.span.end - highlight.span.start;
+        write!(
+            self.fmt,
+            "{}",
+            "-".repeat(span_length).paint(directive_style)
+        )?;
+
+        if let Some(message) = highlight.message {
+            write!(self.fmt, " ")?;
+            write!(self.fmt, "{}", message.paint(directive_style))?;
         }
 
-        groups
+        Ok(())
     }
 
-    fn singleline_groups(&'a self, highlights: Vec<&'a Highlight<'a>>) -> Vec<Annotation<'a>> {
-        highlights
-            .into_iter()
-            .chunk_by(|h| self.source.locate(h.span).map(|(line, _)| line))
-            .into_iter()
-            .map(|(_, group)| Annotation::Singleline(group.collect()))
-            .collect()
-    }
-
-    fn multiline_groups(
-        &'a self,
-    ) -> (
-        Vec<&'a Highlight<'a>>,
-        Vec<(&'a Highlight<'a>, Vec<&'a Highlight<'a>>)>,
-    ) {
-        // First, divide all highlight into multiline groups. To do that, we
-        // first identify highlights that are multiline, and then sort the
+    fn annotations<'b>(&'b self) -> Vec<Annotation<'b>> {
+        // First, divide all highlights into multiline and non-multiline. To
+        // do that, we first identify multiline highlights, and then sort the
         // remaining ones either into a "standalone" category or into one of
         // the multiline groups.
-        let mut standalones: Vec<&Highlight<'a>> = vec![];
+
+        let mut non_multilines = ahash::AHashSet::<&Highlight<'a>>::new();
         let mut multilines = self.find_multilines();
 
         for a_highlight in self.diag.highlights.iter() {
@@ -243,20 +275,56 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
             }
 
             for (m_highlight, m_values) in multilines.iter_mut() {
-                if m_highlight.span.start >= a_highlight.span.start
-                    && m_highlight.span.end <= a_highlight.span.end
+                if m_highlight.span.start <= a_highlight.span.start
+                    && m_highlight.span.end >= a_highlight.span.end
                 {
                     m_values.push(a_highlight);
+                    break;
                 } else {
-                    standalones.push(a_highlight);
+                    non_multilines.insert(a_highlight);
                 }
             }
         }
 
-        (standalones, multilines.into_iter().collect())
+        // Then for each vec<highlight> we combine highlights
+        // on the same lines
+
+        let mut annotations = vec![];
+
+        annotations.extend(self.group_by_line(non_multilines.into_iter()));
+
+        for (highlight, children) in multilines {
+            let singleline = self.group_by_line(children.into_iter());
+
+            annotations.push(Annotation::Multiline {
+                highlight,
+                children: singleline,
+            });
+        }
+
+        annotations
     }
 
-    fn find_multilines(&'a self) -> ahash::AHashMap<&'a Highlight<'a>, Vec<&'a Highlight<'a>>> {
+    fn group_by_line<'b>(
+        &'b self,
+        highlights: impl Iterator<Item = &'b Highlight<'b>>,
+    ) -> Vec<Annotation<'b>> {
+        highlights
+            .chunk_by(|h| self.source.locate(h.span).map(|(line, _)| line))
+            .into_iter()
+            .map(|(_, group)| {
+                let on_one_line: Vec<_> = group.collect();
+
+                if let [highlight] = on_one_line.as_slice() {
+                    Annotation::Standalone(highlight)
+                } else {
+                    Annotation::Singleline(on_one_line)
+                }
+            })
+            .collect()
+    }
+
+    fn find_multilines<'b>(&'b self) -> ahash::AHashMap<&'b Highlight<'a>, Vec<&'b Highlight<'b>>> {
         let multilines_iter = self
             .diag
             .highlights
@@ -268,17 +336,17 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
                 if let Some((left, _)) = self.source.locate(&left)
                     && let Some((right, _)) = self.source.locate(&right)
                 {
-                    return left == right;
+                    return left != right;
                 }
 
                 false
             })
             .map(|h| (h, Vec::<&'a Highlight<'a>>::new()));
 
-        dbg!(AHashMap::from_iter(multilines_iter))
+        AHashMap::from_iter(multilines_iter)
     }
 
-    fn render_help_messages(&mut self) -> Result {
+    fn render_help_messages(&mut self) -> Result<'_> {
         for help_message in &self.diag.help_messages {
             writeln!(self.fmt)?;
 
@@ -291,5 +359,24 @@ impl<'a, F: std::io::Write> RustcDiagnosticRenderer<'a, F> {
         }
 
         Ok(())
+    }
+}
+
+fn direct<'a>(styles: &'a Styles, severity: &'a Severity) -> (&'a str, yansi::Style) {
+    match severity {
+        Severity::Error => ("error", styles.error),
+        Severity::Warning => ("warning", styles.warning),
+        Severity::Custom(directive) => (directive, styles.custom),
+    }
+}
+
+fn force_mut<'src_a, 'src_ref, 'out_a: 'src_a, 'out_ref: 'src_ref, F: std::io::Write>(
+    renderer: &'src_ref RustcDiagnosticRenderer<'src_a, F>,
+) -> &'out_ref mut RustcDiagnosticRenderer<'out_a, F> {
+    unsafe {
+        (renderer as *const RustcDiagnosticRenderer<'src_a, F> as usize
+            as *mut RustcDiagnosticRenderer<'out_a, F>)
+            .as_mut()
+            .unwrap()
     }
 }
