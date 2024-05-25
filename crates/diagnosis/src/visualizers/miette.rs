@@ -32,14 +32,10 @@ impl<'a> MietteVisualizer<'a> {
     }
 }
 
-impl<'a> Visualizer<'a> for MietteVisualizer<'a> {
+impl<'a, F: std::io::Write> Visualizer<'a, F> for MietteVisualizer<'a> {
     type Error = MietteVisualizerError;
 
-    fn visualize(
-        &self,
-        diag: Diagnostic<'_>,
-        f: &mut impl std::io::Write,
-    ) -> Result<(), Self::Error> {
+    fn visualize(&self, diag: Diagnostic<'_>, f: &mut F) -> Result<(), Self::Error> {
         let better = BetterMietteDiagnostic::from_diag(diag, self.source, self.source_name);
 
         let mut buf = String::new();

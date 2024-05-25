@@ -41,9 +41,9 @@ fn run_on_file(file: &Path) -> anyhow::Result<Counter> {
     };
 
     let diagnostics = gdtk_lint::run_builtin_lints(&parsed);
-    let vis = diagnosis::visualizers::rustc::RustcVisualizer::new(source_name, &content);
+    let vis = diagnosis::visualizers::codespan::CodespanVisualizer::new(source_name, &content);
     let mut counter = Counter::default();
-    let mut stderr = std::io::stderr().lock();
+    let mut stderr = diagnosis::visualizers::codespan::codespan_reporting::term::termcolor::StandardStream::stderr(diagnosis::visualizers::codespan::codespan_reporting::term::termcolor::ColorChoice::Always);
 
     for diagnostic in diagnostics {
         if let Some(code) = diagnostic.code
