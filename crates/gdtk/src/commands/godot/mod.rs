@@ -21,3 +21,24 @@ pub(crate) fn select_version(
             .interact()?)
     }
 }
+
+fn symlink_default_version(version_folder: &std::path::Path) -> std::io::Result<()> {
+    let original = version_folder.join("godot");
+    let link = gdtk_paths::default_godot_path()?;
+
+    if link.exists() {
+        std::fs::remove_file(&link)?;
+    }
+
+    #[cfg(windows)]
+    {
+        std::os::windows::fs::symlink_file(original, link)?;
+    }
+
+    #[cfg(not(windows))]
+    {
+        std::os::unix::fs::symlink(original, link)?;
+    }
+
+    Ok(())
+}

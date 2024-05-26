@@ -1,4 +1,12 @@
+use std::{
+    fs::File,
+    io::{Read, Seek},
+    path::Path,
+};
+
 use itertools::Itertools;
+
+use crate::commands::godot::symlink_default_version;
 
 pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     let online_versions = gdtk_gvm::online::fetch_versions().await?;
@@ -60,11 +68,11 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     );
 
     let content = reqwest::get(url.to_owned()).await?.bytes().await?;
-    let source = std::io::Cursor::new(content);
+    let mut source = std::io::Cursor::new(content);
 
     spinner.update_text("Extracting..");
 
-    zip_extract::extract(source, &target_dir, true)?;
+    extract_godot(&mut source, &target_dir)?;
 
     spinner.update_text("Setting up..");
 
@@ -73,6 +81,7 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
 
     if set_as_default {
         version_manager.versions.default = Some(version.clone());
+        symlink_default_version(&target_dir)?;
     }
 
     version_manager.save()?;
@@ -129,4 +138,24 @@ async fn prompt_version(vers: Vec<gdtk_gvm::versions::Versioning>) -> anyhow::Re
     }
 
     Ok(std::mem::take(version))
+}
+
+fn extract_godot(source: impl Read + Seek, target_dir: &Path) -> zip::result::ZipResult<()> {
+    gdtk_paths::ensure_path(target_dir, true)?;
+
+    let mut archive = zip::ZipArchive::new(source)?;
+
+    for n in 0..archive.len() {
+        let mut file = archive.by_index(n)?;
+
+        let mut path = File::create(if file.name().contains("console") {
+            target_dir.join("godot_console")
+        } else {
+            target_dir.join("godot")
+        })?;
+
+        std::io::copy(&mut file, &mut path)?;
+    }
+
+    Ok(())
 }

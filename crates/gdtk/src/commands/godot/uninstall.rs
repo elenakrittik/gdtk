@@ -23,8 +23,11 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
 
     std::fs::remove_dir_all(previous.path)?;
 
-    if matches!(version_manager.versions.default, Some(ref default) if default == &version) {
+    if let Some(default) = &version_manager.versions.default
+        && default == &version
+    {
         version_manager.versions.default = None;
+        std::fs::remove_file(gdtk_paths::default_godot_path()?)?;
     }
 
     version_manager.save()?;
