@@ -1,9 +1,9 @@
 use std::{
     io::{Error, ErrorKind},
-    path::PathBuf,
+    path::{Path, PathBuf},
 };
 
-pub fn ensure_path(path: &PathBuf, dir: bool) -> Result<bool, Error> {
+pub fn ensure_path(path: &Path, dir: bool) -> Result<bool, Error> {
     if path.exists() {
         return Ok(false);
     }
@@ -75,4 +75,39 @@ pub fn logs_path() -> Result<PathBuf, std::io::Error> {
     ensure_path(&data_dir, true)?;
 
     Ok(data_dir)
+}
+
+pub fn executable_path() -> Result<PathBuf, std::io::Error> {
+    // we don't use dirs::executable_dir() because it "doesn't work" on Windows
+    // and macos, even though in practice, `.local/bin` is a thing on all systems
+
+    let mut home = dirs::home_dir().ok_or(std::io::Error::new(
+        std::io::ErrorKind::NotFound,
+        "Home directory could not be detected.",
+    ))?;
+
+    home.push(".local");
+
+    ensure_path(&home, true)?;
+
+    home.push("bin");
+
+    ensure_path(&home, true)?;
+
+    Ok(home)
+}
+
+/// Returns the path to the default godot executable.
+///
+/// **DOES NOT ENSURE THAT IT EXISTS!**
+pub fn default_godot_path() -> Result<PathBuf, std::io::Error> {
+    let mut exec = executable_path()?;
+
+    // NOTE: windows is dumb and can only know if something is executable by
+    // looking at it's extension, so running `godot` *manually* will not work
+    // on windows. however, executing it through a symlink or by spawning a
+    // process will work just fine, so we are fine as well.
+    exec.push("godot");
+
+    Ok(exec)
 }

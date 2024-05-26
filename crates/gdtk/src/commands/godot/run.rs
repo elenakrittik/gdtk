@@ -20,22 +20,26 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
         versions.swap_remove(idx)
     };
 
-    let path = version_manager.get_version(&version.to_string());
+    let Some(version) = version_manager.get_version(&version.to_string()) else {
+        eprintln!("Godot {version} is not installed.");
+        return Ok(());
+    };
 
-    match path {
-        Some(version) => {
-            let path = version.path.read_dir()?
-                .filter_map(|p| p.ok())
-                .filter(|p| p.file_name().to_str().unwrap().contains("Godot"))
-                .map(|p| p.path()).next()
-                .ok_or(anyhow::anyhow!("This Godot installation appears to be broken. Try uninstalling and installing again."))?;
+    let path = if version.path.join("godot").exists() {
+        // New-style installations
+        version.path.join("godot")
+    } else {
+        // Old-style installations
+        version.path.read_dir()?
+            .filter_map(|p| p.ok())
+            .filter(|p| p.file_name().to_str().unwrap().contains("Godot"))
+            .map(|p| p.path()).next()
+            .ok_or(anyhow::anyhow!("This Godot installation appears to be broken. Try uninstalling and installing again."))?
+    };
 
-            let mut child = std::process::Command::new(path).spawn()?;
+    let mut child = std::process::Command::new(path).spawn()?;
 
-            child.wait()?;
-        }
-        None => eprintln!("Godot {version} is not installed."),
-    }
+    child.wait()?;
 
     Ok(())
 }
