@@ -2073,6 +2073,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "tapcli"
+version = "0.1.0"
+
+[[package]]
 name = "tempfile"
 version = "3.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
