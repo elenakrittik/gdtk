@@ -1,24 +1,12 @@
 use std::path::PathBuf;
 
-use clap::Subcommand;
-
-#[derive(Subcommand)]
-pub enum DevCommands {
+pub enum DevCommand {
     /// GDScript-related dev commands.
-    #[clap(name = "gdscript")]
-    GDScript {
-        #[command(subcommand)]
-        command: DevGDScriptCommands,
-    },
+    GDScript { command: DevGDScriptCommands },
     /// GodotCfg-related dev commands.
-    #[clap(name = "godotcfg")]
-    GodotCfg {
-        #[command(subcommand)]
-        command: DevGodotCfgCommands,
-    },
+    GodotCfg { command: DevGodotCfgCommands },
 }
 
-#[derive(Subcommand)]
 pub enum DevGDScriptCommands {
     /// Print the result of lexing the specified GDScript file.
     Lex {
@@ -32,18 +20,15 @@ pub enum DevGDScriptCommands {
     },
 }
 
-#[derive(Subcommand)]
 pub enum DevGodotCfgCommands {
     /// Print the result of lexing the specified GodotCfg file.
     Lex {
         /// The GodotCfg file to lex.
-        #[clap(default_value = "project.godot")]
         file: PathBuf,
     },
     /// Print the result of parsing the specified GodotCfg file.
     Parse {
         /// The GodotCfg file to parse.
-        #[clap(default_value = "project.godot")]
         file: PathBuf,
     },
 }

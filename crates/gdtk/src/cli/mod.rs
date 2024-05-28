@@ -1,66 +1,59 @@
 use std::path::PathBuf;
 
-use clap::{Parser, Subcommand};
+use crate::cli::dev::DevCommand;
 
+pub mod context;
 #[cfg(any(debug_assertions, feature = "dev"))]
 pub mod dev;
 pub mod verbosity;
 
-#[derive(Parser)]
-#[command(author, version, about, long_about = None)]
 pub struct Cli {
-    #[command(flatten)]
-    pub verbosity: crate::cli::verbosity::VerbosityArg,
-
-    #[command(subcommand)]
-    pub command: Commands,
+    pub verbosity: crate::cli::verbosity::Verbosity,
+    pub command: Option<Command>,
 }
 
-#[derive(Subcommand)]
-pub enum Commands {
+pub enum Command {
     /// Namespace for arbitrary commands useful when working on gdtk.
     #[cfg(any(debug_assertions, feature = "dev"))]
-    Dev {
-        #[command(subcommand)]
-        command: crate::cli::dev::DevCommands,
-    },
+    Dev(DevCommand),
     /// Manage your Godot installations.
-    Godot {
-        #[command(subcommand)]
-        command: GodotCommands,
-    },
+    Godot(GodotCommand),
     /// Lint GDScript code.
-    Lint {
-        /// The GDScript file(s) to lint.
-        #[clap(default_value = "./")]
-        files: Vec<PathBuf>,
-    },
+    Lint(LintCommand),
 }
 
-#[derive(Subcommand)]
-pub enum GodotCommands {
+pub struct LintCommand {
+    /// The GDScript file(s) to lint.
+    files: Vec<PathBuf>,
+}
+
+pub enum GodotCommand {
     /// List locally-installed or online Godot versions.
-    List,
+    List(GodotListCommand),
 
     /// Run the specified Godot version.
-    Run {
-        /// The Godot version to run.
-        version: Option<String>,
-    },
+    Run(GodotRunCommand),
 
     /// Install the specified Godot version.
-    Install {
-        /// The Godot version to install.
-        version: Option<String>,
-    },
+    Install(GodotInstallCommand),
 
     /// Uninstall the specified Godot version.
-    Uninstall {
-        /// The Godot version to uninstall.
-        version: Option<String>,
-    },
+    Uninstall(GodotUninstallCommand),
 }
 
-pub fn cli() -> Cli {
-    Cli::parse()
+pub struct GodotListCommand;
+
+pub struct GodotRunCommand {
+    /// The Godot version to run.
+    version: Option<String>,
+}
+
+pub struct GodotInstallCommand {
+    /// The Godot version to install.
+    version: Option<String>,
+}
+
+pub struct GodotUninstallCommand {
+    /// The Godot version to uninstall.
+    version: Option<String>,
 }

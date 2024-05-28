@@ -1,19 +1,10 @@
-use clap::{ArgAction, Args};
 use tracing::level_filters::LevelFilter;
 
-#[derive(Args)]
-pub struct VerbosityArg {
-    #[arg(
-        short = 'v',
-        long = "verbose",
-        global = true,
-        action = ArgAction::Count,
-        help = "Set log verbosity level.",
-    )]
+pub struct Verbosity {
     verbosity: u8,
 }
 
-impl VerbosityArg {
+impl Verbosity {
     pub fn level(&self) -> anyhow::Result<LevelFilter> {
         match self.verbosity {
             0 => Ok(LevelFilter::INFO),
