@@ -1,0 +1,7 @@
+[package]
+name = "tapcli"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+lexopt = "0.3.0"

@@ -26,7 +26,7 @@ ignore = { version = "0.4.22", features = ["simd-accel"] }
 tracing = { version = "0.1.40", features = ["release_max_level_info"] }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = ["fmt", "ansi", "smallvec", "parking_lot"] }
 tracing-appender = "0.2.3"
-lexopt = "0.3.0"
+tapcli = { version = "0.1.0", path = "../tapcli" }
 
 [lib]
 name = "gdtk"

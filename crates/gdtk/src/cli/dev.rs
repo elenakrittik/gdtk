@@ -2,33 +2,43 @@ use std::path::PathBuf;
 
 pub enum DevCommand {
     /// GDScript-related dev commands.
-    GDScript { command: DevGDScriptCommands },
+    GDScript(DevGDScriptCommand),
     /// GodotCfg-related dev commands.
-    GodotCfg { command: DevGodotCfgCommands },
+    GodotCfg(DevGodotCfgCommand),
 }
 
-pub enum DevGDScriptCommands {
+pub enum DevGDScriptCommand {
     /// Print the result of lexing the specified GDScript file.
-    Lex {
-        /// The GDScript file to lex.
-        file: PathBuf,
-    },
+    Lex(DevGDScriptLexCommand),
     /// Print the result of parsing the specified GDScript file.
-    Parse {
-        /// The GDScript file to parse.
-        file: PathBuf,
-    },
+    Parse(DevGDScriptParseCommand),
 }
 
-pub enum DevGodotCfgCommands {
+pub struct DevGDScriptLexCommand {
+    /// The GDScript file to lex.
+    file: PathBuf,
+}
+
+pub struct DevGDScriptParseCommand {
+/// The GDScript file to parse.
+    file: PathBuf,
+}
+
+pub enum DevGodotCfgCommand {
     /// Print the result of lexing the specified GodotCfg file.
-    Lex {
+    Lex(DevGodotCfgLexCommand),
+    /// Print the result of parsing the specified GodotCfg file.
+    Parse(DevGodotCfgParseCommand),
+}
+
+pub struct DevGodotCfgLexCommand 
+{
         /// The GodotCfg file to lex.
         file: PathBuf,
-    },
-    /// Print the result of parsing the specified GodotCfg file.
-    Parse {
+    }
+
+pub struct DevGodotCfgParseCommand 
+{
         /// The GodotCfg file to parse.
         file: PathBuf,
-    },
-}
+    }
