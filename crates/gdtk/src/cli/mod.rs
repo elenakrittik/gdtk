@@ -1,14 +1,10 @@
-use std::path::PathBuf;
+use crate::cli::dev::DevCommand;
 
-use crate::cli::{dev::DevCommand, verbosity::Verbosity};
-
-pub mod context;
 #[cfg(any(debug_assertions, feature = "dev"))]
 pub mod dev;
-pub mod verbosity;
 
 pub struct Cli {
-    pub verbosity: Verbosity,
+    pub verbosity: u8,
     pub command: Command,
 }
 
@@ -16,10 +12,10 @@ pub enum Command {
     /// Namespace for arbitrary commands useful when working on gdtk.
     #[cfg(any(debug_assertions, feature = "dev"))]
     Dev(DevCommand),
-    /// Manage your Godot installations.
-    Godot(GodotCommand),
-    /// Lint GDScript code.
-    Lint(LintCommand),
+    // /// Manage your Godot installations.
+    // Godot(GodotCommand),
+    // /// Lint GDScript code.
+    // Lint(LintCommand),
 }
 
 // pub struct LintCommand {
@@ -62,23 +58,33 @@ pub macro unknown($arg:expr) {
     ::anyhow::bail!("Unknown option: {:?}", $arg)
 }
 
-impl tapcli::Command for Cli {
-    pub fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        let mut verbosity = Option<0u8>;
+impl Cli {
+    pub fn verbosity(&self) -> tracing::level_filters::LevelFilter {
+        todo!()
+    }
+}
 
-        while let Some(arg) = parser.next()? {
-            match arg {
-                lexopt::Arg::Short('v') => verbosity.get_or_insert_default() += 1,
-                lexopt::Arg::Long("help") => todo!(),
-                lexopt::Arg::Value("dev") => todo!(),
-                lexopt::Arg::Value("godot") => todo!(),
-                lexopt::Arg::Value("lint") => todo!(),
-                other => unknown!(other),
-            }
+impl tapcli::Command for Cli {
+    type Error = anyhow::Error;
+
+    fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+        // let mut verbosity = None;
+
+        while let Some(arg) = parser.next() {
+            // match arg {
+            //     tapcli::Arg::Short('v') => *verbosity.get_or_insert_default() += 1,
+            //     tapcli::Arg::Long("help") => todo!(),
+            //     tapcli::Arg::Value("dev") => todo!(),
+            //     tapcli::Arg::Value("godot") => todo!(),
+            //     tapcli::Arg::Value("lint") => todo!(),
+            //     other => unknown!(other),
+            // }
         }
+
+        anyhow::bail!("No command specified.")
     }
 
-    pub fn run(self) -> Result<Self::Output, Self::Error> {
+    fn run(self) -> Result<Self::Output, Self::Error> {
         todo!()
     }
 }
