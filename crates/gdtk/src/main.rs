@@ -8,6 +8,7 @@
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    dbg!(std::env::args().collect::<Vec<_>>());
     for arg in tapcli::Parser::from_env() {
         dbg!(arg);
     }

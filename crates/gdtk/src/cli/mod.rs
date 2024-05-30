@@ -68,17 +68,17 @@ impl tapcli::Command for Cli {
     type Error = anyhow::Error;
 
     fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        // let mut verbosity = None;
+        let mut verbosity = None;
 
-        while let Some(arg) = parser.next() {
-            // match arg {
-            //     tapcli::Arg::Short('v') => *verbosity.get_or_insert_default() += 1,
-            //     tapcli::Arg::Long("help") => todo!(),
-            //     tapcli::Arg::Value("dev") => todo!(),
-            //     tapcli::Arg::Value("godot") => todo!(),
-            //     tapcli::Arg::Value("lint") => todo!(),
-            //     other => unknown!(other),
-            // }
+        for arg in parser {
+            match arg.as_ref() {
+                tapcli::ArgRef::Short('v') => *verbosity.get_or_insert(0u8) += 1,
+                tapcli::ArgRef::Long("help") => todo!(),
+                tapcli::ArgRef::Value("dev") => todo!(),
+                tapcli::ArgRef::Value("godot") => todo!(),
+                tapcli::ArgRef::Value("lint") => todo!(),
+                other => unknown!(other),
+            }
         }
 
         anyhow::bail!("No command specified.")
