@@ -1,7 +1,37 @@
+use crate::cli::godot::{
+    install::GodotInstallCommand, list::GodotListCommand, run::GodotRunCommand,
+};
+
 pub mod install;
 pub mod list;
 pub mod run;
 pub mod uninstall;
+
+pub enum GodotCommand {
+    /// List locally-installed or online Godot versions.
+    List(GodotListCommand),
+
+    /// Run the specified Godot version.
+    Run(GodotRunCommand),
+
+    /// Install the specified Godot version.
+    Install(GodotInstallCommand),
+
+    /// Uninstall the specified Godot version.
+    Uninstall(GodotListCommand),
+}
+
+impl tapcli::Command for GodotCommand {
+    type Error = anyhow::Error;
+
+    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+        todo!()
+    }
+
+    async fn run(self) -> Result<Self::Output, Self::Error> {
+        todo!()
+    }
+}
 
 pub(crate) fn select_version(
     versions: &[gdtk_gvm::versions::Versioning],

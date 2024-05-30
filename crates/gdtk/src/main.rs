@@ -1,3 +1,18 @@
+#![deny(clippy::disallowed_types)]
+#![feature(
+    let_chains,
+    decl_macro,
+    option_get_or_insert_default,
+    impl_trait_in_assoc_type
+)]
+
+use tapcli::Command;
+
+use crate::utils::setup_tracing;
+
+pub mod cli;
+pub mod utils;
+
 // #[cfg(any(debug_assertions, feature = "dev"))]
 // use gdtk::cli::dev::{DevCommand, DevGDScriptCommands, DevGodotCfgCommands};
 // use gdtk::{
@@ -8,35 +23,9 @@
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dbg!(std::env::args().collect::<Vec<_>>());
-    for arg in tapcli::Parser::from_env() {
-        dbg!(arg);
-    }
+    let cli = crate::cli::Cli::from_env().await?;
 
-    // let cli = gdtk::cli::cli()?;
+    setup_tracing(&cli)?;
 
-    // setup_tracing(&cli)?;
-
-    // match cli.command {
-    //     #[cfg(any(debug_assertions, feature = "dev"))]
-    //     Command::Dev { command } => match command {
-    //         DevCommand::GDScript { command } => match command {
-    //             DevGDScriptCommands::Lex { file } => cmds::dev::gdscript::lex::run(file)?,
-    //             DevGDScriptCommands::Parse { file } => cmds::dev::gdscript::parse::run(file)?,
-    //         },
-    //         DevCommand::GodotCfg { command } => match command {
-    //             DevGodotCfgCommands::Lex { file } => cmds::dev::godotcfg::lex::run(file)?,
-    //             DevGodotCfgCommands::Parse { file } => cmds::dev::godotcfg::parse::run(file)?,
-    //         },
-    //     },
-    //     Command::Godot { command } => match command {
-    //         GodotCommand::List => cmds::godot::list::run()?,
-    //         GodotCommand::Install { version } => cmds::godot::install::run(version).await?,
-    //         GodotCommand::Uninstall { version } => cmds::godot::uninstall::run(version).await?,
-    //         GodotCommand::Run { version } => cmds::godot::run::run(version).await?,
-    //     },
-    //     Command::Lint { files } => cmds::lint::run(files)?,
-    // }
-
-    Ok(())
+    cli.run().await
 }

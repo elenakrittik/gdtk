@@ -1,3 +1,5 @@
+use crate::cli::godot::select_version;
+
 pub async fn run(version: Option<String>) -> anyhow::Result<()> {
     let mut version_manager = gdtk_gvm::VersionManager::load()?;
 
@@ -8,8 +10,7 @@ pub async fn run(version: Option<String>) -> anyhow::Result<()> {
 
             let versions =
                 gdtk_gvm::utils::coerce_version(versioning, version_manager.versionings())?;
-            let idx =
-                crate::commands::godot::select_version(&versions, "Select version to uninstall")?;
+            let idx = select_version(&versions, "Select version to uninstall")?;
 
             versions[idx].to_string()
         }

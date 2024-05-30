@@ -1,6 +1,11 @@
 //! A sane command-line application framework.
 
-#![feature(associated_type_defaults, never_type, assert_matches)]
+#![feature(
+    associated_type_defaults,
+    never_type,
+    assert_matches,
+    impl_trait_in_assoc_type
+)]
 #![forbid(unsafe_code)]
 #![warn(missing_docs, missing_debug_implementations, elided_lifetimes_in_paths)]
 

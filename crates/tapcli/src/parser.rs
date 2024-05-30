@@ -16,13 +16,45 @@ enum State {
 /// A command-line argument parser.
 #[derive(Debug)]
 pub struct Parser {
-    args: std::env::Args,
-    state: State,
+    inner: std::iter::Peekable<std::iter::Skip<InnerParser>>,
 }
 
 impl Parser {
     /// Create a new `Parser` from the environment.
     pub fn from_env() -> Self {
+        Self {
+            inner: InnerParser::from_env().skip(1).peekable(),
+        }
+    }
+
+    /// See [std::iter::Peekable::peek]
+    pub fn peek(&mut self) -> Option<&Arg> {
+        self.inner.peek()
+    }
+
+    /// See [std::iter::Peekable::peek_mut]
+    pub fn peek_mut(&mut self) -> Option<&mut Arg> {
+        self.inner.peek_mut()
+    }
+}
+
+impl Iterator for Parser {
+    type Item = Arg;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next()
+    }
+}
+
+#[derive(Debug)]
+struct InnerParser {
+    args: std::env::Args,
+    state: State,
+}
+
+impl InnerParser {
+    /// Create a new `Parser` from the environment.
+    fn from_env() -> Self {
         Self {
             args: std::env::args(),
             state: State::None,
@@ -62,7 +94,7 @@ impl Parser {
     }
 }
 
-impl Iterator for Parser {
+impl Iterator for InnerParser {
     type Item = Arg;
 
     fn next(&mut self) -> Option<Self::Item> {
