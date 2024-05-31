@@ -5,27 +5,49 @@ use std::{
 
 use diagnosis::protocol::Visualizer;
 
+use super::unknown;
 use crate::utils::{get_content, resolve_files_by_ext};
 
-pub fn run(files: Vec<PathBuf>) -> anyhow::Result<()> {
-    let files = resolve_files_by_ext(files, "gd")?;
-    let counts: Counter = files.iter().filter_map(|p| run_on_file(p).ok()).sum();
+pub struct LintCommand {
+    pub files: Vec<PathBuf>,
+}
 
-    if counts.errors > 0 || counts.warnings > 0 {
-        eprintln!(
-            "Checked {} files, {} errors, {} warnings.",
-            files.len(),
-            counts.errors,
-            counts.warnings,
-        );
-    } else {
-        eprintln!(
-            "Checked {} files, nothing found. Enjoy your day! ✨️",
-            files.len(),
-        );
+impl tapcli::Command for LintCommand {
+    type Error = anyhow::Error;
+
+    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+        let mut files = Vec::new();
+
+        for arg in parser {
+            match arg {
+                tapcli::Arg::Value(path) => files.push(path.into()),
+                other => unknown!(other),
+            }
+        }
+
+        Ok(Self { files })
     }
 
-    Ok(())
+    async fn run(self) -> Result<Self::Output, Self::Error> {
+        let files = resolve_files_by_ext(self.files, "gd")?;
+        let counts: Counter = files.iter().filter_map(|p| run_on_file(p).ok()).sum();
+
+        if counts.errors > 0 || counts.warnings > 0 {
+            eprintln!(
+                "Checked {} files, {} errors, {} warnings.",
+                files.len(),
+                counts.errors,
+                counts.warnings,
+            );
+        } else {
+            eprintln!(
+                "Checked {} files, nothing found. Enjoy your day! ✨️",
+                files.len(),
+            );
+        }
+
+        Ok(())
+    }
 }
 
 fn run_on_file(file: &Path) -> anyhow::Result<Counter> {

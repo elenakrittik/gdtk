@@ -1,37 +1,31 @@
-#[cfg(any(debug_assertions, feature = "dev"))]
-use gdtk::cli::dev::{DevCommands, DevGDScriptCommands, DevGodotCfgCommands};
-use gdtk::{
-    cli::{Commands, GodotCommands},
-    commands as cmds,
-    utils::setup_tracing,
-};
+#![deny(clippy::disallowed_types)]
+#![feature(
+    let_chains,
+    decl_macro,
+    option_get_or_insert_default,
+    impl_trait_in_assoc_type
+)]
+
+use tapcli::Command;
+
+use crate::utils::setup_tracing;
+
+pub mod cli;
+pub mod utils;
+
+// #[cfg(any(debug_assertions, feature = "dev"))]
+// use gdtk::cli::dev::{DevCommand, DevGDScriptCommands, DevGodotCfgCommands};
+// use gdtk::{
+//     cli::{Command, GodotCommand},
+//     commands as cmds,
+//     utils::setup_tracing,
+// };
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let cli = gdtk::cli::cli();
+    let cli = crate::cli::Cli::from_env().await?;
 
     setup_tracing(&cli)?;
 
-    match cli.command {
-        #[cfg(any(debug_assertions, feature = "dev"))]
-        Commands::Dev { command } => match command {
-            DevCommands::GDScript { command } => match command {
-                DevGDScriptCommands::Lex { file } => cmds::dev::gdscript::lex::run(file)?,
-                DevGDScriptCommands::Parse { file } => cmds::dev::gdscript::parse::run(file)?,
-            },
-            DevCommands::GodotCfg { command } => match command {
-                DevGodotCfgCommands::Lex { file } => cmds::dev::godotcfg::lex::run(file)?,
-                DevGodotCfgCommands::Parse { file } => cmds::dev::godotcfg::parse::run(file)?,
-            },
-        },
-        Commands::Godot { command } => match command {
-            GodotCommands::List => cmds::godot::list::run()?,
-            GodotCommands::Install { version } => cmds::godot::install::run(version).await?,
-            GodotCommands::Uninstall { version } => cmds::godot::uninstall::run(version).await?,
-            GodotCommands::Run { version } => cmds::godot::run::run(version).await?,
-        },
-        Commands::Lint { files } => cmds::lint::run(files)?,
-    }
-
-    Ok(())
+    cli.run().await
 }
