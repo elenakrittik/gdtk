@@ -6,7 +6,7 @@
 //!
 //! The flow goes like this:
 //! - Define your command structs/enums. Each command must implement
-//! the [Command] trait.
+//!   the [Command] trait.
 //! - Parse the root command from the environment using [Command::from_env].
 //! - Run the root command (i.e. your whole application) using [Command::run].
 //!
