@@ -6,7 +6,10 @@ use std::{
 
 use itertools::Itertools;
 
-use crate::cli::godot::{select_version, symlink_default_version};
+use crate::cli::{
+    godot::{select_version, symlink_default_version},
+    utils::ParserExt,
+};
 
 pub struct GodotInstallCommand {
     pub version: Option<String>,
@@ -16,7 +19,9 @@ impl tapcli::Command for GodotInstallCommand {
     type Error = anyhow::Error;
 
     async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        todo!()
+        let version = parser.next_value_maybe()?;
+
+        Ok(Self { version })
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {

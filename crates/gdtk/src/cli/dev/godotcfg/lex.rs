@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::utils::get_content;
+use crate::{cli::utils::ParserExt, utils::get_content};
 
 pub struct DevGodotCfgLexCommand {
     /// The GodotCfg file to lex.
@@ -11,7 +11,9 @@ impl tapcli::Command for DevGodotCfgLexCommand {
     type Error = anyhow::Error;
 
     async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        todo!()
+        let file = parser.next_value()?.into();
+
+        Ok(Self { file })
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {
@@ -19,7 +21,7 @@ impl tapcli::Command for DevGodotCfgLexCommand {
         let lexed = gdtk_godotcfg_parser::lexer(&content);
 
         for token in lexed {
-            println!("{:?}", token);
+            eprintln!("{:?}", token);
         }
 
         Ok(())

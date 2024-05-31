@@ -1,41 +1,55 @@
-use crate::cli::godot::select_version;
+use crate::cli::{godot::select_version, utils::ParserExt};
 
-pub async fn run(version: Option<String>) -> anyhow::Result<()> {
-    let mut version_manager = gdtk_gvm::VersionManager::load()?;
+pub struct GodotUninstallCommand {
+    pub version: Option<String>,
+}
 
-    let version = match version {
-        Some(v) => {
-            let versioning = gdtk_gvm::versions::Versioning::new(&v)
-                .ok_or(anyhow::anyhow!("Invalid version: {v}"))?;
+impl tapcli::Command for GodotUninstallCommand {
+    type Error = anyhow::Error;
 
-            let versions =
-                gdtk_gvm::utils::coerce_version(versioning, version_manager.versionings())?;
-            let idx = select_version(&versions, "Select version to uninstall")?;
+    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+        let version = parser.next_value_maybe()?;
 
-            versions[idx].to_string()
-        }
-        None => prompt_version(version_manager.versionings())?,
-    };
-
-    let previous = match version_manager.remove_version(&version) {
-        Some(previous) => previous,
-        None => anyhow::bail!("Godot {version} isn't installed."),
-    };
-
-    std::fs::remove_dir_all(previous.path)?;
-
-    if let Some(default) = &version_manager.versions.default
-        && default == &version
-    {
-        version_manager.versions.default = None;
-        std::fs::remove_file(gdtk_paths::default_godot_path()?)?;
+        Ok(Self { version })
     }
 
-    version_manager.save()?;
+    async fn run(self) -> Result<Self::Output, Self::Error> {
+        let mut version_manager = gdtk_gvm::VersionManager::load()?;
 
-    println!("Godot {version} uninstalled!");
+        let version = match self.version {
+            Some(v) => {
+                let versioning = gdtk_gvm::versions::Versioning::new(&v)
+                    .ok_or(anyhow::anyhow!("Invalid version: {v}"))?;
 
-    Ok(())
+                let versions =
+                    gdtk_gvm::utils::coerce_version(versioning, version_manager.versionings())?;
+                let idx = select_version(&versions, "Select version to uninstall")?;
+
+                versions[idx].to_string()
+            }
+            None => prompt_version(version_manager.versionings())?,
+        };
+
+        let previous = match version_manager.remove_version(&version) {
+            Some(previous) => previous,
+            None => anyhow::bail!("Godot {version} isn't installed."),
+        };
+
+        std::fs::remove_dir_all(previous.path)?;
+
+        if let Some(default) = &version_manager.versions.default
+            && default == &version
+        {
+            version_manager.versions.default = None;
+            std::fs::remove_file(gdtk_paths::default_godot_path()?)?;
+        }
+
+        version_manager.save()?;
+
+        println!("Godot {version} uninstalled!");
+
+        Ok(())
+    }
 }
 
 fn prompt_version(versions: Vec<gdtk_gvm::versions::Versioning>) -> anyhow::Result<String> {

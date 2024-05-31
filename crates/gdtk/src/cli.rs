@@ -94,3 +94,7 @@ impl tapcli::Command for Command {
 pub macro unknown($arg:expr) {
     ::anyhow::bail!("Unknown option: {:?}", $arg)
 }
+
+pub macro missing($what:expr) {
+    ::anyhow::bail!(concat!("Missing required argument: ", $what))
+}

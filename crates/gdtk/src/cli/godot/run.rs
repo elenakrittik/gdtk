@@ -1,4 +1,4 @@
-use crate::cli::{godot::select_version, unknown};
+use crate::cli::{godot::select_version, utils::ParserExt};
 
 pub struct GodotRunCommand {
     pub version: Option<String>,
@@ -8,11 +8,7 @@ impl tapcli::Command for GodotRunCommand {
     type Error = anyhow::Error;
 
     async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        let version = match parser.next() {
-            Some(tapcli::Arg::Value(version)) => Some(version),
-            None => None,
-            other => unknown!(other),
-        };
+        let version = parser.next_value_maybe()?;
 
         Ok(Self { version })
     }

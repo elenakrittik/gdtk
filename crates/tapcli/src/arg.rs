@@ -20,6 +20,12 @@ impl Arg {
     }
 }
 
+impl std::fmt::Display for Arg {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.as_ref().fmt(f)
+    }
+}
+
 /// A borrowed version of [Arg] useful primarily for pattern
 /// matching.
 #[derive(Debug)]
@@ -30,4 +36,14 @@ pub enum ArgRef<'a> {
     Long(&'a str),
     /// See [Arg::Value].
     Value(&'a str),
+}
+
+impl std::fmt::Display for ArgRef<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Short(c) => write!(f, "-{}", c),
+            Self::Long(s) => write!(f, "--{}", s),
+            Self::Value(s) => write!(f, "{}", s),
+        }
+    }
 }

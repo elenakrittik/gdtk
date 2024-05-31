@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use crate::utils::get_content;
+use crate::{cli::utils::ParserExt, utils::get_content};
 
 pub struct DevGDScriptParseCommand {
     /// The GDScript file to parse.
@@ -11,7 +11,9 @@ impl tapcli::Command for DevGDScriptParseCommand {
     type Error = anyhow::Error;
 
     async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        todo!()
+        let file = parser.next_value()?.into();
+
+        Ok(Self { file })
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {

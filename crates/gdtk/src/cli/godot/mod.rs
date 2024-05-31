@@ -1,5 +1,9 @@
-use crate::cli::godot::{
-    install::GodotInstallCommand, list::GodotListCommand, run::GodotRunCommand,
+use crate::cli::{
+    godot::{
+        install::GodotInstallCommand, list::GodotListCommand, run::GodotRunCommand,
+        uninstall::GodotUninstallCommand,
+    },
+    unknown,
 };
 
 pub mod install;
@@ -18,18 +22,30 @@ pub enum GodotCommand {
     Install(GodotInstallCommand),
 
     /// Uninstall the specified Godot version.
-    Uninstall(GodotListCommand),
+    Uninstall(GodotUninstallCommand),
 }
 
 impl tapcli::Command for GodotCommand {
     type Error = anyhow::Error;
 
+    #[rustfmt::skip]
     async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        todo!()
+        match parser.next().unwrap().as_ref() {
+            tapcli::ArgRef::Value("list") => Ok(Self::List(GodotListCommand::parse(parser).await?)),
+            tapcli::ArgRef::Value("run") => Ok(Self::Run(GodotRunCommand::parse(parser).await?)),
+            tapcli::ArgRef::Value("install") => Ok(Self::Install(GodotInstallCommand::parse(parser).await?)),
+            tapcli::ArgRef::Value("uninstall") => Ok(Self::Uninstall(GodotUninstallCommand::parse(parser).await?)),
+            other => unknown!(other),
+        }
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {
-        todo!()
+        match self {
+            GodotCommand::List(c) => c.run().await,
+            GodotCommand::Run(c) => c.run().await,
+            GodotCommand::Install(c) => c.run().await,
+            GodotCommand::Uninstall(c) => c.run().await,
+        }
     }
 }
 

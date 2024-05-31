@@ -2,17 +2,20 @@ use std::path::PathBuf;
 
 use itertools::Itertools;
 
-use crate::utils::get_content;
+use crate::{cli::utils::ParserExt, utils::get_content};
 
 pub struct DevGDScriptLexCommand {
     /// The GDScript file to lex.
     file: PathBuf,
 }
+
 impl tapcli::Command for DevGDScriptLexCommand {
     type Error = anyhow::Error;
 
     async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        todo!()
+        let file = parser.next_value()?.into();
+
+        Ok(Self { file })
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {

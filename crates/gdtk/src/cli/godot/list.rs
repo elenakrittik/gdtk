@@ -5,8 +5,8 @@ pub struct GodotListCommand;
 impl tapcli::Command for GodotListCommand {
     type Error = anyhow::Error;
 
-    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        todo!()
+    async fn parse(_: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+        Ok(Self)
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {
