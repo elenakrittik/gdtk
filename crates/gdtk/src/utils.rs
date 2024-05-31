@@ -12,7 +12,7 @@ pub fn setup_tracing(cli: &Cli) -> anyhow::Result<()> {
     let writer = tracing_appender::rolling::daily(logs, "log");
 
     let subscriber = tracing_subscriber::FmtSubscriber::builder()
-        .with_max_level(cli.verbosity.level()?)
+        .with_max_level(cli.verbosity())
         .with_ansi(false)
         .with_writer(writer)
         .pretty()
