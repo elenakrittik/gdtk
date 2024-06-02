@@ -2,6 +2,7 @@ name: Tests
 
 on:
   push:
+  merge_group:
 
 jobs:
   tests:

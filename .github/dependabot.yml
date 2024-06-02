@@ -4,7 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      time: "03:00"
+      time: "07:00"
     reviewers:
       - "elenakrittik"
     commit-message:
