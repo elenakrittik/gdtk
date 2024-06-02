@@ -43,9 +43,10 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.NIGHTLIES_TOKEN }}
+          author: "Elena Krittik <dev.elenakrittik@gmail.com>"
           title: "deps: Automated nightly version update."
           body: ""
           commit-message: "Update nightly version."
-          branch: "deps/weekly-update"
+          branch: "deps/rustc-update"
           delete-branch: true
           labels: "a: deps"
