@@ -2,10 +2,9 @@
 
 ## Supported Versions
 
-Only two latest minor versions of latest major version are supported.
+We aim to support all reasonably up-to-date versions of `gdtk` and Godot.
 
 ## Reporting a Vulnerability
 
-To report a vulnerability, go to the "Security" tab, and there describe the vulnerability in
-as much detail as possible. Project maintainers will reply as soon as they can and will work
-with you to resolve the issue in the best way possible.
+To report a vulnerability, go to the "Security" tab on `gdtk`'s GitHub repository page, press "Report a vulnerability"
+and there describe it in as much detail as possible. We will reply ASAP and will work with you towards an optimal solution.
