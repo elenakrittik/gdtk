@@ -34,14 +34,14 @@ impl tapcli::Command for LintCommand {
 
         if counts.errors > 0 || counts.warnings > 0 {
             eprintln!(
-                "Checked {} files, {} errors, {} warnings.",
+                "Checked {} file(s), {} errors, {} warnings.",
                 files.len(),
                 counts.errors,
                 counts.warnings,
             );
         } else {
             eprintln!(
-                "Checked {} files, nothing found. Enjoy your day! ✨️",
+                "Checked {} file(s), nothing found. Enjoy your day! ✨️",
                 files.len(),
             );
         }

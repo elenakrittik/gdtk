@@ -138,13 +138,15 @@ impl<'a, F: std::io::Write> Visualizer<'a, F> for RustcVisualizer<'a> {
         // Step 3. Draw highlights.
 
         for highlight in diag.highlights {
-            let Some((line, column)) = span_to_pos.get(&highlight.span) else {
+            let Some((mut line, column)) = span_to_pos.get(&highlight.span) else {
                 continue;
             };
 
-            let Some(line_source) = self.source.line(*line) else {
+            let Some(line_source) = self.source.line(line) else {
                 continue;
             };
+
+            line += 1;
 
             let local_line_number_offset = line_number_offset + 1 - line.count_digits();
 
