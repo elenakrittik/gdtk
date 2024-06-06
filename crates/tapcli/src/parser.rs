@@ -8,6 +8,9 @@ enum State {
     /// `0` is the index of the next character to process, `1` is
     /// the short argument itself.
     Short(usize, String),
+    /// The parser has encountered a `--kwarg=val` and needs to emit
+    /// the value next.
+    LongEq(String),
     /// The parser has encountered a `--` and therefore anything and.
     /// everything shall be treated as values.
     TreatAsValues,
@@ -75,6 +78,13 @@ impl InnerParser {
                 return Some(Arg::Value(self.args.next()?));
             }
 
+            // encountered `--key=val`
+            if let Some((arg, value)) = arg.split_once('=') {
+                self.state = State::LongEq(value.to_string());
+
+                return Some(Arg::Long(arg.to_string()));
+            }
+
             return Some(Arg::Long(arg.to_string()));
         }
 
@@ -111,6 +121,13 @@ impl Iterator for InnerParser {
                     // if it *is* exhausted, go on to the next os argument
                     self.switch()?
                 }
+            }
+            State::LongEq(ref mut value) => {
+                let arg = Arg::Value(std::mem::take(value));
+
+                self.state = State::None;
+
+                arg
             }
             State::TreatAsValues => Arg::Value(self.args.next()?),
         })
