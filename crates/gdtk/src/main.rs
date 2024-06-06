@@ -13,14 +13,6 @@ use crate::utils::setup_tracing;
 pub mod cli;
 pub mod utils;
 
-// #[cfg(any(debug_assertions, feature = "dev"))]
-// use gdtk::cli::dev::{DevCommand, DevGDScriptCommands, DevGodotCfgCommands};
-// use gdtk::{
-//     cli::{Command, GodotCommand},
-//     commands as cmds,
-//     utils::setup_tracing,
-// };
-
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     let cli = crate::cli::Cli::from_env().await?;
