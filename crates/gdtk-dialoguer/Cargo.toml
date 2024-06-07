@@ -31,3 +31,5 @@ zeroize = { version = "1.8.1", optional = true }
 fuzzy-matcher = { version = "0.3.7", optional = true }
 shell-words = "1.1.0"
 thiserror = "1.0.61"
+yansi = "1.0.1"
+typed-builder = "0.18.2"

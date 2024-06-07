@@ -1,6 +1,7 @@
 //! This is a fork of [dialoguer]. Use the official crate instead.
 
-#![deny(clippy::all)]
+#![feature(iter_repeat_n)]
+#![feature(type_alias_impl_trait)]
 
 #[cfg(feature = "completion")]
 pub use completion::Completion;
@@ -10,13 +11,10 @@ pub use edit::Editor;
 pub use error::{Error, Result};
 #[cfg(feature = "history")]
 pub use history::{BasicHistory, History};
-use paging::Paging;
 #[cfg(feature = "fuzzy-select")]
-pub use prompts::fuzzy_select::FuzzySelect;
-#[cfg(feature = "password")]
-pub use prompts::password::Password;
 pub use prompts::{
-    confirm::Confirm, input::Input, multi_select::MultiSelect, select::Select, sort::Sort,
+    dynamic::{DynamicPrompt, QueryFn, QueryResult},
+    fuzzy_select::FuzzySelect,
 };
 pub use validate::{InputValidator, PasswordValidator};
 
@@ -27,7 +25,6 @@ mod edit;
 mod error;
 #[cfg(feature = "history")]
 mod history;
-mod paging;
 mod prompts;
 pub mod theme;
 mod validate;
