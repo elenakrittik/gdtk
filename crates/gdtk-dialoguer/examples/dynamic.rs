@@ -1,18 +1,11 @@
-use gdtk_dialoguer::{DynamicPrompt, QueryResult};
-
-fn query(_: &DynamicPrompt) -> QueryResult<'static> {
-    let items = vec![
-        "foo", "bar", "foo", "bar", "foo", "bar", "foo", "bar", "foo", "bar", "foo", "bar", "foo",
-        "bar", "baz",
-    ];
-
-    std::ops::ControlFlow::Continue(("abc", items))
-}
+use gdtk_dialoguer::Prompt;
 
 fn main() -> gdtk_dialoguer::Result<()> {
-    let answer = DynamicPrompt::builder().query(query).build().interact()?;
-
-    dbg!(answer);
+    Prompt::<'_, _, _>::builder()
+        .question("Choose Godot version")
+        .items(&["4.3", "4.2", "4.1"])
+        .build()
+        .interact()?;
 
     Ok(())
 }

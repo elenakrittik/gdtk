@@ -2,6 +2,7 @@
 
 #![feature(iter_repeat_n)]
 #![feature(type_alias_impl_trait)]
+#![feature(stmt_expr_attributes)]
 
 #[cfg(feature = "completion")]
 pub use completion::Completion;
@@ -12,10 +13,8 @@ pub use error::{Error, Result};
 #[cfg(feature = "history")]
 pub use history::{BasicHistory, History};
 #[cfg(feature = "fuzzy-select")]
-pub use prompts::{
-    dynamic::{DynamicPrompt, QueryFn, QueryResult},
-    fuzzy_select::FuzzySelect,
-};
+pub use prompts::fuzzy_select::FuzzySelect;
+pub use prompts::prompt::Prompt;
 pub use validate::{InputValidator, PasswordValidator};
 
 #[cfg(feature = "completion")]
