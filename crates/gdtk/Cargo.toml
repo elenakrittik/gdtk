@@ -15,7 +15,7 @@ gdtk-godotcfg-parser = { version = "0.1.0", path = "../gdtk-godotcfg-parser" }
 gdtk-gdscript-parser = { version = "0.1.0", path = "../gdtk-gdscript-parser" }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
 tokio = { version = "1.34.0", features = ["full"] }
-zip = { version = "2.1.2", default-features = false, features = [
+zip = { version = "2.1.3", default-features = false, features = [
     "deflate",
 ] }
 itertools = "0.13.0"
