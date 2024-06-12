@@ -1,71 +1,43 @@
-use crate::cli::{godot::select_version, utils::ParserExt};
+use gdtk_gvm::{versions::Versioning, VersionManager};
+
+use crate::cli::utils::ParserExt;
 
 pub struct GodotUninstallCommand {
-    pub version: Option<String>,
+    pub version: Versioning,
+    pub manager: VersionManager,
 }
 
 impl tapcli::Command for GodotUninstallCommand {
     type Error = anyhow::Error;
 
     async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        let version = parser.next_value_maybe()?;
+        let manager = VersionManager::load()?;
+        let version = parser.next_godot_version(manager.versionings())?;
 
-        Ok(Self { version })
+        Ok(Self { version, manager })
     }
 
-    async fn run(self) -> Result<Self::Output, Self::Error> {
-        let mut version_manager = gdtk_gvm::VersionManager::load()?;
+    async fn run(mut self) -> Result<Self::Output, Self::Error> {
+        let version_string = self.version.to_string();
 
-        let version = match self.version {
-            Some(v) => {
-                let versioning = gdtk_gvm::versions::Versioning::new(&v)
-                    .ok_or(anyhow::anyhow!("Invalid version: {v}"))?;
-
-                let versions =
-                    gdtk_gvm::utils::coerce_version(versioning, version_manager.versionings())?;
-                let idx = select_version(&versions, "Select version to uninstall")?;
-
-                versions[idx].to_string()
-            }
-            None => prompt_version(version_manager.versionings())?,
-        };
-
-        let previous = match version_manager.remove_version(&version) {
+        let previous = match self.manager.remove_version(&version_string) {
             Some(previous) => previous,
-            None => anyhow::bail!("Godot {version} isn't installed."),
+            None => anyhow::bail!("Godot {version_string} isn't installed."),
         };
 
         std::fs::remove_dir_all(previous.path)?;
 
-        if let Some(default) = &version_manager.versions.default
-            && default == &version
+        if let Some(default) = &self.manager.inner.default
+            && default == &version_string
         {
-            version_manager.versions.default = None;
+            self.manager.inner.default = None;
             std::fs::remove_file(gdtk_paths::default_godot_path()?)?;
         }
 
-        version_manager.save()?;
+        self.manager.save()?;
 
-        println!("Godot {version} uninstalled!");
+        println!("Godot {version_string} uninstalled!");
 
         Ok(())
-    }
-}
-
-fn prompt_version(versions: Vec<gdtk_gvm::versions::Versioning>) -> anyhow::Result<String> {
-    if versions.is_empty() {
-        anyhow::bail!("No versions installed.");
-    } else if versions.len() == 1 {
-        Ok(versions[0].to_string())
-    } else {
-        let idx = gdtk_dialoguer::FuzzySelect::new()
-            .with_theme(&gdtk_dialoguer::theme::ColorfulTheme::default())
-            .add_items(&versions)
-            .highlight_matches(true)
-            .with_default(0)
-            .with_prompt("Select version to uninstall")
-            .interact()?;
-
-        Ok(versions[idx].to_string())
     }
 }

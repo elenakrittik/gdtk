@@ -14,11 +14,14 @@ const ELLIPSIS_STYLE: yansi::Style = yansi::Style::new().bright_black().bold().d
 const CHOICE_STYLE: yansi::Style = ARROW_STYLE;
 const NO_CHOICE_STYLE: yansi::Style = yansi::Style::new().bright_red().bold();
 
+/// A prompt. Create using `Prompt::<'_, _, _>::builder()` (generic placeholders needed
+/// due to poor inference).
 #[derive(TypedBuilder)]
 pub struct Prompt<
     'items,
     Q: Display,
     Item: Display,
+    const OPTIONAL: bool = true,
     const TOTAL_VIEW_LENGTH: usize = 7,
     const VIEW_DRAG_LIMIT: usize = 3,
 > {
@@ -30,13 +33,16 @@ pub struct Prompt<
     term: Term,
 }
 
-impl<'items, Q, Item, const TOTAL_VIEW_LENGTH: usize, const VIEW_DRAG_LIMIT: usize>
-    Prompt<'items, Q, Item, TOTAL_VIEW_LENGTH, VIEW_DRAG_LIMIT>
-where
-    Q: Display,
-    Item: Display,
+impl<
+        'items,
+        Q: Display,
+        Item: Display,
+        const OPTIONAL: bool,
+        const TOTAL_VIEW_LENGTH: usize,
+        const VIEW_DRAG_LIMIT: usize,
+    > Prompt<'items, Q, Item, OPTIONAL, TOTAL_VIEW_LENGTH, VIEW_DRAG_LIMIT>
 {
-    pub fn interact(mut self) -> crate::Result<Option<&'items Item>> {
+    pub fn interact(mut self) -> crate::Result<Option<usize>> {
         let mut choice = None;
         let mut view = SliceView::new(self.items, self.current_item_idx, TOTAL_VIEW_LENGTH);
 
@@ -60,10 +66,10 @@ where
                     lines_previously_drawn = self.draw_items(&mut view)?;
                 }
                 Key::Enter => {
-                    choice.replace(&self.items[self.current_item_idx]);
+                    choice.replace(self.current_item_idx);
                     break;
                 }
-                Key::Escape => break,
+                Key::Escape if OPTIONAL => break,
                 _ => {}
             }
         }
@@ -127,21 +133,21 @@ where
         Ok(lines_drawn)
     }
 
-    fn draw_choice(&mut self, choice: Option<&'items Item>) -> crate::Result {
+    fn draw_choice(&mut self, choice: Option<usize>) -> crate::Result {
         if let Some(choice) = choice {
             writeln!(
                 self.term,
                 "{} {}: {}",
                 '?'.paint(CHOICE_STYLE),
                 self.question,
-                choice
+                &self.items[choice],
             )?;
         } else {
             writeln!(
                 self.term,
                 "{} {}",
                 'x'.paint(NO_CHOICE_STYLE),
-                self.question
+                self.question,
             )?;
         }
 
@@ -173,6 +179,21 @@ where
         }
 
         Ok(())
+    }
+}
+
+impl<Q, Item> Debug for Prompt<'_, Q, Item>
+where
+    Q: Display + Debug,
+    Item: Display + Debug,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Prompt")
+            .field("question", &self.question)
+            .field("items", &self.items)
+            .field("current_item_idx", &self.current_item_idx)
+            .field("term", &self.term)
+            .finish()
     }
 }
 

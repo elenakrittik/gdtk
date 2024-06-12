@@ -1,7 +1,7 @@
 use serde::Deserialize;
 
 pub struct VersionManager {
-    pub versions: crate::types::VersionsToml,
+    pub inner: crate::types::VersionsToml,
 }
 
 impl VersionManager {
@@ -10,12 +10,12 @@ impl VersionManager {
         let content = std::fs::read_to_string(gdtk_paths::versions_toml_path()?)?;
         let versions = crate::types::VersionsToml::deserialize(toml::Deserializer::new(&content))?;
 
-        Ok(Self { versions })
+        Ok(Self { inner: versions })
     }
 
     /// Save the `versions.toml` file.
     pub fn save(&self) -> Result<(), crate::Error> {
-        let contents = toml::to_string_pretty(&self.versions)?;
+        let contents = toml::to_string_pretty(&self.inner)?;
         let path = gdtk_paths::versions_toml_path()?;
 
         std::fs::write(path, contents)?;
@@ -25,26 +25,30 @@ impl VersionManager {
 
     /// Get all installed versions.
     pub fn versionings(&self) -> Vec<versions::Versioning> {
-        self.versions
+        self.inner
             .versions
             .keys()
             .filter_map(|v| versions::Versioning::new(v))
             .collect()
     }
 
-    pub fn add_version(&mut self, version: String, data: crate::types::Version) -> bool {
-        self.versions.versions.insert(version, data).is_some()
+    /// Inserts a version and returns whether this version was previously in there.
+    pub fn add_version(&mut self, version: &str, data: crate::types::Version) -> bool {
+        self.inner
+            .versions
+            .insert(version.to_string(), data)
+            .is_some()
     }
 
     pub fn get_version(&self, version: &str) -> Option<&crate::types::Version> {
-        self.versions.versions.get(version)
+        self.inner.versions.get(version)
     }
 
     pub fn is_empty(&self) -> bool {
-        self.versions.versions.is_empty()
+        self.inner.versions.is_empty()
     }
 
     pub fn remove_version(&mut self, version: &str) -> Option<crate::types::Version> {
-        self.versions.versions.remove(version)
+        self.inner.versions.remove(version)
     }
 }

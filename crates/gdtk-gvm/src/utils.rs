@@ -1,7 +1,7 @@
 use versions::{Release, SemVer, Version, Versioning};
 
 fn get_stable_chunk() -> versions::Chunk {
-    versions::Chunk::Alphanum("stable".to_owned())
+    versions::Chunk::Alphanum("stable".to_string())
 }
 
 /// Returns whether a given Godot version is stable.
@@ -69,10 +69,12 @@ pub(crate) fn strip_stable_postfix(ver: Versioning) -> Versioning {
     }
 }
 
-pub fn normalize_arch(arch: &'static str) -> &'static str {
-    if arch == "aarch64" {
+pub const fn arch_os() -> (&'static str, &'static str) {
+    let arch = if cfg!(target_arch = "aarch64") {
         "arm64"
     } else {
-        arch
-    }
+        std::env::consts::ARCH
+    };
+
+    (arch, std::env::consts::OS)
 }

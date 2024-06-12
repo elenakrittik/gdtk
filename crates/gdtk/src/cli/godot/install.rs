@@ -4,77 +4,46 @@ use std::{
     path::Path,
 };
 
-use itertools::Itertools;
+use gdtk_gvm::{online::version_download_urls, utils::arch_os, versions::Versioning};
 
-use crate::cli::{
-    godot::{select_version, symlink_default_version},
-    utils::ParserExt,
-};
+use crate::cli::{godot::symlink_default_version, utils::ParserExt};
 
 pub struct GodotInstallCommand {
-    pub version: Option<String>,
+    pub version: Versioning,
 }
 
 impl tapcli::Command for GodotInstallCommand {
     type Error = anyhow::Error;
 
     async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        let version = parser.next_value_maybe()?;
+        let pool = gdtk_gvm::online::fetch_versions().await?;
+        let version = parser.next_godot_version(pool)?;
 
         Ok(Self { version })
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {
-        let online_versions = gdtk_gvm::online::fetch_versions().await?;
+        let mut manager = gdtk_gvm::VersionManager::load()?;
+        let version_string = self.version.to_string();
+        let set_as_default = manager.is_empty();
+        let target_dir = gdtk_paths::godots_path()?.join(&version_string);
 
-        let version = match self.version {
-            Some(v) => {
-                if v == "latest" {
-                    online_versions
-                        .into_iter()
-                        .find(gdtk_gvm::utils::is_stable)
-                        .unwrap()
-                        .to_string()
-                } else {
-                    let versioning = gdtk_gvm::versions::Versioning::new(&v)
-                        .ok_or(anyhow::anyhow!("Invalid Godot version: {v}"))?;
-                    let versions = gdtk_gvm::utils::coerce_version(versioning, online_versions)?;
-
-                    let idx = select_version(versions.as_slice(), "Select version to install")?;
-
-                    versions[idx].to_string()
-                }
-            }
-            None => prompt_version(online_versions).await?,
-        };
-
-        let mut version_manager = gdtk_gvm::VersionManager::load()?;
-        let set_as_default = version_manager.is_empty();
-        let target_dir = gdtk_paths::godots_path()?.join(&version);
-
-        let already_installed = version_manager.add_version(
-            version.clone(),
+        let already_installed = manager.add_version(
+            &version_string,
             gdtk_gvm::types::Version {
                 path: target_dir.clone(),
             },
         );
 
         if already_installed {
-            anyhow::bail!("Godot {version} is already installed.");
+            anyhow::bail!("Godot {version_string} is already installed.");
         }
 
-        let arch = (
-            gdtk_gvm::utils::normalize_arch(std::env::consts::ARCH),
-            std::env::consts::OS,
-        );
-
-        let version_download_urls = gdtk_gvm::online::version_download_urls(&version).await?;
-        let url = match version_download_urls.get(&arch) {
-            Some(url) => url,
-            None => {
-                anyhow::bail!("Couldn't find download URL for current arch/os pair {arch:?}.")
-            }
-        };
+        let download_urls = version_download_urls(&self.version, &version_string).await?;
+        let url = download_urls.get(&arch_os()).ok_or(anyhow::anyhow!(
+            "Couldn't find download URL for current arch/os pair {:?}.",
+            arch_os(),
+        ))?;
 
         let mut spinner = spinoff::Spinner::new(
             spinoff::spinners::Dots2,
@@ -95,65 +64,16 @@ impl tapcli::Command for GodotInstallCommand {
         std::fs::File::create(target_dir.join("._sc_"))?;
 
         if set_as_default {
-            version_manager.versions.default = Some(version.clone());
+            manager.inner.default = Some(version_string);
             symlink_default_version(&target_dir)?;
         }
 
-        version_manager.save()?;
+        manager.save()?;
 
-        spinner.success(&format!("Installed Godot {version}!"));
+        spinner.success(&format!("Installed Godot {}!", self.version));
 
         Ok(())
     }
-}
-
-async fn prompt_version(vers: Vec<gdtk_gvm::versions::Versioning>) -> anyhow::Result<String> {
-    let variant_dev = "Development versions..";
-    let theme = gdtk_dialoguer::theme::ColorfulTheme::default();
-
-    let mut versions = vers
-        .into_iter()
-        .map(|ver| {
-            if gdtk_gvm::utils::is_stable(&ver) {
-                ("stable", ver.to_string())
-            } else {
-                ("dev", ver.to_string())
-            }
-        })
-        .chain(std::iter::once(("stable", variant_dev.to_owned())))
-        .into_group_map();
-
-    let stables = versions.get_mut("stable").unwrap().as_mut_slice();
-
-    let mut version = stables
-        .get_mut(
-            gdtk_dialoguer::FuzzySelect::new()
-                .with_theme(&theme)
-                .with_prompt("Select version to install")
-                .with_max_length(7)
-                .with_default(0)
-                .add_items(stables)
-                .interact()?,
-        )
-        .unwrap();
-
-    if version == variant_dev {
-        let devs = versions.get_mut("dev").unwrap().as_mut_slice();
-
-        version = devs
-            .get_mut(
-                gdtk_dialoguer::FuzzySelect::new()
-                    .with_theme(&theme)
-                    .with_prompt("Select version to install")
-                    .with_max_length(7)
-                    .with_default(0)
-                    .add_items(devs)
-                    .interact()?,
-            )
-            .unwrap();
-    }
-
-    Ok(std::mem::take(version))
 }
 
 fn extract_godot(source: impl Read + Seek, target_dir: &Path) -> zip::result::ZipResult<()> {

@@ -1,0 +1,18 @@
+[package]
+name = "cliui"
+description = "Good-looking prompts and whatnot for your command-line applications."
+version = "0.1.0"
+edition = "2021"
+authors = ["Elena Krittik <dev.elenakrittik@gmail.com>"]
+keywords = ["cli", "menu", "prompt"]
+categories = ["command-line-interface"]
+license = "MIT"
+homepage = "https://github.com/elenakrittik/gdtk/tree/master/crates/cliui"
+repository = "https://github.com/elenakrittik/gdtk/tree/master/crates/cliui"
+documentation = "https://docs.rs/cliui"
+
+[dependencies]
+console = "0.15.0"
+thiserror = "1.0.61"
+yansi = "1.0.1"
+typed-builder = "0.18.2"
