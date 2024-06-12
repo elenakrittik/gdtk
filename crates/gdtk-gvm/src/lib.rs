@@ -1,4 +1,4 @@
-#![feature(decl_macro, option_take_if)]
+#![feature(decl_macro)]
 
 pub use versions;
 
