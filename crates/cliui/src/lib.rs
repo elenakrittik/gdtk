@@ -3,7 +3,7 @@
 #![feature(stmt_expr_attributes)]
 
 pub use crate::error::{Error, Result};
-pub use crate::prompt::Prompt;
+pub use crate::prompt::{Prompt, PromptBuilder};
 
 mod error;
 mod prompt;

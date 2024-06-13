@@ -30,9 +30,9 @@ impl ParserExt for tapcli::Parser {
 
     fn next_godot_version(&mut self, mut pool: Vec<Versioning>) -> anyhow::Result<Versioning> {
         let prompt = |items| {
-            Prompt::<'_, _, _, false, 7, 3>::builder()
-                .question("Select Godot version")
-                .items(items)
+            Prompt::builder()
+                .with_question("Select Godot version")
+                .with_items(items)
                 .build()
                 .interact()
         };

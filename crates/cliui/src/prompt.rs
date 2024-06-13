@@ -5,7 +5,6 @@ use std::{
 };
 
 use console::{Key, Term};
-use typed_builder::TypedBuilder;
 use yansi::Paint;
 
 const QUESTION_MARK_STYLE: yansi::Style = yansi::Style::new().bright_yellow().bold();
@@ -14,9 +13,15 @@ const ELLIPSIS_STYLE: yansi::Style = yansi::Style::new().bright_black().bold().d
 const CHOICE_STYLE: yansi::Style = ARROW_STYLE;
 const NO_CHOICE_STYLE: yansi::Style = yansi::Style::new().bright_red().bold();
 
-/// A prompt. Create using `Prompt::<'_, _, _>::builder()` (generic placeholders needed
-/// due to poor inference).
-#[derive(TypedBuilder)]
+pub struct DisplaySentinel;
+
+impl Display for DisplaySentinel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "DisplaySentinel")
+    }
+}
+
+/// A prompt.
 pub struct Prompt<
     'items,
     Q: Display,
@@ -27,10 +32,14 @@ pub struct Prompt<
 > {
     question: Q,
     items: &'items [Item],
-    #[builder(default)]
     current_item_idx: usize,
-    #[builder(default = Term::stderr())]
     term: Term,
+}
+
+impl Prompt<'_, DisplaySentinel, DisplaySentinel> {
+    pub fn builder() -> PromptBuilder<'static, DisplaySentinel, DisplaySentinel> {
+        PromptBuilder::new()
+    }
 }
 
 impl<
@@ -239,5 +248,77 @@ where
             .field("slice", &self.slice)
             .field("range", &self.range)
             .finish()
+    }
+}
+
+pub struct PromptBuilder<'items, Q: Display, Item: Display> {
+    question: Option<Q>,
+    items: Option<&'items [Item]>,
+    default_item_idx: Option<usize>,
+    term: Option<Term>,
+}
+
+impl PromptBuilder<'_, DisplaySentinel, DisplaySentinel> {
+    fn new() -> Self {
+        Self {
+            question: None,
+            items: None,
+            default_item_idx: None,
+            term: None,
+        }
+    }
+}
+
+impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
+    pub fn with_question<NewQ: Display>(self, question: NewQ) -> PromptBuilder<'items, NewQ, Item> {
+        PromptBuilder {
+            question: Some(question),
+            items: self.items,
+            default_item_idx: self.default_item_idx,
+            term: self.term,
+        }
+    }
+
+    pub fn with_items<NewItem: Display>(self, items: &[NewItem]) -> PromptBuilder<'_, Q, NewItem> {
+        PromptBuilder {
+            question: self.question,
+            items: Some(items),
+            default_item_idx: self.default_item_idx,
+            term: self.term,
+        }
+    }
+
+    pub fn with_default_item(mut self, idx: usize) -> Self {
+        self.default_item_idx = Some(idx);
+        self
+    }
+
+    pub fn build(self) -> Prompt<'items, Q, Item> {
+        let question = self
+            .question
+            .expect("`question` must've been set before calling `.build()`");
+        let items = self
+            .items
+            .expect("`items` must've been set before calling `.build()`");
+        let current_item_idx = self.default_item_idx.unwrap_or_default();
+        let term = self.term.unwrap_or_else(Term::stderr);
+
+        Prompt {
+            question,
+            items,
+            current_item_idx,
+            term,
+        }
+    }
+}
+
+impl Default for PromptBuilder<'_, DisplaySentinel, DisplaySentinel> {
+    fn default() -> Self {
+        Self {
+            question: None,
+            items: None,
+            default_item_idx: None,
+            term: None,
+        }
     }
 }
