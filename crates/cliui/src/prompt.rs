@@ -270,24 +270,14 @@ impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
     pub fn with_question<NewQ: Display>(self, question: NewQ) -> PromptBuilder<'items, NewQ, Item> {
         PromptBuilder {
             question: Some(question),
-            items: self.items,
-            default_item_idx: self.default_item_idx,
-            term: self.term,
-            allow_esc: self.allow_esc,
-            view_length: self.view_length,
-            view_drag_limit: self.view_drag_limit,
+            ..self
         }
     }
 
     pub fn with_items<NewItem: Display>(self, items: &[NewItem]) -> PromptBuilder<'_, Q, NewItem> {
         PromptBuilder {
-            question: self.question,
             items: Some(items),
-            default_item_idx: self.default_item_idx,
-            term: self.term,
-            allow_esc: self.allow_esc,
-            view_length: self.view_length,
-            view_drag_limit: self.view_drag_limit,
+            ..self
         }
     }
 
