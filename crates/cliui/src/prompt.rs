@@ -13,7 +13,7 @@ const ELLIPSIS_STYLE: yansi::Style = yansi::Style::new().bright_black().bold().d
 const CHOICE_STYLE: yansi::Style = ARROW_STYLE;
 const NO_CHOICE_STYLE: yansi::Style = yansi::Style::new().bright_red().bold();
 
-pub struct DisplaySentinel;
+pub struct DisplaySentinel(());
 
 impl Display for DisplaySentinel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -22,18 +22,14 @@ impl Display for DisplaySentinel {
 }
 
 /// A prompt.
-pub struct Prompt<
-    'items,
-    Q: Display,
-    Item: Display,
-    const OPTIONAL: bool = true,
-    const TOTAL_VIEW_LENGTH: usize = 7,
-    const VIEW_DRAG_LIMIT: usize = 3,
-> {
+pub struct Prompt<'items, Q: Display, Item: Display> {
     question: Q,
     items: &'items [Item],
     current_item_idx: usize,
     term: Term,
+    allow_esc: bool,
+    total_view_length: usize,
+    view_drag_limit: usize,
 }
 
 impl Prompt<'_, DisplaySentinel, DisplaySentinel> {
@@ -42,18 +38,14 @@ impl Prompt<'_, DisplaySentinel, DisplaySentinel> {
     }
 }
 
-impl<
-        'items,
-        Q: Display,
-        Item: Display,
-        const OPTIONAL: bool,
-        const TOTAL_VIEW_LENGTH: usize,
-        const VIEW_DRAG_LIMIT: usize,
-    > Prompt<'items, Q, Item, OPTIONAL, TOTAL_VIEW_LENGTH, VIEW_DRAG_LIMIT>
-{
+impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
     pub fn interact(mut self) -> crate::Result<Option<usize>> {
         let mut choice = None;
-        let mut view = SliceView::new(self.items, self.current_item_idx, TOTAL_VIEW_LENGTH);
+        let mut view = SliceView::new(
+            self.items,
+            self.current_item_idx..self.total_view_length,
+            self.total_view_length,
+        );
 
         self.term.hide_cursor()?;
         self.draw_question()?;
@@ -78,7 +70,7 @@ impl<
                     choice.replace(self.current_item_idx);
                     break;
                 }
-                Key::Escape if OPTIONAL => break,
+                Key::Escape if self.allow_esc => break,
                 _ => {}
             }
         }
@@ -102,10 +94,7 @@ impl<
         Ok(1)
     }
 
-    fn draw_items(
-        &mut self,
-        view: &mut SliceView<'items, Item, TOTAL_VIEW_LENGTH>,
-    ) -> crate::Result<usize> {
+    fn draw_items(&mut self, view: &mut SliceView<'items, Item>) -> crate::Result<usize> {
         let range = view.range.start..=view.range.end;
         let has_items_above = view.start() > 0;
         let has_items_below = view.slice.len().saturating_sub(view.end()) > 1;
@@ -163,27 +152,24 @@ impl<
         Ok(())
     }
 
-    fn move_up(&mut self, view: &mut SliceView<'items, Item, TOTAL_VIEW_LENGTH>) -> crate::Result {
+    fn move_up(&mut self, view: &mut SliceView<'items, Item>) -> crate::Result {
         self.current_item_idx = self.current_item_idx.saturating_sub(1);
 
-        if view.end().saturating_sub(self.current_item_idx) > VIEW_DRAG_LIMIT {
+        if view.end().saturating_sub(self.current_item_idx) > self.view_drag_limit {
             view.shift(-1);
         }
 
         Ok(())
     }
 
-    fn move_down(
-        &mut self,
-        view: &mut SliceView<'items, Item, TOTAL_VIEW_LENGTH>,
-    ) -> crate::Result {
+    fn move_down(&mut self, view: &mut SliceView<'items, Item>) -> crate::Result {
         let next_item_idx = self.current_item_idx.saturating_add(1);
 
         if next_item_idx < view.slice.len() {
             self.current_item_idx = next_item_idx;
         }
 
-        if self.current_item_idx.saturating_sub(view.start()) > VIEW_DRAG_LIMIT {
+        if self.current_item_idx.saturating_sub(view.start()) > self.view_drag_limit {
             view.shift(1);
         }
 
@@ -202,20 +188,25 @@ where
             .field("items", &self.items)
             .field("current_item_idx", &self.current_item_idx)
             .field("term", &self.term)
+            .field("allow_esc", &self.allow_esc)
+            .field("total_view_length", &self.total_view_length)
+            .field("view_drag_limit", &self.view_drag_limit)
             .finish()
     }
 }
 
-struct SliceView<'a, T, const LENGTH: usize> {
+struct SliceView<'a, T> {
     slice: &'a [T],
     range: Range<usize>,
+    length: usize,
 }
 
-impl<'a, T, const LENGTH: usize> SliceView<'a, T, LENGTH> {
-    fn new(slice: &'a [T], from: usize, to: usize) -> Self {
+impl<'a, T> SliceView<'a, T> {
+    fn new(slice: &'a [T], range: Range<usize>, length: usize) -> Self {
         Self {
             slice,
-            range: from..to,
+            range,
+            length,
         }
     }
 
@@ -231,15 +222,14 @@ impl<'a, T, const LENGTH: usize> SliceView<'a, T, LENGTH> {
         let start = self.range.start.saturating_add_signed(delta);
         let end = self.range.end.saturating_add_signed(delta);
 
-        #[rustfmt::skip]
-        if end < self.slice.len() && end.saturating_sub(start) == LENGTH {
+        if end < self.slice.len() && end.saturating_sub(start) == self.length {
             self.range.start = start;
             self.range.end = end;
         }
     }
 }
 
-impl<'a, T, const LENGTH: usize> Debug for SliceView<'a, T, LENGTH>
+impl<'a, T> Debug for SliceView<'a, T>
 where
     T: Debug,
 {
@@ -247,6 +237,7 @@ where
         f.debug_struct("SliceView")
             .field("slice", &self.slice)
             .field("range", &self.range)
+            .field("length", &self.length)
             .finish()
     }
 }
@@ -256,6 +247,9 @@ pub struct PromptBuilder<'items, Q: Display, Item: Display> {
     items: Option<&'items [Item]>,
     default_item_idx: Option<usize>,
     term: Option<Term>,
+    allow_esc: Option<bool>,
+    view_length: Option<usize>,
+    view_drag_limit: Option<usize>,
 }
 
 impl PromptBuilder<'_, DisplaySentinel, DisplaySentinel> {
@@ -265,6 +259,9 @@ impl PromptBuilder<'_, DisplaySentinel, DisplaySentinel> {
             items: None,
             default_item_idx: None,
             term: None,
+            allow_esc: None,
+            view_length: None,
+            view_drag_limit: None,
         }
     }
 }
@@ -276,6 +273,9 @@ impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
             items: self.items,
             default_item_idx: self.default_item_idx,
             term: self.term,
+            allow_esc: self.allow_esc,
+            view_length: self.view_length,
+            view_drag_limit: self.view_drag_limit,
         }
     }
 
@@ -285,6 +285,9 @@ impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
             items: Some(items),
             default_item_idx: self.default_item_idx,
             term: self.term,
+            allow_esc: self.allow_esc,
+            view_length: self.view_length,
+            view_drag_limit: self.view_drag_limit,
         }
     }
 
@@ -293,32 +296,44 @@ impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
         self
     }
 
+    pub fn with_term(mut self, term: Term) -> Self {
+        self.term = Some(term);
+        self
+    }
+
+    pub fn allow_esc(mut self, allow: bool) -> Self {
+        self.allow_esc = Some(allow);
+        self
+    }
+
+    pub fn with_view_length(mut self, length: usize) -> Self {
+        self.view_length = Some(length);
+        self
+    }
+
+    pub fn with_view_drag_limit(mut self, limit: usize) -> Self {
+        self.view_drag_limit = Some(limit);
+        self
+    }
+
+    #[rustfmt::skip]
     pub fn build(self) -> Prompt<'items, Q, Item> {
-        let question = self
-            .question
-            .expect("`question` must've been set before calling `.build()`");
-        let items = self
-            .items
-            .expect("`items` must've been set before calling `.build()`");
+        let question = self.question.expect("`question` must've been set before calling `.build()`");
+        let items = self.items.expect("`items` must've been set before calling `.build()`");
         let current_item_idx = self.default_item_idx.unwrap_or_default();
         let term = self.term.unwrap_or_else(Term::stderr);
+        let allow_esc = self.allow_esc.unwrap_or(false);
+        let total_view_length = self.view_length.unwrap_or(7);
+        let view_drag_limit = self.view_drag_limit.unwrap_or(3);
 
         Prompt {
             question,
             items,
             current_item_idx,
             term,
-        }
-    }
-}
-
-impl Default for PromptBuilder<'_, DisplaySentinel, DisplaySentinel> {
-    fn default() -> Self {
-        Self {
-            question: None,
-            items: None,
-            default_item_idx: None,
-            term: None,
+            allow_esc,
+            total_view_length,
+            view_drag_limit,
         }
     }
 }
