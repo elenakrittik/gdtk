@@ -30,6 +30,7 @@ pub struct Prompt<'items, Q: Display, Item: Display> {
     allow_esc: bool,
     total_view_length: usize,
     view_drag_limit: usize,
+    view: SliceView<'items, Item>,
 }
 
 impl Prompt<'_, DisplaySentinel, DisplaySentinel> {
@@ -41,30 +42,25 @@ impl Prompt<'_, DisplaySentinel, DisplaySentinel> {
 impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
     pub fn interact(mut self) -> crate::Result<Option<usize>> {
         let mut choice = None;
-        let mut view = SliceView::new(
-            self.items,
-            self.current_item_idx..self.total_view_length,
-            self.total_view_length,
-        );
 
         self.term.hide_cursor()?;
         self.draw_question()?;
 
-        let mut lines_previously_drawn = self.draw_items(&mut view)?;
+        let mut lines_previously_drawn = self.draw_items()?;
 
         loop {
             match self.term.read_key()? {
                 Key::ArrowUp => {
-                    self.move_up(&mut view)?;
+                    self.move_up()?;
                     self.term.clear_last_lines(lines_previously_drawn)?;
 
-                    lines_previously_drawn = self.draw_items(&mut view)?;
+                    lines_previously_drawn = self.draw_items()?;
                 }
                 Key::ArrowDown => {
-                    self.move_down(&mut view)?;
+                    self.move_down()?;
                     self.term.clear_last_lines(lines_previously_drawn)?;
 
-                    lines_previously_drawn = self.draw_items(&mut view)?;
+                    lines_previously_drawn = self.draw_items()?;
                 }
                 Key::Enter => {
                     choice.replace(self.current_item_idx);
@@ -94,10 +90,10 @@ impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
         Ok(1)
     }
 
-    fn draw_items(&mut self, view: &mut SliceView<'items, Item>) -> crate::Result<usize> {
-        let range = view.range.start..=view.range.end;
-        let has_items_above = view.start() > 0;
-        let has_items_below = view.slice.len().saturating_sub(view.end()) > 1;
+    fn draw_items(&mut self) -> crate::Result<usize> {
+        let range = self.view.start()..=self.view.end();
+        let has_items_above = self.view.start() > 0;
+        let has_items_below = self.view.slice.len().saturating_sub(self.view.end()) > 1;
         let mut lines_drawn = 0;
 
         if has_items_above {
@@ -105,7 +101,8 @@ impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
             lines_drawn += 1;
         }
 
-        let items = view
+        let items = self
+            .view
             .slice
             .iter()
             .enumerate()
@@ -152,25 +149,25 @@ impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
         Ok(())
     }
 
-    fn move_up(&mut self, view: &mut SliceView<'items, Item>) -> crate::Result {
+    fn move_up(&mut self) -> crate::Result {
         self.current_item_idx = self.current_item_idx.saturating_sub(1);
 
-        if view.end().saturating_sub(self.current_item_idx) > self.view_drag_limit {
-            view.shift(-1);
+        if self.view.end().saturating_sub(self.current_item_idx) > self.view_drag_limit {
+            self.view.shift(-1);
         }
 
         Ok(())
     }
 
-    fn move_down(&mut self, view: &mut SliceView<'items, Item>) -> crate::Result {
+    fn move_down(&mut self) -> crate::Result {
         let next_item_idx = self.current_item_idx.saturating_add(1);
 
-        if next_item_idx < view.slice.len() {
+        if next_item_idx < self.view.slice.len() {
             self.current_item_idx = next_item_idx;
         }
 
-        if self.current_item_idx.saturating_sub(view.start()) > self.view_drag_limit {
-            view.shift(1);
+        if self.current_item_idx.saturating_sub(self.view.start()) > self.view_drag_limit {
+            self.view.shift(1);
         }
 
         Ok(())
@@ -191,6 +188,7 @@ where
             .field("allow_esc", &self.allow_esc)
             .field("total_view_length", &self.total_view_length)
             .field("view_drag_limit", &self.view_drag_limit)
+            .field("view", &self.view)
             .finish()
     }
 }
@@ -315,6 +313,11 @@ impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
         let allow_esc = self.allow_esc.unwrap_or(false);
         let total_view_length = self.view_length.unwrap_or(7);
         let view_drag_limit = self.view_drag_limit.unwrap_or(3);
+        let view = SliceView::new(
+            items,
+            current_item_idx..total_view_length,
+            total_view_length,
+        );
 
         Prompt {
             question,
@@ -324,6 +327,7 @@ impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
             allow_esc,
             total_view_length,
             view_drag_limit,
+            view,
         }
     }
 }
