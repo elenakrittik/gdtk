@@ -80,7 +80,7 @@ pub fn new_godot_versioning(from: &str) -> anyhow::Result<Versioning> {
 pub fn ask_for_version(mut pool: Vec<Versioning>) -> anyhow::Result<Versioning> {
     let answer = Prompt::builder()
         .with_question("Select Godot version")
-        .with_items(&pool)
+        .with_items(pool.iter())
         .build()
         .interact()?
         .unwrap();

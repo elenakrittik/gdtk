@@ -1,8 +1,4 @@
-use std::{
-    fmt::{Debug, Display},
-    io::Write,
-    ops::Range,
-};
+use std::{fmt::Display, io::Write, ops::Range};
 
 use console::{Key, Term};
 use yansi::Paint;
@@ -13,33 +9,39 @@ const ELLIPSIS_STYLE: yansi::Style = yansi::Style::new().bright_black().bold().d
 const CHOICE_STYLE: yansi::Style = ARROW_STYLE;
 const NO_CHOICE_STYLE: yansi::Style = yansi::Style::new().bright_red().bold();
 
-pub struct DisplaySentinel(());
+pub struct Sentinel(());
 
-impl Display for DisplaySentinel {
+impl Display for Sentinel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "DisplaySentinel")
     }
 }
 
+impl Iterator for Sentinel {
+    type Item = Self;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        None
+    }
+}
+
 /// A prompt.
-pub struct Prompt<'items, Q: Display, Item: Display> {
+pub struct Prompt<Q, Item> {
     question: Q,
-    items: &'items [Item],
     current_item_idx: usize,
     term: Term,
     allow_esc: bool,
-    total_view_length: usize,
     view_drag_limit: usize,
-    view: SliceView<'items, Item>,
+    view: View<Item>,
 }
 
-impl Prompt<'_, DisplaySentinel, DisplaySentinel> {
-    pub fn builder() -> PromptBuilder<'static, DisplaySentinel, DisplaySentinel> {
+impl Prompt<Sentinel, Sentinel> {
+    pub fn builder() -> PromptBuilder<Sentinel, Sentinel> {
         PromptBuilder::new()
     }
 }
 
-impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
+impl<Q: Display, Item: Display> Prompt<Q, Item> {
     pub fn interact(mut self) -> crate::Result<Option<usize>> {
         let mut choice = None;
 
@@ -93,7 +95,7 @@ impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
     fn draw_items(&mut self) -> crate::Result<usize> {
         let range = self.view.start()..=self.view.end();
         let has_items_above = self.view.start() > 0;
-        let has_items_below = self.view.slice.len().saturating_sub(self.view.end()) > 1;
+        let has_items_below = self.view.items.len().saturating_sub(self.view.end()) > 1;
         let mut lines_drawn = 0;
 
         if has_items_above {
@@ -103,7 +105,7 @@ impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
 
         let items = self
             .view
-            .slice
+            .items
             .iter()
             .enumerate()
             .filter(|(idx, _)| range.contains(idx));
@@ -135,7 +137,7 @@ impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
                 "{} {}: {}",
                 '?'.paint(CHOICE_STYLE),
                 self.question,
-                &self.items[choice],
+                &self.view.items[choice],
             )?;
         } else {
             writeln!(
@@ -162,7 +164,7 @@ impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
     fn move_down(&mut self) -> crate::Result {
         let next_item_idx = self.current_item_idx.saturating_add(1);
 
-        if next_item_idx < self.view.slice.len() {
+        if next_item_idx < self.view.items.len() {
             self.current_item_idx = next_item_idx;
         }
 
@@ -174,35 +176,16 @@ impl<'items, Q: Display, Item: Display> Prompt<'items, Q, Item> {
     }
 }
 
-impl<Q, Item> Debug for Prompt<'_, Q, Item>
-where
-    Q: Display + Debug,
-    Item: Display + Debug,
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Prompt")
-            .field("question", &self.question)
-            .field("items", &self.items)
-            .field("current_item_idx", &self.current_item_idx)
-            .field("term", &self.term)
-            .field("allow_esc", &self.allow_esc)
-            .field("total_view_length", &self.total_view_length)
-            .field("view_drag_limit", &self.view_drag_limit)
-            .field("view", &self.view)
-            .finish()
-    }
-}
-
-struct SliceView<'a, T> {
-    slice: &'a [T],
+struct View<T> {
+    items: Vec<T>,
     range: Range<usize>,
     length: usize,
 }
 
-impl<'a, T> SliceView<'a, T> {
-    fn new(slice: &'a [T], range: Range<usize>, length: usize) -> Self {
+impl<T> View<T> {
+    fn new(items: Vec<T>, range: Range<usize>, length: usize) -> Self {
         Self {
-            slice,
+            items,
             range,
             length,
         }
@@ -220,29 +203,16 @@ impl<'a, T> SliceView<'a, T> {
         let start = self.range.start.saturating_add_signed(delta);
         let end = self.range.end.saturating_add_signed(delta);
 
-        if end < self.slice.len() && end.saturating_sub(start) == self.length {
+        if end < self.items.len() && end.saturating_sub(start) == self.length {
             self.range.start = start;
             self.range.end = end;
         }
     }
 }
 
-impl<'a, T> Debug for SliceView<'a, T>
-where
-    T: Debug,
-{
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("SliceView")
-            .field("slice", &self.slice)
-            .field("range", &self.range)
-            .field("length", &self.length)
-            .finish()
-    }
-}
-
-pub struct PromptBuilder<'items, Q: Display, Item: Display> {
+pub struct PromptBuilder<Q, I> {
     question: Option<Q>,
-    items: Option<&'items [Item]>,
+    items: Option<I>,
     default_item_idx: Option<usize>,
     term: Option<Term>,
     allow_esc: Option<bool>,
@@ -250,7 +220,7 @@ pub struct PromptBuilder<'items, Q: Display, Item: Display> {
     view_drag_limit: Option<usize>,
 }
 
-impl PromptBuilder<'_, DisplaySentinel, DisplaySentinel> {
+impl PromptBuilder<Sentinel, Sentinel> {
     fn new() -> Self {
         Self {
             question: None,
@@ -264,15 +234,15 @@ impl PromptBuilder<'_, DisplaySentinel, DisplaySentinel> {
     }
 }
 
-impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
-    pub fn with_question<NewQ: Display>(self, question: NewQ) -> PromptBuilder<'items, NewQ, Item> {
+impl<Q: Display, I: Iterator<Item: Display>> PromptBuilder<Q, I> {
+    pub fn with_question<NewQ: Display>(self, question: NewQ) -> PromptBuilder<NewQ, I> {
         PromptBuilder {
             question: Some(question),
             ..self
         }
     }
 
-    pub fn with_items<NewItem: Display>(self, items: &[NewItem]) -> PromptBuilder<'_, Q, NewItem> {
+    pub fn with_items<NewI: Iterator<Item: Display>>(self, items: NewI) -> PromptBuilder<Q, NewI> {
         PromptBuilder {
             items: Some(items),
             ..self
@@ -305,15 +275,15 @@ impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
     }
 
     #[rustfmt::skip]
-    pub fn build(self) -> Prompt<'items, Q, Item> {
+    pub fn build(self) -> Prompt<Q, I::Item> {
         let question = self.question.expect("`question` must've been set before calling `.build()`");
-        let items = self.items.expect("`items` must've been set before calling `.build()`");
+        let items = self.items.expect("`items` must've been set before calling `.build()`").collect::<Vec<_>>();
         let current_item_idx = self.default_item_idx.unwrap_or_default();
         let term = self.term.unwrap_or_else(Term::stderr);
         let allow_esc = self.allow_esc.unwrap_or(false);
         let total_view_length = self.view_length.unwrap_or(7);
         let view_drag_limit = self.view_drag_limit.unwrap_or(3);
-        let view = SliceView::new(
+        let view = View::new(
             items,
             current_item_idx..total_view_length,
             total_view_length,
@@ -321,11 +291,9 @@ impl<'items, Q: Display, Item: Display> PromptBuilder<'items, Q, Item> {
 
         Prompt {
             question,
-            items,
             current_item_idx,
             term,
             allow_esc,
-            total_view_length,
             view_drag_limit,
             view,
         }

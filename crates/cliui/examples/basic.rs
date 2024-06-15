@@ -5,7 +5,7 @@ fn main() -> cliui::Result<()> {
 
     Prompt::builder()
         .with_question("Choose Godot version")
-        .with_items(&ITEMS)
+        .with_items(ITEMS.into_iter())
         .build()
         .interact()?;
 
