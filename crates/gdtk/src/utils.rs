@@ -77,13 +77,13 @@ pub fn new_godot_versioning(from: &str) -> anyhow::Result<Versioning> {
     Versioning::new(from).ok_or(anyhow::anyhow!("Invalid Godot version."))
 }
 
-pub fn ask_for_version(mut pool: Vec<Versioning>) -> anyhow::Result<Versioning> {
+pub fn ask_for_version(pool: Vec<Versioning>) -> anyhow::Result<Versioning> {
     let answer = Prompt::builder()
         .with_question("Select Godot version")
-        .with_items(pool.iter())
+        .with_items(pool.into_iter())
         .build()
         .interact()?
         .unwrap();
 
-    Ok(pool.swap_remove(answer))
+    Ok(answer)
 }

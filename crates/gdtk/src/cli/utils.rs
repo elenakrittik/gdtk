@@ -28,11 +28,11 @@ impl ParserExt for tapcli::Parser {
         })
     }
 
-    fn next_godot_version(&mut self, mut pool: Vec<Versioning>) -> anyhow::Result<Versioning> {
-        let prompt = |items: &[Versioning]| {
+    fn next_godot_version(&mut self, pool: Vec<Versioning>) -> anyhow::Result<Versioning> {
+        let prompt = |items: Vec<Versioning>| {
             Prompt::builder()
                 .with_question("Select Godot version")
-                .with_items(items.iter())
+                .with_items(items.into_iter())
                 .build()
                 .interact()
         };
@@ -40,17 +40,15 @@ impl ParserExt for tapcli::Parser {
         if let Some(input) = self.next_value_maybe()? {
             let mut matches = coerce_version(new_godot_versioning(&input)?, pool)?;
 
-            let idx = if matches.len() == 1 {
-                0
+            let version = if matches.len() == 1 {
+                matches.swap_remove(0)
             } else {
-                prompt(&matches)?.unwrap()
+                prompt(matches)?.unwrap()
             };
 
-            Ok(matches.swap_remove(idx))
+            Ok(version)
         } else {
-            let idx = prompt(&pool)?.unwrap();
-
-            Ok(pool.swap_remove(idx))
+            Ok(prompt(pool)?.unwrap())
         }
     }
 }

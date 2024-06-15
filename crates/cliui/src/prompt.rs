@@ -42,7 +42,7 @@ impl Prompt<Sentinel, Sentinel> {
 }
 
 impl<Q: Display, Item: Display> Prompt<Q, Item> {
-    pub fn interact(mut self) -> crate::Result<Option<usize>> {
+    pub fn interact(mut self) -> crate::Result<Option<Item>> {
         let mut choice = None;
 
         self.term.hide_cursor()?;
@@ -78,7 +78,7 @@ impl<Q: Display, Item: Display> Prompt<Q, Item> {
         self.draw_choice(choice)?;
         self.term.show_cursor()?;
 
-        Ok(choice)
+        Ok(choice.map(|idx| self.view.items.swap_remove(idx)))
     }
 
     fn draw_question(&mut self) -> crate::Result<usize> {
