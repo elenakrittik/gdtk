@@ -19,7 +19,7 @@ zip = { version = "2.1.3", default-features = false, features = [
     "deflate",
 ] }
 itertools = "0.13.0"
-reqwest = "0.12.2"
+reqwest = "0.12.5"
 tabled = { version = "0.15.0", features = ["std"] }
 spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
 ignore = { version = "0.4.22", features = ["simd-accel"] }
