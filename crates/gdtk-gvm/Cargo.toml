@@ -9,7 +9,7 @@ edition = "2021"
 ahash = { version = "0.8.6", features = ["serde"] }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
 serde = { version = "1.0.203", features = ["derive"] }
-reqwest = "0.12.2"
+reqwest = "0.12.5"
 thiserror = "1.0.61"
 toml = "0.8.14"
 versions = "6.0.0"
