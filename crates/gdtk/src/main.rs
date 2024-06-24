@@ -5,6 +5,7 @@
     option_get_or_insert_default,
     impl_trait_in_assoc_type
 )]
+#![feature(generic_arg_infer)]
 
 use tapcli::Command;
 

@@ -1,4 +1,5 @@
 use ahash::AHashMap;
+use versions::Versioning;
 
 const GODOT_DOWNLOADS_ROOT: &str = "https://godotengine.org/download/archive/";
 
@@ -18,11 +19,12 @@ pub async fn fetch_versions() -> Result<Vec<versions::Versioning>, crate::Error>
 }
 
 pub async fn version_download_urls(
-    version: &str,
+    version: &Versioning,
+    version_string: &str,
 ) -> Result<AHashMap<(&'static str, &'static str), url::Url>, crate::Error> {
-    let mut url = GODOT_DOWNLOADS_ROOT.to_owned() + version;
+    let mut url = GODOT_DOWNLOADS_ROOT.to_owned() + version_string;
 
-    if crate::utils::is_stable(&versions::Versioning::new(version).unwrap()) {
+    if crate::utils::is_stable(version) {
         url += "-stable";
     }
 
