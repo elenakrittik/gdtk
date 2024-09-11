@@ -28,7 +28,7 @@ impl VersionManager {
         self.inner
             .versions
             .keys()
-            .filter_map(|v| versions::Versioning::new(v))
+            .filter_map(versions::Versioning::new)
             .collect()
     }
 

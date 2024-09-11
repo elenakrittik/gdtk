@@ -32,9 +32,22 @@ impl ParserExt for tapcli::Parser {
         let prompt = |items: Vec<Versioning>| {
             Prompt::builder()
                 .with_question("Select Godot version")
-                .with_items(items.into_iter())
+                .with_items(items.iter().collect::<Vec<_>>())
+                .with_state(PromptState::default())
+                .with_action(
+                    cliui::Key::Char('d'),
+                    cliui::Action {
+                        description: "Show in-development versions.",
+                        callback: |prompt| {
+                            prompt.state.dev = !prompt.state.dev;
+
+                            Ok(())
+                        },
+                    },
+                )
                 .build()
                 .interact()
+                .map(|o| o.map(|v| v.to_owned()))
         };
 
         if let Some(input) = self.next_value_maybe()? {
@@ -51,4 +64,10 @@ impl ParserExt for tapcli::Parser {
             Ok(prompt(pool)?.unwrap())
         }
     }
+}
+
+#[derive(Default)]
+struct PromptState {
+    dev: bool,
+    mono: bool,
 }

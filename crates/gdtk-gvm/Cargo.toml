@@ -16,3 +16,5 @@ versions = "6.0.0"
 scraper = "0.19.0"
 url = "2.4.1"
 tabled = "0.15.0"
+octocrab = { version = "0.39.0", features = ["stream"] }
+futures-util = "0.3.30"

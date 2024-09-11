@@ -1,4 +1,4 @@
-#![feature(decl_macro, option_take_if)]
+#![feature(decl_macro)]
 
 pub use versions;
 
@@ -9,3 +9,4 @@ pub mod manager;
 pub mod online;
 pub mod types;
 pub mod utils;
+pub mod version;
