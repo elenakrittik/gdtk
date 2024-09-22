@@ -72,13 +72,19 @@ impl tapcli::Command for Command {
     type Error = anyhow::Error;
 
     async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        match parser.next().unwrap().as_ref() {
+        let command = match parser.next().unwrap().as_ref() {
             #[cfg(any(debug_assertions, feature = "dev"))]
-            tapcli::ArgRef::Value("dev") => Ok(Self::Dev(DevCommand::parse(parser).await?)),
-            tapcli::ArgRef::Value("godot") => Ok(Self::Godot(GodotCommand::parse(parser).await?)),
-            tapcli::ArgRef::Value("lint") => Ok(Self::Lint(LintCommand::parse(parser).await?)),
+            tapcli::ArgRef::Value("dev") => Self::Dev(DevCommand::parse(parser).await?),
+            tapcli::ArgRef::Value("godot") => Self::Godot(GodotCommand::parse(parser).await?),
+            tapcli::ArgRef::Value("lint") => Self::Lint(LintCommand::parse(parser).await?),
             _ => unreachable!(),
+        };
+
+        if let Some(arg) = parser.next() {
+            anyhow::bail!("Unrecognized argument: {arg}");
         }
+
+        Ok(command)
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {

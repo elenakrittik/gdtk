@@ -21,18 +21,7 @@ fn main() -> cliui::Result<()> {
                 callback: |prompt| {
                     prompt.state.only_3x = !prompt.state.only_3x;
 
-                    let new_items = ITEMS
-                        .into_iter()
-                        .filter(|v| {
-                            if prompt.state.only_3x {
-                                v.starts_with('3')
-                            } else {
-                                true
-                            }
-                        })
-                        .collect::<Vec<_>>();
-
-                    prompt.replace_items(new_items)?;
+                    // TODO: implement filtering
 
                     Ok(())
                 },

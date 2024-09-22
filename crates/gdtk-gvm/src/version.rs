@@ -1,26 +1,37 @@
-use octocrab::models::repos::Release;
+use std::fmt::Display;
+
 use versions::Version as SemanticVersion;
 
-#[derive(PartialEq)]
+use crate::queries::releases::Release as GraphQLRelease;
+
+#[derive(PartialEq, Debug)]
 pub struct Version {
     semantic: SemanticVersion,
-    data: Release, // TODO: this thing is *FAT*. we should use graphql api via cynic and only include what we need
+    data: GraphQLRelease,
 }
 
 impl Version {
-    pub fn is_dev(&self) -> bool {
-        self.data.prerelease
-    }
-}
-
-impl AsRef<str> for Version {
-    fn as_ref(&self) -> &str {
+    pub fn name(&self) -> &str {
         &self.data.tag_name
     }
+
+    pub fn is_dev(&self) -> bool {
+        self.data.is_prerelease
+    }
+
+    pub fn as_ordered(&self) -> &impl Ord {
+        &self.semantic
+    }
 }
 
-impl From<Release> for Version {
-    fn from(value: Release) -> Self {
+impl Display for Version {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.data.tag_name)
+    }
+}
+
+impl From<GraphQLRelease> for Version {
+    fn from(value: GraphQLRelease) -> Self {
         Self {
             semantic: SemanticVersion::new(&value.tag_name).expect("a valid version"),
             data: value,

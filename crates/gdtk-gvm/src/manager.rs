@@ -24,12 +24,8 @@ impl VersionManager {
     }
 
     /// Get all installed versions.
-    pub fn versionings(&self) -> Vec<versions::Versioning> {
-        self.inner
-            .versions
-            .keys()
-            .filter_map(versions::Versioning::new)
-            .collect()
+    pub fn versions(&self) -> Vec<&str> {
+        self.inner.versions.keys().map(AsRef::as_ref).collect()
     }
 
     /// Inserts a version and returns whether this version was previously in there.

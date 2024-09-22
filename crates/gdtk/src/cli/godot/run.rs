@@ -1,25 +1,22 @@
-use gdtk_gvm::{versions::Versioning, VersionManager};
+use gdtk_gvm::VersionManager;
 
-use crate::cli::utils::ParserExt;
+use crate::cli::utils::prompt_local_version;
 
-pub struct GodotRunCommand {
-    pub version: Versioning,
-    pub manager: VersionManager,
-}
+pub struct GodotRunCommand;
 
 impl tapcli::Command for GodotRunCommand {
     type Error = anyhow::Error;
 
-    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        let manager = VersionManager::load()?;
-        let version = parser.next_godot_version(manager.versionings())?;
-
-        Ok(Self { version, manager })
+    async fn parse(_: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+        Ok(Self)
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {
-        let Some(version) = self.manager.get_version(&self.version.to_string()) else {
-            eprintln!("Godot {} is not installed.", self.version);
+        let manager = VersionManager::load()?;
+        let version = prompt_local_version(&manager)?;
+
+        let Some(version) = manager.get_version(version) else {
+            eprintln!("Godot {} is not installed.", version);
             return Ok(());
         };
 

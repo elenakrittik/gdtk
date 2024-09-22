@@ -4,46 +4,49 @@ use std::{
     path::Path,
 };
 
-use gdtk_gvm::{online::version_download_urls, utils::arch_os, versions::Versioning};
+use cliui::{Action, Prompt};
+use gdtk_gvm::{
+    online::{fetch_version_assets, fetch_versions},
+    utils::pick_asset,
+    version::Version,
+};
 
-use crate::cli::{godot::symlink_default_version, utils::ParserExt};
+use crate::cli::godot::symlink_default_version;
 
 pub struct GodotInstallCommand {
-    pub version: Versioning,
+    version: Version,
+    mono: bool,
 }
 
 impl tapcli::Command for GodotInstallCommand {
     type Error = anyhow::Error;
 
-    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        let pool = gdtk_gvm::online::fetch_versions().await?;
-        let version = parser.next_godot_version(pool)?;
+    async fn parse(_: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+        let (version, mono) = prompt_for_version()?;
 
-        Ok(Self { version })
+        Ok(Self { version, mono })
     }
 
     async fn run(self) -> Result<Self::Output, Self::Error> {
         let mut manager = gdtk_gvm::VersionManager::load()?;
-        let version_string = self.version.to_string();
+
         let set_as_default = manager.is_empty();
-        let target_dir = gdtk_paths::godots_path()?.join(&version_string);
+        let target_dir = gdtk_paths::godots_path()?.join(self.version.name());
 
         let already_installed = manager.add_version(
-            &version_string,
+            self.version.name(),
             gdtk_gvm::types::Version {
                 path: target_dir.clone(),
             },
         );
 
         if already_installed {
-            anyhow::bail!("Godot {version_string} is already installed.");
+            anyhow::bail!("Godot {} is already installed.", self.version.name());
         }
 
-        let download_urls = version_download_urls(&self.version, &version_string).await?;
-        let url = download_urls.get(&arch_os()).ok_or(anyhow::anyhow!(
-            "Couldn't find download URL for current arch/os pair {:?}.",
-            arch_os(),
-        ))?;
+        let assets = fetch_version_assets(self.version.name())?;
+        let asset = pick_asset(&assets, self.mono)
+            .expect("Couldn't find a Godot build for current OS/arch pair.");
 
         let mut spinner = spinoff::Spinner::new(
             spinoff::spinners::Dots2,
@@ -51,7 +54,14 @@ impl tapcli::Command for GodotInstallCommand {
             spinoff::Color::Cyan,
         );
 
-        let content = reqwest::get(url.to_owned()).await?.bytes().await?;
+        let mut content = vec![];
+
+        ureq::get(&asset.download_url.0)
+            .call()?
+            .into_body()
+            .into_reader()
+            .read_to_end(&mut content)?;
+
         let mut source = std::io::Cursor::new(content);
 
         spinner.update_text("Extracting..");
@@ -64,7 +74,7 @@ impl tapcli::Command for GodotInstallCommand {
         std::fs::File::create(target_dir.join("._sc_"))?;
 
         if set_as_default {
-            manager.inner.default = Some(version_string);
+            manager.inner.default = Some(self.version.name().to_string());
             symlink_default_version(&target_dir)?;
         }
 
@@ -94,4 +104,41 @@ fn extract_godot(source: impl Read + Seek, target_dir: &Path) -> zip::result::Zi
     }
 
     Ok(())
+}
+
+const TOGGLE_MONO_KEY: cliui::Key = cliui::Key::Char('m');
+const TOGGLE_MONO_DESC_NO: &str = "Install the mono variant? (current: no)";
+const TOGGLE_MONO_DESC_YES: &str = "Install the mono variant? (current: yes)";
+
+fn prompt_for_version() -> anyhow::Result<(Version, bool)> {
+    let available_versions = fetch_versions()?;
+
+    let (version, mono) = Prompt::builder()
+        .with_question("Select version")
+        .with_items(available_versions)
+        .with_state(false)
+        .with_action(
+            TOGGLE_MONO_KEY,
+            Action {
+                description: TOGGLE_MONO_DESC_NO,
+                callback: |prompt| {
+                    prompt.state = !prompt.state;
+
+                    let action = prompt.actions.get_mut(&TOGGLE_MONO_KEY).unwrap();
+
+                    if prompt.state {
+                        action.description = TOGGLE_MONO_DESC_YES;
+                    } else {
+                        action.description = TOGGLE_MONO_DESC_NO;
+                    }
+
+                    Ok(())
+                },
+            },
+        )
+        .allow_esc(false)
+        .build()
+        .interact()?;
+
+    Ok((version.unwrap(), mono))
 }

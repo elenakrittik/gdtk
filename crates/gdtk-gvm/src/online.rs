@@ -1,82 +1,109 @@
-use futures_util::StreamExt;
+use cynic::QueryBuilder;
 
-use crate::version::Version;
+use crate::{
+    queries::{
+        release_assets::{ReleaseAsset, ReleaseAssetsQuery, ReleaseAssetsQueryVariables},
+        releases::{ReleasesQuery, ReleasesQueryVariables},
+        GITHUB_GRAPHQL_API,
+    },
+    version::Version,
+};
 
-pub async fn fetch_versions() -> Result<Vec<Version>, crate::Error> {
-    let github = octocrab::Octocrab::builder().build()?;
+pub fn fetch_versions() -> Result<Vec<Version>, crate::Error> {
+    let mut output = vec![];
+    let mut cursor_end = None;
 
-    let releases = github
-        .repos("godotengine", "godot-builds")
-        .releases()
-        .list()
-        .per_page(100)
-        .send()
-        .await?
-        .into_stream(&github)
-        .filter_map(|r| async { r.ok() })
-        .map(Version::from)
-        .collect::<Vec<_>>()
-        .await;
+    loop {
+        let op = ReleasesQuery::build(ReleasesQueryVariables {
+            after: cursor_end.as_deref(),
+        });
 
-    Ok(releases)
+        let response = send_graphql_request(op)?.repository.unwrap().releases;
+
+        output.extend(
+            response
+                .nodes
+                .unwrap()
+                .into_iter()
+                .flatten()
+                .map(Version::from),
+        );
+
+        if response.page_info.has_next_page {
+            cursor_end = response.page_info.end_cursor;
+        } else {
+            break;
+        }
+    }
+
+    output.sort_unstable_by(|v1, v2| v2.as_ordered().cmp(v1.as_ordered()));
+
+    Ok(output)
 }
 
-// pub async fn fetch_versions() -> Result<Vec<Version>, crate::Error> {
-//     let text = reqwest::get(GODOT_DOWNLOADS_ROOT).await?.text().await?;
-//     let html = scraper::Html::parse_document(&text);
-//     let selector = scraper::Selector::parse(".archive-version > h4").unwrap();
+pub fn fetch_version_assets(tag_name: &str) -> Result<Vec<ReleaseAsset>, crate::Error> {
+    let mut output = vec![];
+    let mut cursor_end = None;
 
-//     let versions = html
-//         .select(&selector)
-//         .filter_map(|elem| elem.attr("id"))
-//         .filter_map(versions::Version::new)
-//         .map(crate::utils::strip_stable_postfix)
-//         .map(|v| Version::new(v, false))
-//         .collect();
+    loop {
+        let op = ReleaseAssetsQuery::build(ReleaseAssetsQueryVariables {
+            after: cursor_end.as_deref(),
+            tag_name,
+        });
 
-//     Ok(versions)
-// }
+        let response = send_graphql_request(op)?
+            .repository
+            .unwrap()
+            .release
+            .unwrap()
+            .release_assets;
 
-// pub async fn version_download_urls(
-//     version: &versions::Version,
-//     version_string: &str,
-// ) -> Result<AHashMap<(&'static str, &'static str), url::Url>, crate::Error> {
-//     let mut url = GODOT_DOWNLOADS_ROOT.to_owned() + version_string;
+        output.extend(response.nodes.unwrap().into_iter().flatten());
 
-//     if crate::utils::is_stable(version) {
-//         url += "-stable";
-//     }
+        if response.page_info.has_next_page {
+            cursor_end = response.page_info.end_cursor;
+        } else {
+            break;
+        }
+    }
 
-//     let text = reqwest::get(url).await?.text().await?;
-//     let html = scraper::Html::parse_document(&text);
-//     let selector = scraper::Selector::parse(".download > span > a").unwrap();
+    Ok(output)
+}
 
-//     let downloads = html
-//         .select(&selector)
-//         .filter_map(|elem| elem.attr("href"))
-//         .filter_map(|href| map_href_to_arch(href).ok().zip(url::Url::parse(href).ok()))
-//         .collect();
+fn retrieve_token() -> Result<String, crate::Error> {
+    let command = std::process::Command::new("gh")
+        .arg("auth")
+        .arg("token")
+        .output()?;
 
-//     Ok(downloads)
-// }
+    let std::process::Output {
+        status,
+        stdout: output,
+        ..
+    } = command;
 
-// fn map_href_to_arch(href: &str) -> Result<(&'static str, &'static str), crate::Error> {
-//     if href.contains("mono") {
-//         return Err(crate::Error::MonoUnsupported);
-//     }
+    if status.success() {
+        Ok(String::from_utf8(output.trim_ascii().to_owned())
+            .map_err(|_| crate::Error::TokenRetrievalError)?)
+    } else {
+        Err(crate::Error::TokenRetrievalError)
+    }
+}
 
-//     // TODO: use a regex instead?
+fn send_graphql_request<Q, V>(op: cynic::Operation<Q, V>) -> Result<Q, crate::Error>
+where
+    Q: serde::de::DeserializeOwned,
+    V: serde::Serialize,
+{
+    let token = format!("Bearer {}", retrieve_token()?);
 
-//     // hardcoding :(
-//     match href {
-//         href if href.ends_with("android_editor.apk") => Ok(("arm64", "android")),
-//         href if href.ends_with("linux.x86_64.zip") => Ok(("x86_64", "linux")),
-//         href if href.ends_with("linux.x86_32.zip") => Ok(("x86", "linux")),
-//         href if href.ends_with("linux.arm64.zip") => Ok(("arm64", "linux")),
-//         href if href.ends_with("linux.arm32.zip") => Ok(("arm32", "linux")),
-//         href if href.ends_with("macos.universal.zip") => Ok(("darwinany", "macos")),
-//         href if href.ends_with("win64.exe.zip") => Ok(("x86_64", "windows")),
-//         href if href.ends_with("win32.exe.zip") => Ok(("x86", "windows")),
-//         _ => Err(crate::Error::UnknownDownloadUrl(href.into())),
-//     }
-// }
+    let data = ureq::post(GITHUB_GRAPHQL_API)
+        .header("Authorization", &token)
+        .send_json(op)?
+        .into_body()
+        .read_json::<cynic::GraphQlResponse<Q>>()?
+        .data
+        .unwrap();
+
+    Ok(data)
+}

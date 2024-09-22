@@ -1,0 +1,150 @@
+
+"""
+The query root of GitHub's GraphQL interface.
+"""
+type Query {
+  """
+  Lookup a given repository by the owner and repository name.
+  """
+  repository(
+    """
+    The name of the repository
+    """
+    name: String!
+
+    """
+    The login field of a user or organization
+    """
+    owner: String!
+  ): Repository
+}
+
+"""
+A repository contains the content for a project.
+"""
+type Repository {
+  """
+  Lookup a single release given various criteria.
+  """
+  release(
+    """
+    The name of the Tag the Release was created from
+    """
+    tagName: String!
+  ): Release
+
+  """
+  List of releases which are dependent on this repository.
+  """
+  releases(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+  ): ReleaseConnection!
+}
+
+"""
+The connection type for Release.
+"""
+type ReleaseConnection {
+  """
+  A list of nodes.
+  """
+  nodes: [Release]
+
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+A release contains the content for a release.
+"""
+type Release {
+  """
+  Whether or not the release is a prerelease
+  """
+  isPrerelease: Boolean!
+
+  """
+  List of releases assets which are dependent on this release.
+  """
+  releaseAssets(
+    """
+    Returns the elements in the list that come after the specified cursor.
+    """
+    after: String
+
+    """
+    Returns the first _n_ elements from the list.
+    """
+    first: Int
+  ): ReleaseAssetConnection!
+
+  """
+  The name of the release's Git tag
+  """
+  tagName: String!
+}
+
+"""
+The connection type for ReleaseAsset.
+"""
+type ReleaseAssetConnection {
+  """
+  A list of nodes.
+  """
+  nodes: [ReleaseAsset]
+
+  """
+  Information to aid in pagination.
+  """
+  pageInfo: PageInfo!
+}
+
+"""
+A release asset contains the content for a release asset.
+"""
+type ReleaseAsset {
+  """
+  Identifies the URL where you can download the release asset via the browser.
+  """
+  downloadUrl: URI!
+
+  """
+  Identifies the title of the release asset.
+  """
+  name: String!
+
+  """
+  The size (in bytes) of the asset
+  """
+  size: Int!
+}
+
+"""
+Information about pagination in a connection.
+"""
+type PageInfo {
+  """
+  When paginating forwards, the cursor to continue.
+  """
+  endCursor: String
+
+  """
+  When paginating forwards, are there more items?
+  """
+  hasNextPage: Boolean!
+}
+
+"""
+An RFC 3986, RFC 3987, and RFC 6570 (level 4) compliant URI string.
+"""
+scalar URI

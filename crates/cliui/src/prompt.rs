@@ -29,20 +29,12 @@ pub struct Prompt<Item, State> {
     term: Term,
     allow_esc: bool,
     view: VecView<Item>,
-    actions: AHashMap<Key, Action<Item, State>>,
+    pub actions: AHashMap<Key, Action<Item, State>>,
     pub state: State,
 }
 
-impl<Item, State> Prompt<Item, State> {
-    pub fn replace_items(&mut self, with: impl Into<Vec<Item>>) -> crate::Result {
-        self.view = VecView::new(with.into(), self.view.length, self.view.drag_limit);
-
-        Ok(())
-    }
-}
-
 impl<Item: Display, State> Prompt<Item, State> {
-    pub fn interact(mut self) -> crate::Result<Option<Item>> {
+    pub fn interact(mut self) -> crate::Result<(Option<Item>, State)> {
         let mut choice = None;
 
         self.term.hide_cursor()?;
@@ -85,7 +77,9 @@ impl<Item: Display, State> Prompt<Item, State> {
         self.draw_choice(choice)?;
         self.term.show_cursor()?;
 
-        Ok(choice.map(|idx| self.view.items.swap_remove(idx)))
+        let item = choice.map(|idx| self.view.items.swap_remove(idx));
+
+        Ok((item, self.state))
     }
 
     fn draw_question(&mut self) -> crate::Result<usize> {

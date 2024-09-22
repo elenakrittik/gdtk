@@ -1,4 +1,4 @@
-/// A special type that all prompt-related `new()` functions use in place of generic parameters.
+/// A special uninstantiable type for use as "default" generic parameters.
 pub struct Sentinel(());
 
 impl std::fmt::Display for Sentinel {

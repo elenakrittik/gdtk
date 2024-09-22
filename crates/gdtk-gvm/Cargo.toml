@@ -9,12 +9,12 @@ edition = "2021"
 ahash = { version = "0.8.6", features = ["serde"] }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
 serde = { version = "1.0.203", features = ["derive"] }
-reqwest = "0.12.2"
 thiserror = "1.0.61"
 toml = "0.8.6"
 versions = "6.0.0"
-scraper = "0.19.0"
-url = "2.4.1"
 tabled = "0.15.0"
-octocrab = { version = "0.39.0", features = ["stream"] }
-futures-util = "0.3.30"
+cynic = { version = "3.8.0", default-features = false }
+ureq = { version = "3.0.0-rc1", features = ["json"] }
+
+[build-dependencies]
+cynic-codegen = { version = "3.8.0", features = ["rkyv"] }

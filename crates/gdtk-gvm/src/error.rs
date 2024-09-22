@@ -1,9 +1,8 @@
 use std::io::Error as IOError;
 
-use octocrab::Error as OctoError;
-use reqwest::Error as ReqError;
 use toml::de::Error as TOMLDeError;
 use toml::ser::Error as TOMLSerError;
+use ureq::Error as UreqError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -22,9 +21,9 @@ pub enum Error {
     #[error("TOML deserialization error: {0:?}")]
     TOMLDeserializationError(#[from] TOMLDeError),
 
-    #[error("Reqwest error: {0:?}")]
-    ReqwestError(#[from] ReqError),
+    #[error("Surf error: {0:?}")]
+    UreqError(#[from] UreqError),
 
-    #[error("GitHub API errorL {0:?}")]
-    OctocrabError(#[from] OctoError),
+    #[error("Unable to retrieve GitHub authentication token. Is `gh` set up on your machine?")]
+    TokenRetrievalError,
 }

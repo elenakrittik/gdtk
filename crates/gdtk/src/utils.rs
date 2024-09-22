@@ -3,8 +3,6 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use cliui::Prompt;
-use gdtk_gvm::versions::Versioning;
 use itertools::Itertools;
 
 use crate::cli::Cli;
@@ -71,19 +69,4 @@ pub fn get_content(file: &Path) -> anyhow::Result<String> {
     } else {
         std::fs::read_to_string(file)?
     })
-}
-
-pub fn new_godot_versioning(from: &str) -> anyhow::Result<Versioning> {
-    Versioning::new(from).ok_or(anyhow::anyhow!("Invalid Godot version."))
-}
-
-pub fn ask_for_version(pool: Vec<Versioning>) -> anyhow::Result<Versioning> {
-    let answer = Prompt::builder()
-        .with_question("Select Godot version")
-        .with_items(pool)
-        .build()
-        .interact()?
-        .unwrap();
-
-    Ok(answer)
 }

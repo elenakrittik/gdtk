@@ -1,25 +1,41 @@
-use versions::Versioning;
+use std::fmt::Display;
+
+use crate::queries::release_assets::ReleaseAsset;
 
 /// Pick the best match for a given ``version`` from ``vers``.
-pub fn coerce_version(
-    version: Versioning,
-    vers: Vec<Versioning>,
-) -> Result<Vec<Versioning>, crate::Error> {
-    let matches_ = vers
+pub fn coerce_version<V: Display>(input: &str, pool: Vec<V>) -> Result<Vec<V>, crate::Error> {
+    let matches_ = pool
         .into_iter()
-        .filter(|ver| ver.to_string().starts_with(&version.to_string()))
-        .filter(|ver| ver >= &version)
+        .filter(|ver| ver.to_string().starts_with(input))
         .collect::<Vec<_>>();
 
     Ok(matches_)
 }
 
-pub const fn arch_os() -> (&'static str, &'static str) {
-    let arch = if cfg!(target_arch = "aarch64") {
-        "arm64"
-    } else {
-        std::env::consts::ARCH
+pub fn pick_asset(assets: &[ReleaseAsset], mono: bool) -> Option<&ReleaseAsset> {
+    // something something consistency
+    // see https://github.com/godotengine/godot-builds/issues/5
+
+    let suffix = match (mono, std::env::consts::OS, std::env::consts::ARCH) {
+        (false, "windows", "x86_64") => "win64.exe.zip",
+        (false, "windows", "x86") => "win32.exe.zip",
+        (false, "windows", "aarch64") => "windows_arm64.exe.zip",
+        (false, "linux", "x86_64") => "linux.x86_64.zip",
+        (false, "linux", "x86") => "linux.x86_32.zip",
+        (false, "linux", "arm") => "linux.arm32.zip",
+        (false, "linux", "aarch64") => "linux.arm64.zip",
+        (false, "macos", "x86_64" | "aarch64") => "macos.universal.zip",
+        // --
+        (true, "windows", "x86_64") => "mono_win64.zip",
+        (true, "windows", "x86") => "mono_win32.zip",
+        (true, "windows", "aarch64") => "mono_windows_arm64.zip",
+        (true, "linux", "x86_64") => "mono_linux_x86_64_zip",
+        (true, "linux", "x86") => "mono_linux_x86_32_zip",
+        (true, "linux", "arm") => "mono_linux_arm32.zip",
+        (true, "linux", "aarch64") => "mono_linux_arm64.zip",
+        (true, "macos", "x86_64" | "aarch64") => "mono_macos.universal.zip",
+        _ => return None,
     };
 
-    (arch, std::env::consts::OS)
+    assets.iter().find(|asset| asset.name.ends_with(suffix))
 }
