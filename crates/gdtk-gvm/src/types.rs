@@ -1,31 +1,18 @@
-use std::{fmt::Display, path::PathBuf};
+use std::fmt::Display;
 
 /// Represents a `versions.toml` file.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct VersionsToml {
-    pub versions: Vec<DiskVersion>,
-}
+#[derive(Debug, Clone, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+pub struct VersionsToml(pub Vec<DiskVersion>);
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, tabled::Tabled)]
+#[derive(Debug, Clone, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, tabled::Tabled)]
 pub struct DiskVersion {
     #[tabled(rename = "Version")]
-    #[tabled(display_with("Self::display_name", self))]
+    #[tabled(display_with("ToString::to_string", self))]
     pub name: String,
-    #[tabled(display_with("Self::display_path", self))]
     #[tabled(rename = "Location")]
-    pub path: PathBuf,
+    pub path: String,
     #[tabled(skip)]
     pub mono: bool,
-}
-
-impl DiskVersion {
-    fn display_name(&self) -> String {
-        self.to_string()
-    }
-
-    fn display_path(&self) -> String {
-        self.path.display().to_string()
-    }
 }
 
 impl Display for DiskVersion {
