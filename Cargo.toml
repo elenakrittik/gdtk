@@ -15,7 +15,7 @@ debug = true
 
 [patch.crates-io]
 # This fork of logos includes some unstable fixes that we need.
-# logos = { git = "https://github.com/elenakrittik/logos", rev = "d79f8e736239fb5e6b972a54463095d44bc494bc" }
-logos = { path = "../logos" } # you didn't see this, okay?
+logos = { git = "https://github.com/elenakrittik/logos", rev = "d835bae8e28829710f44fcc679770c3f0ada87d3" }
+# logos = { path = "../logos" } # you didn't see this, okay?
 # ureq 3.x, currently unreleased. Much better than 2.x.
 ureq = { git = "https://github.com/algesten/ureq", rev = "bc6665047304bb839193f39ece4021d3981cdcc8" }
