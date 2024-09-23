@@ -13,20 +13,13 @@ impl tapcli::Command for GodotUninstallCommand {
 
     async fn run(self) -> Result<Self::Output, Self::Error> {
         let mut manager = VersionManager::load()?;
-        let version = prompt_local_version(&manager)?.to_owned();
+        let version = prompt_local_version(&manager)?.clone();
 
-        let Some(previous) = manager.remove_version(&version) else {
+        let Some(previous) = manager.remove_version(&version.name, version.mono) else {
             anyhow::bail!("Godot {} isn't installed.", &version)
         };
 
         std::fs::remove_dir_all(previous.path)?;
-
-        if let Some(default) = &manager.inner.default
-            && default == &version
-        {
-            manager.inner.default = None;
-            std::fs::remove_file(gdtk_paths::default_godot_path()?)?;
-        }
 
         manager.save()?;
 

@@ -1,14 +1,14 @@
-use serde::Deserialize;
+use crate::types::{DiskVersion, VersionsToml};
 
 pub struct VersionManager {
-    pub inner: crate::types::VersionsToml,
+    inner: VersionsToml,
 }
 
 impl VersionManager {
     /// Load the `versions.toml` file.
     pub fn load() -> Result<Self, crate::Error> {
         let content = std::fs::read_to_string(gdtk_paths::versions_toml_path()?)?;
-        let versions = crate::types::VersionsToml::deserialize(toml::Deserializer::new(&content))?;
+        let versions = toml::from_str(&content)?;
 
         Ok(Self { inner: versions })
     }
@@ -24,27 +24,35 @@ impl VersionManager {
     }
 
     /// Get all installed versions.
-    pub fn versions(&self) -> Vec<&str> {
-        self.inner.versions.keys().map(AsRef::as_ref).collect()
+    #[inline]
+    pub fn installed(&self) -> &[DiskVersion] {
+        &self.inner.versions
     }
 
-    /// Inserts a version and returns whether this version was previously in there.
-    pub fn add_version(&mut self, version: &str, data: crate::types::Version) -> bool {
-        self.inner
-            .versions
-            .insert(version.to_string(), data)
-            .is_some()
+    /// Try to find an installed version.
+    pub fn get_version(&self, name: &str, mono: bool) -> Option<&crate::types::DiskVersion> {
+        self.installed()
+            .iter()
+            .find(|v| v.name == name && v.mono == mono)
     }
 
-    pub fn get_version(&self, version: &str) -> Option<&crate::types::Version> {
-        self.inner.versions.get(version)
+    /// Insert a version.
+    pub fn add_version(&mut self, data: crate::types::DiskVersion) {
+        debug_assert!(self.get_version(&data.name, data.mono).is_none());
+
+        self.inner.versions.push(data);
     }
 
     pub fn is_empty(&self) -> bool {
-        self.inner.versions.is_empty()
+        self.installed().len() == 0
     }
 
-    pub fn remove_version(&mut self, version: &str) -> Option<crate::types::Version> {
-        self.inner.versions.remove(version)
+    pub fn remove_version(&mut self, name: &str, mono: bool) -> Option<crate::types::DiskVersion> {
+        let idx = self
+            .installed()
+            .iter()
+            .position(|v| v.name == name && v.mono == mono)?;
+
+        Some(self.inner.versions.swap_remove(idx))
     }
 }

@@ -7,11 +7,10 @@ use std::{
 use cliui::{Action, Prompt};
 use gdtk_gvm::{
     online::{fetch_version_assets, fetch_versions},
+    types::DiskVersion,
     utils::pick_asset,
     version::Version,
 };
-
-use crate::cli::godot::symlink_default_version;
 
 pub struct GodotInstallCommand {
     version: Version,
@@ -30,17 +29,12 @@ impl tapcli::Command for GodotInstallCommand {
     async fn run(self) -> Result<Self::Output, Self::Error> {
         let mut manager = gdtk_gvm::VersionManager::load()?;
 
-        let set_as_default = manager.is_empty();
         let target_dir = gdtk_paths::godots_path()?.join(self.version.name());
 
-        let already_installed = manager.add_version(
-            self.version.name(),
-            gdtk_gvm::types::Version {
-                path: target_dir.clone(),
-            },
-        );
-
-        if already_installed {
+        if manager
+            .get_version(self.version.name(), self.mono)
+            .is_some()
+        {
             anyhow::bail!("Godot {} is already installed.", self.version.name());
         }
 
@@ -73,10 +67,11 @@ impl tapcli::Command for GodotInstallCommand {
         // Enable self-contained mode.
         std::fs::File::create(target_dir.join("._sc_"))?;
 
-        if set_as_default {
-            manager.inner.default = Some(self.version.name().to_string());
-            symlink_default_version(&target_dir)?;
-        }
+        manager.add_version(DiskVersion {
+            name: self.version.name().to_owned(),
+            path: target_dir,
+            mono: self.mono,
+        });
 
         manager.save()?;
 

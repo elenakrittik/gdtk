@@ -15,7 +15,7 @@ impl tapcli::Command for GodotRunCommand {
         let manager = VersionManager::load()?;
         let version = prompt_local_version(&manager)?;
 
-        let Some(version) = manager.get_version(version) else {
+        let Some(version) = manager.get_version(&version.name, version.mono) else {
             eprintln!("Godot {} is not installed.", version);
             return Ok(());
         };

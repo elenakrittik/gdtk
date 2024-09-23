@@ -1,5 +1,5 @@
 use cliui::Prompt;
-use gdtk_gvm::VersionManager;
+use gdtk_gvm::{types::DiskVersion, VersionManager};
 
 use crate::cli::{missing, unknown};
 
@@ -21,12 +21,12 @@ pub impl tapcli::Parser {
     }
 }
 
-pub fn prompt_local_version(manager: &VersionManager) -> anyhow::Result<&str> {
-    let available_versions = manager.versions();
+pub fn prompt_local_version(manager: &VersionManager) -> anyhow::Result<&DiskVersion> {
+    let available_versions = manager.installed();
 
     let (Some(version), _) = Prompt::builder()
         .with_question("Select version")
-        .with_items(available_versions)
+        .with_items(available_versions.iter().collect::<Vec<_>>()) // FIXME: remove vec requirement, somehow?
         .build()
         .interact()?
     else {
