@@ -10,7 +10,7 @@ ahash = { version = "0.8.6", features = ["serde"] }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
 serde = { version = "1.0.203", features = ["derive"] }
 thiserror = "1.0.61"
-toml = "0.8.6"
+toml = "0.8.14"
 versions = "6.0.0"
 tabled = "0.15.0"
 cynic = { version = "3.8.0", default-features = false }
