@@ -29,6 +29,3 @@ extend = "1.2.0"
 
 [features]
 dev = []
-
-[package.metadata.cargo-shear]
-ignored = ["extend"]
