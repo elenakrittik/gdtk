@@ -7,9 +7,7 @@ edition = "2021"
 anyhow = "1.0.86"
 diagnosis = { version = "0.1.0", path = "../diagnosis", features = ["codespan-reporting"] }
 gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm" }
-gdtk-dialoguer = { path = "../gdtk-dialoguer", version = "0.11.0", features = [
-    "fuzzy-select",
-], default-features = false }
+cliui = { version = "0.1.0", path = "../cliui" }
 gdtk-lint = { version = "0.1.0", path = "../gdtk-lint" }
 gdtk-godotcfg-parser = { version = "0.1.0", path = "../gdtk-godotcfg-parser" }
 gdtk-gdscript-parser = { version = "0.1.0", path = "../gdtk-gdscript-parser" }
@@ -19,7 +17,7 @@ zip = { version = "2.1.3", default-features = false, features = [
     "deflate",
 ] }
 itertools = "0.13.0"
-reqwest = "0.12.5"
+ureq = "3.0.0-rc1"
 tabled = { version = "0.15.0", features = ["std"] }
 spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
 ignore = { version = "0.4.22", features = ["simd-accel"] }
@@ -27,6 +25,7 @@ tracing = { version = "0.1.40", features = ["release_max_level_info"] }
 tracing-subscriber = { version = "0.3.18", default-features = false, features = ["fmt", "ansi", "smallvec", "parking_lot"] }
 tracing-appender = "0.2.3"
 tapcli = { version = "0.1.0", path = "../tapcli" }
+extend = "1.2.0"
 
 [features]
 dev = []

@@ -1,22 +1,31 @@
-use serde::Deserialize;
+use std::io::Read;
+
+use crate::types::{DiskVersion, VersionsToml};
 
 pub struct VersionManager {
-    pub versions: crate::types::VersionsToml,
+    inner: VersionsToml,
 }
 
 impl VersionManager {
     /// Load the `versions.toml` file.
     pub fn load() -> Result<Self, crate::Error> {
-        let content = std::fs::read_to_string(gdtk_paths::versions_toml_path()?)?;
-        let versions = crate::types::VersionsToml::deserialize(toml::Deserializer::new(&content))?;
+        let mut content = vec![];
+        let mut file = std::fs::File::options()
+            .read(true)
+            .write(true)
+            .open(crate::utils::versions_toml_path()?)?;
 
-        Ok(Self { versions })
+        file.read_to_end(&mut content)?;
+
+        let versions = rkyv::from_bytes::<_, rkyv::rancor::Error>(&content)?;
+
+        Ok(Self { inner: versions })
     }
 
     /// Save the `versions.toml` file.
     pub fn save(&self) -> Result<(), crate::Error> {
-        let contents = toml::to_string_pretty(&self.versions)?;
-        let path = gdtk_paths::versions_toml_path()?;
+        let contents = rkyv::to_bytes::<rkyv::rancor::Error>(&self.inner)?;
+        let path = crate::utils::versions_toml_path()?;
 
         std::fs::write(path, contents)?;
 
@@ -24,27 +33,35 @@ impl VersionManager {
     }
 
     /// Get all installed versions.
-    pub fn versionings(&self) -> Vec<versions::Versioning> {
-        self.versions
-            .versions
-            .keys()
-            .filter_map(|v| versions::Versioning::new(v))
-            .collect()
+    #[inline]
+    pub fn installed(&self) -> &[DiskVersion] {
+        &self.inner.0
     }
 
-    pub fn add_version(&mut self, version: String, data: crate::types::Version) -> bool {
-        self.versions.versions.insert(version, data).is_some()
+    /// Try to find an installed version.
+    pub fn get_version(&self, name: &str, mono: bool) -> Option<&crate::types::DiskVersion> {
+        self.installed()
+            .iter()
+            .find(|v| v.name == name && v.mono == mono)
     }
 
-    pub fn get_version(&self, version: &str) -> Option<&crate::types::Version> {
-        self.versions.versions.get(version)
+    /// Insert a version.
+    pub fn add_version(&mut self, data: crate::types::DiskVersion) {
+        debug_assert!(self.get_version(&data.name, data.mono).is_none());
+
+        self.inner.0.push(data);
     }
 
     pub fn is_empty(&self) -> bool {
-        self.versions.versions.is_empty()
+        self.installed().len() == 0
     }
 
-    pub fn remove_version(&mut self, version: &str) -> Option<crate::types::Version> {
-        self.versions.versions.remove(version)
+    pub fn remove_version(&mut self, name: &str, mono: bool) -> Option<crate::types::DiskVersion> {
+        let idx = self
+            .installed()
+            .iter()
+            .position(|v| v.name == name && v.mono == mono)?;
+
+        Some(self.inner.0.swap_remove(idx))
     }
 }

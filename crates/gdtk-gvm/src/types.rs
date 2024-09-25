@@ -1,21 +1,32 @@
-use std::path::PathBuf;
+use std::fmt::Display;
+
+use gdtk_paths::camino::Utf8PathBuf;
 
 /// Represents a `versions.toml` file.
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
-pub struct VersionsToml {
-    pub versions: ahash::AHashMap<String, Version>,
-    pub default: Option<String>,
-}
+#[derive(Debug, Clone, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
+pub struct VersionsToml(pub Vec<DiskVersion>);
 
-#[derive(Debug, serde::Deserialize, serde::Serialize, tabled::Tabled)]
-pub struct Version {
-    #[tabled(display_with("Self::display_version", self))]
+#[derive(Debug, Clone, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, tabled::Tabled)]
+pub struct DiskVersion {
+    #[tabled(rename = "Version")]
+    #[tabled(display_with("ToString::to_string", self))]
+    pub name: String,
     #[tabled(rename = "Location")]
-    pub path: PathBuf,
+    pub path: String,
+    #[tabled(skip)]
+    pub mono: bool,
 }
 
-impl Version {
-    pub fn display_version(&self) -> String {
-        self.path.display().to_string()
+impl DiskVersion {
+    pub fn path(&self) -> Utf8PathBuf {
+        Utf8PathBuf::from(&self.path)
+    }
+}
+
+impl Display for DiskVersion {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let suffix = if self.mono { " (mono)" } else { "" };
+
+        write!(f, "{}{}", self.name, suffix)
     }
 }

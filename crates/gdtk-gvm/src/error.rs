@@ -1,26 +1,26 @@
 use std::io::Error as IOError;
 
-use reqwest::Error as ReqError;
-use toml::de::Error as TOMLDeError;
-use toml::ser::Error as TOMLSerError;
+use gdtk_paths::Error as GdtkPathsError;
+use rkyv::rancor::Error as RkyvError;
+use ureq::Error as UreqError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
-    #[error("Mono versions of Godot are not supported yet.")]
-    MonoUnsupported,
-
     #[error("Unknown download URL: {0}.")]
     UnknownDownloadUrl(String),
 
     #[error("I/O error: {0:?}")]
     IOError(#[from] IOError),
 
-    #[error("TOML serialization error: {0:?}")]
-    TOMLSerializationError(#[from] TOMLSerError),
+    #[error("Rkyv error: {0:?}")]
+    RkyvError(#[from] RkyvError),
 
-    #[error("TOML deserialization error: {0:?}")]
-    TOMLDeserializationError(#[from] TOMLDeError),
+    #[error("Surf error: {0:?}")]
+    UreqError(#[from] UreqError),
 
-    #[error("Reqwest error: {0:?}")]
-    ReqwestError(#[from] ReqError),
+    #[error("gdtk-paths error: {0:?}")]
+    GdtkPathsError(#[from] GdtkPathsError),
+
+    #[error("Unable to retrieve GitHub authentication token. Is `gh` set up on your machine?")]
+    TokenRetrievalError,
 }
