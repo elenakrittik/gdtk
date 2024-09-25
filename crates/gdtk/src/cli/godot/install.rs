@@ -1,7 +1,6 @@
 use std::{
     fs::File,
     io::{Read, Seek},
-    path::Path,
 };
 
 use cliui::{Action, Prompt};
@@ -11,6 +10,7 @@ use gdtk_gvm::{
     utils::pick_asset,
     version::Version,
 };
+use gdtk_paths::camino::Utf8Path;
 
 pub struct GodotInstallCommand {
     version: Version,
@@ -29,7 +29,12 @@ impl tapcli::Command for GodotInstallCommand {
     async fn run(self) -> Result<Self::Output, Self::Error> {
         let mut manager = gdtk_gvm::VersionManager::load()?;
 
-        let target_dir = gdtk_paths::godots_path()?.join(self.version.name());
+        let display_version = format!(
+            "{}{}",
+            self.version.name(),
+            if self.mono { "-mono" } else { "" }
+        );
+        let target_dir = gdtk_paths::godots_path()?.join(&display_version);
 
         if manager
             .get_version(self.version.name(), self.mono)
@@ -69,19 +74,19 @@ impl tapcli::Command for GodotInstallCommand {
 
         manager.add_version(DiskVersion {
             name: self.version.name().to_owned(),
-            path: target_dir,
+            path: target_dir.into_string(),
             mono: self.mono,
         });
 
         manager.save()?;
 
-        spinner.success(&format!("Installed Godot {}!", self.version));
+        spinner.success(&format!("Installed Godot {}!", &display_version));
 
         Ok(())
     }
 }
 
-fn extract_godot(source: impl Read + Seek, target_dir: &Path) -> zip::result::ZipResult<()> {
+fn extract_godot(source: impl Read + Seek, target_dir: &Utf8Path) -> anyhow::Result<()> {
     gdtk_paths::ensure_path(target_dir, true)?;
 
     let mut archive = zip::ZipArchive::new(source)?;

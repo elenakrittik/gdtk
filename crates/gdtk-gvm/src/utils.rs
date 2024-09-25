@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::queries::release_assets::ReleaseAsset;
+use crate::{queries::release_assets::ReleaseAsset, types::VersionsToml};
 
 /// Pick the best match for a given ``version`` from ``vers``.
 pub fn coerce_version<V: Display>(input: &str, pool: Vec<V>) -> Result<Vec<V>, crate::Error> {
@@ -38,4 +38,19 @@ pub fn pick_asset(assets: &[ReleaseAsset], mono: bool) -> Option<&ReleaseAsset> 
     };
 
     assets.iter().find(|asset| asset.name.ends_with(suffix))
+}
+
+pub fn versions_toml_path() -> Result<gdtk_paths::camino::Utf8PathBuf, crate::Error> {
+    let mut conf_dir = gdtk_paths::base_conf_dir()?;
+
+    conf_dir.push("versions.toml");
+
+    if gdtk_paths::ensure_path(&conf_dir, false)? {
+        let data = VersionsToml(vec![]);
+        let encoded = rkyv::to_bytes::<rkyv::rancor::Error>(&data)?;
+
+        std::fs::write(&conf_dir, encoded)?;
+    }
+
+    Ok(conf_dir)
 }

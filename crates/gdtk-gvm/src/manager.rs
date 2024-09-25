@@ -13,7 +13,7 @@ impl VersionManager {
         let mut file = std::fs::File::options()
             .read(true)
             .write(true)
-            .open(gdtk_paths::versions_toml_path()?)?;
+            .open(crate::utils::versions_toml_path()?)?;
 
         file.read_to_end(&mut content)?;
 
@@ -25,7 +25,7 @@ impl VersionManager {
     /// Save the `versions.toml` file.
     pub fn save(&self) -> Result<(), crate::Error> {
         let contents = rkyv::to_bytes::<rkyv::rancor::Error>(&self.inner)?;
-        let path = gdtk_paths::versions_toml_path()?;
+        let path = crate::utils::versions_toml_path()?;
 
         std::fs::write(path, contents)?;
 

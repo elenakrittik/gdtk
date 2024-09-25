@@ -1,5 +1,6 @@
 use std::io::{Error as IOError, ErrorKind};
 
+pub use camino;
 use camino::{Utf8Path as Path, Utf8PathBuf as PathBuf};
 
 #[derive(Debug, thiserror::Error)]
@@ -56,18 +57,6 @@ pub fn base_data_dir() -> Result<PathBuf, Error> {
     ensure_path(&data_dir, true)?;
 
     Ok(data_dir)
-}
-
-pub fn versions_toml_path() -> Result<PathBuf, Error> {
-    let mut conf_dir = base_conf_dir()?;
-
-    conf_dir.push("versions.toml");
-
-    if ensure_path(&conf_dir, false)? {
-        std::fs::write(&conf_dir, "")?;
-    }
-
-    Ok(conf_dir)
 }
 
 pub fn godots_path() -> Result<PathBuf, Error> {

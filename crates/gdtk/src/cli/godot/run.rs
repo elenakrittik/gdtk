@@ -1,3 +1,5 @@
+use std::process::Command;
+
 use gdtk_gvm::VersionManager;
 
 use crate::cli::utils::prompt_local_version;
@@ -20,7 +22,7 @@ impl tapcli::Command for GodotRunCommand {
             return Ok(());
         };
 
-        let mut child = std::process::Command::new(version.path.join("godot")).spawn()?;
+        let mut child = Command::new(version.path().join("godot")).spawn()?;
 
         child.wait()?;
 
