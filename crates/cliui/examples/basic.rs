@@ -19,7 +19,7 @@ fn main() -> cliui::Result<()> {
             Action {
                 description: "Toggle something idk",
                 callback: |prompt| {
-                    prompt.state.only_3x = !prompt.state.only_3x;
+                    prompt.state_mut().only_3x = !prompt.state().only_3x;
 
                     // TODO: implement filtering
 

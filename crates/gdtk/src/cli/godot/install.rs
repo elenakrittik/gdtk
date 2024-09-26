@@ -122,15 +122,19 @@ fn prompt_for_version() -> anyhow::Result<(Version, bool)> {
             Action {
                 description: TOGGLE_MONO_DESC_NO,
                 callback: |prompt| {
-                    prompt.state = !prompt.state;
+                    *prompt.state_mut() = !prompt.state();
 
-                    let action = prompt.actions.get_mut(&TOGGLE_MONO_KEY).unwrap();
-
-                    if prompt.state {
-                        action.description = TOGGLE_MONO_DESC_YES;
+                    let description = if *prompt.state() {
+                        TOGGLE_MONO_DESC_YES
                     } else {
-                        action.description = TOGGLE_MONO_DESC_NO;
-                    }
+                        TOGGLE_MONO_DESC_NO
+                    };
+
+                    prompt
+                        .actions_mut()
+                        .get_mut(&TOGGLE_MONO_KEY)
+                        .unwrap()
+                        .description = description;
 
                     Ok(())
                 },

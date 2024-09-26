@@ -29,8 +29,8 @@ pub struct Prompt<Item, State> {
     term: Term,
     allow_esc: bool,
     view: VecView<Item>,
-    pub actions: AHashMap<Key, Action<Item, State>>,
-    pub state: State,
+    actions: AHashMap<Key, Action<Item, State>>,
+    state: State,
 }
 
 impl<Item: Display, State> Prompt<Item, State> {
@@ -57,7 +57,7 @@ impl<Item: Display, State> Prompt<Item, State> {
                     lines_previously_drawn = self.draw_items()?;
                 }
                 Key::Enter => {
-                    choice.replace(self.view.current_idx);
+                    choice.replace(self.view.current_item_index());
                     break;
                 }
                 Key::Escape if self.allow_esc => break,
@@ -77,7 +77,7 @@ impl<Item: Display, State> Prompt<Item, State> {
         self.draw_choice(choice)?;
         self.term.show_cursor()?;
 
-        let item = choice.map(|idx| self.view.items.swap_remove(idx));
+        let item = choice.map(|idx| self.view.consume_item(idx));
 
         Ok((item, self.state))
     }
@@ -98,7 +98,7 @@ impl<Item: Display, State> Prompt<Item, State> {
         let mut idx = self.view.range_start();
 
         for item in view.items {
-            let arrow = if idx == self.view.current_idx {
+            let arrow = if idx == self.view.current_item_index() {
                 ">"
             } else {
                 " "
@@ -121,7 +121,7 @@ impl<Item: Display, State> Prompt<Item, State> {
                 "{} {}: {}",
                 '?'.paint(CHOICE_STYLE),
                 self.question,
-                &self.view.items[choice],
+                &self.view[choice],
             )?;
         } else {
             writeln!(
@@ -150,6 +150,26 @@ impl<Item: Display, State> Prompt<Item, State> {
         }
 
         Ok(self.actions.len() + 1)
+    }
+
+    #[inline]
+    pub fn actions(&self) -> &AHashMap<Key, Action<Item, State>> {
+        &self.actions
+    }
+
+    #[inline]
+    pub fn actions_mut(&mut self) -> &mut AHashMap<Key, Action<Item, State>> {
+        &mut self.actions
+    }
+
+    #[inline]
+    pub fn state(&self) -> &State {
+        &self.state
+    }
+
+    #[inline]
+    pub fn state_mut(&mut self) -> &mut State {
+        &mut self.state
     }
 }
 

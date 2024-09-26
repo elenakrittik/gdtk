@@ -1,10 +1,10 @@
 use std::ops::Range;
 
 pub struct VecView<T> {
-    pub items: Vec<T>,
-    pub current_idx: usize,
-    pub length: usize,
-    pub drag_limit: usize,
+    items: Vec<T>,
+    current_idx: usize,
+    length: usize,
+    drag_limit: usize,
     range: Range<usize>,
 }
 
@@ -24,6 +24,11 @@ impl<T> VecView<T> {
     }
 
     #[inline]
+    pub fn current_item_index(&self) -> usize {
+        self.current_idx
+    }
+
+    #[inline]
     pub fn range_start(&self) -> usize {
         self.range.start
     }
@@ -31,6 +36,11 @@ impl<T> VecView<T> {
     #[inline]
     pub fn range_end(&self) -> usize {
         self.range.end
+    }
+
+    #[inline]
+    pub fn consume_item(mut self, idx: usize) -> T {
+        self.items.swap_remove(idx)
     }
 
     pub fn move_up(&mut self) {
@@ -86,5 +96,13 @@ impl<T> VecView<T> {
         ViewData {
             items: &self.items[self.range_start()..end],
         }
+    }
+}
+
+impl<T> std::ops::Deref for VecView<T> {
+    type Target = [T];
+
+    fn deref(&self) -> &Self::Target {
+        &self.items
     }
 }
