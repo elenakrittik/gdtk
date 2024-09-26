@@ -20,7 +20,7 @@
 //! }
 //!
 //! impl Command for Cli {
-//!     async fn parse(parser: &mut Parser) -> Result<Self, Self::Error> {
+//!     fn parse(parser: &mut Parser) -> Result<Self, Self::Error> {
 //!         let name = match parser.next().unwrap() {
 //!             Arg::Value(name) => name,
 //!             other => panic!("Expected a value, got {:?}", other),
@@ -29,17 +29,17 @@
 //!         Ok(Self { name })
 //!     }
 //!
-//!     async fn run(self) -> Result<Self::Output, Self::Error> {
+//!     fn run(self) -> Result<Self::Output, Self::Error> {
 //!         eprintln!("Hello, {}!", self.name);
 //!
 //!         Ok(())
 //!     }
 //! }
 //!
-//! async fn app() -> Result<(), Box<dyn std::error::Error>> {
-//!     let cli = Cli::from_env().await?;
+//! fn app() -> Result<(), Box<dyn std::error::Error>> {
+//!     let cli = Cli::from_env()?;
 //!
-//!     cli.run().await?;
+//!     cli.run()?;
 //!
 //!     Ok(())
 //! }

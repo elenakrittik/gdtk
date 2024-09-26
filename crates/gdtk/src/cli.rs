@@ -30,7 +30,7 @@ impl Cli {
 impl tapcli::Command for Cli {
     type Error = anyhow::Error;
 
-    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+    fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
         let mut verbosity = None;
 
         while let Some(arg) = parser.peek() {
@@ -43,7 +43,7 @@ impl tapcli::Command for Cli {
                 tapcli::ArgRef::Value("dev" | "godot" | "lint") => {
                     return Ok(Self {
                         verbosity: verbosity.unwrap_or(0),
-                        command: Command::parse(parser).await?,
+                        command: Command::parse(parser)?,
                     });
                 }
                 other => unknown!(other),
@@ -53,8 +53,8 @@ impl tapcli::Command for Cli {
         anyhow::bail!("No command specified.")
     }
 
-    async fn run(self) -> Result<Self::Output, Self::Error> {
-        self.command.run().await
+    fn run(self) -> Result<Self::Output, Self::Error> {
+        self.command.run()
     }
 }
 
@@ -71,12 +71,12 @@ pub enum Command {
 impl tapcli::Command for Command {
     type Error = anyhow::Error;
 
-    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+    fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
         let command = match parser.next().unwrap().as_ref() {
             #[cfg(any(debug_assertions, feature = "dev"))]
-            tapcli::ArgRef::Value("dev") => Self::Dev(DevCommand::parse(parser).await?),
-            tapcli::ArgRef::Value("godot") => Self::Godot(GodotCommand::parse(parser).await?),
-            tapcli::ArgRef::Value("lint") => Self::Lint(LintCommand::parse(parser).await?),
+            tapcli::ArgRef::Value("dev") => Self::Dev(DevCommand::parse(parser)?),
+            tapcli::ArgRef::Value("godot") => Self::Godot(GodotCommand::parse(parser)?),
+            tapcli::ArgRef::Value("lint") => Self::Lint(LintCommand::parse(parser)?),
             _ => unreachable!(),
         };
 
@@ -87,12 +87,12 @@ impl tapcli::Command for Command {
         Ok(command)
     }
 
-    async fn run(self) -> Result<Self::Output, Self::Error> {
+    fn run(self) -> Result<Self::Output, Self::Error> {
         match self {
             #[cfg(any(debug_assertions, feature = "dev"))]
-            Self::Dev(cmd) => cmd.run().await,
-            Self::Godot(cmd) => cmd.run().await,
-            Self::Lint(cmd) => cmd.run().await,
+            Self::Dev(cmd) => cmd.run(),
+            Self::Godot(cmd) => cmd.run(),
+            Self::Lint(cmd) => cmd.run(),
         }
     }
 }

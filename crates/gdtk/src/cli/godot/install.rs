@@ -20,13 +20,13 @@ pub struct GodotInstallCommand {
 impl tapcli::Command for GodotInstallCommand {
     type Error = anyhow::Error;
 
-    async fn parse(_: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+    fn parse(_: &mut tapcli::Parser) -> Result<Self, Self::Error> {
         let (version, mono) = prompt_for_version()?;
 
         Ok(Self { version, mono })
     }
 
-    async fn run(self) -> Result<Self::Output, Self::Error> {
+    fn run(self) -> Result<Self::Output, Self::Error> {
         let mut manager = gdtk_gvm::VersionManager::load()?;
 
         let display_version = format!(

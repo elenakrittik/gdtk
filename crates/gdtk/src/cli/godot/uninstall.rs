@@ -7,11 +7,11 @@ pub struct GodotUninstallCommand;
 impl tapcli::Command for GodotUninstallCommand {
     type Error = anyhow::Error;
 
-    async fn parse(_: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+    fn parse(_: &mut tapcli::Parser) -> Result<Self, Self::Error> {
         Ok(Self)
     }
 
-    async fn run(self) -> Result<Self::Output, Self::Error> {
+    fn run(self) -> Result<Self::Output, Self::Error> {
         let mut manager = VersionManager::load()?;
         let version = prompt_local_version(&manager)?.clone();
 

@@ -17,18 +17,18 @@ impl tapcli::Command for DevCommand {
     type Error = anyhow::Error;
 
     #[rustfmt::skip]
-    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+    fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
         match parser.next().unwrap().as_ref() {
-            tapcli::ArgRef::Value("gdscript") => Ok(Self::GDScript(DevGDScriptCommand::parse(parser).await?)),
-            tapcli::ArgRef::Value("godotcfg") => Ok(Self::GodotCfg(DevGodotCfgCommand::parse(parser).await?)),
+            tapcli::ArgRef::Value("gdscript") => Ok(Self::GDScript(DevGDScriptCommand::parse(parser)?)),
+            tapcli::ArgRef::Value("godotcfg") => Ok(Self::GodotCfg(DevGodotCfgCommand::parse(parser)?)),
             other => unknown!(other),
         }
     }
 
-    async fn run(self) -> Result<Self::Output, Self::Error> {
+    fn run(self) -> Result<Self::Output, Self::Error> {
         match self {
-            DevCommand::GDScript(c) => c.run().await,
-            DevCommand::GodotCfg(c) => c.run().await,
+            DevCommand::GDScript(c) => c.run(),
+            DevCommand::GodotCfg(c) => c.run(),
         }
     }
 }
