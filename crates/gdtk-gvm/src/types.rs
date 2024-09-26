@@ -4,7 +4,7 @@ use gdtk_paths::camino::Utf8PathBuf;
 
 /// Represents a `versions.toml` file.
 #[derive(Debug, Clone, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize)]
-pub struct VersionsToml(pub Vec<DiskVersion>);
+pub struct LocalVersions(pub Vec<DiskVersion>);
 
 #[derive(Debug, Clone, rkyv::Archive, rkyv::Deserialize, rkyv::Serialize, tabled::Tabled)]
 pub struct DiskVersion {

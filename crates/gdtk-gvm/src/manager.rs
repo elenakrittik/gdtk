@@ -1,9 +1,9 @@
 use std::io::Read;
 
-use crate::types::{DiskVersion, VersionsToml};
+use crate::types::{DiskVersion, LocalVersions};
 
 pub struct VersionManager {
-    inner: VersionsToml,
+    inner: LocalVersions,
 }
 
 impl VersionManager {
