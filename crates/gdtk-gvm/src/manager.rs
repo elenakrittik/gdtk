@@ -1,6 +1,6 @@
 use std::io::Read;
 
-use crate::types::{DiskVersion, LocalVersions};
+use crate::types::{LocalVersion, LocalVersions};
 
 pub struct VersionManager {
     inner: LocalVersions,
@@ -34,19 +34,19 @@ impl VersionManager {
 
     /// Get all installed versions.
     #[inline]
-    pub fn installed(&self) -> &[DiskVersion] {
+    pub fn installed(&self) -> &[LocalVersion] {
         &self.inner.0
     }
 
     /// Try to find an installed version.
-    pub fn get_version(&self, name: &str, mono: bool) -> Option<&crate::types::DiskVersion> {
+    pub fn get_version(&self, name: &str, mono: bool) -> Option<&crate::types::LocalVersion> {
         self.installed()
             .iter()
             .find(|v| v.name == name && v.mono == mono)
     }
 
     /// Insert a version.
-    pub fn add_version(&mut self, data: crate::types::DiskVersion) {
+    pub fn add_version(&mut self, data: crate::types::LocalVersion) {
         debug_assert!(self.get_version(&data.name, data.mono).is_none());
 
         self.inner.0.push(data);
@@ -56,7 +56,7 @@ impl VersionManager {
         self.installed().len() == 0
     }
 
-    pub fn remove_version(&mut self, name: &str, mono: bool) -> Option<crate::types::DiskVersion> {
+    pub fn remove_version(&mut self, name: &str, mono: bool) -> Option<crate::types::LocalVersion> {
         let idx = self
             .installed()
             .iter()

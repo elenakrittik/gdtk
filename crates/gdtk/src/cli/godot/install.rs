@@ -6,7 +6,7 @@ use std::{
 use cliui::{Action, Prompt};
 use gdtk_gvm::{
     online::{fetch_version_assets, fetch_versions},
-    types::DiskVersion,
+    types::LocalVersion,
     utils::pick_asset,
     version::Version,
 };
@@ -72,7 +72,7 @@ impl tapcli::Command for GodotInstallCommand {
         // Enable self-contained mode.
         std::fs::File::create(target_dir.join("._sc_"))?;
 
-        manager.add_version(DiskVersion {
+        manager.add_version(LocalVersion {
             name: self.version.name().to_owned(),
             path: target_dir.into_string(),
             mono: self.mono,
