@@ -18,10 +18,8 @@ jobs:
         with:
           toolchain: nightly-2024-09-24
 
-      - uses: taiki-e/install-action
+      - uses: taiki-e/install-action@v2
         with:
           tool: cargo-shear
 
       - run: cargo shear
-
-      
