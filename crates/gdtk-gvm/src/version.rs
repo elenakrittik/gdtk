@@ -5,12 +5,12 @@ use versions::Version as SemanticVersion;
 use crate::queries::releases::Release as GraphQLRelease;
 
 #[derive(PartialEq, Debug)]
-pub struct Version {
+pub struct OnlineVersion {
     semantic: SemanticVersion,
     data: GraphQLRelease,
 }
 
-impl Version {
+impl OnlineVersion {
     pub fn name(&self) -> &str {
         &self.data.tag_name
     }
@@ -24,13 +24,13 @@ impl Version {
     }
 }
 
-impl Display for Version {
+impl Display for OnlineVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.data.tag_name)
     }
 }
 
-impl From<GraphQLRelease> for Version {
+impl From<GraphQLRelease> for OnlineVersion {
     fn from(value: GraphQLRelease) -> Self {
         Self {
             semantic: SemanticVersion::new(&value.tag_name).expect("a valid version"),
@@ -39,7 +39,7 @@ impl From<GraphQLRelease> for Version {
     }
 }
 
-impl PartialOrd for Version {
+impl PartialOrd for OnlineVersion {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.semantic.partial_cmp(&other.semantic)
     }

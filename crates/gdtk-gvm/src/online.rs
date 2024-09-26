@@ -6,10 +6,10 @@ use crate::{
         releases::{ReleasesQuery, ReleasesQueryVariables},
         GITHUB_GRAPHQL_API,
     },
-    version::Version,
+    version::OnlineVersion,
 };
 
-pub fn fetch_versions() -> Result<Vec<Version>, crate::Error> {
+pub fn fetch_versions() -> Result<Vec<OnlineVersion>, crate::Error> {
     let mut output = vec![];
     let mut cursor_end = None;
 
@@ -26,7 +26,7 @@ pub fn fetch_versions() -> Result<Vec<Version>, crate::Error> {
                 .unwrap()
                 .into_iter()
                 .flatten()
-                .map(Version::from),
+                .map(OnlineVersion::from),
         );
 
         if response.page_info.has_next_page {

@@ -1,5 +1,5 @@
 use cliui::Prompt;
-use gdtk_gvm::{types::DiskVersion, VersionManager};
+use gdtk_gvm::{types::LocalVersion, VersionManager};
 
 use crate::cli::{missing, unknown};
 
@@ -21,7 +21,7 @@ pub impl tapcli::Parser {
     }
 }
 
-pub fn prompt_local_version(manager: &VersionManager) -> anyhow::Result<&DiskVersion> {
+pub fn prompt_local_version(manager: &VersionManager) -> anyhow::Result<&LocalVersion> {
     let available_versions = manager.installed();
 
     let (Some(version), _) = Prompt::builder()

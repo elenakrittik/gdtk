@@ -6,14 +6,14 @@ use std::{
 use cliui::{Action, Prompt};
 use gdtk_gvm::{
     online::{fetch_version_assets, fetch_versions},
-    types::DiskVersion,
+    types::LocalVersion,
     utils::pick_asset,
-    version::Version,
+    version::OnlineVersion,
 };
 use gdtk_paths::camino::Utf8Path;
 
 pub struct GodotInstallCommand {
-    version: Version,
+    version: OnlineVersion,
     mono: bool,
 }
 
@@ -72,7 +72,7 @@ impl tapcli::Command for GodotInstallCommand {
         // Enable self-contained mode.
         std::fs::File::create(target_dir.join("._sc_"))?;
 
-        manager.add_version(DiskVersion {
+        manager.add_version(LocalVersion {
             name: self.version.name().to_owned(),
             path: target_dir.into_string(),
             mono: self.mono,
@@ -110,7 +110,7 @@ const TOGGLE_MONO_KEY: cliui::Key = cliui::Key::Char('m');
 const TOGGLE_MONO_DESC_NO: &str = "Install the mono variant? (current: no)";
 const TOGGLE_MONO_DESC_YES: &str = "Install the mono variant? (current: yes)";
 
-fn prompt_for_version() -> anyhow::Result<(Version, bool)> {
+fn prompt_for_version() -> anyhow::Result<(OnlineVersion, bool)> {
     let available_versions = fetch_versions()?;
 
     let (version, mono) = Prompt::builder()
