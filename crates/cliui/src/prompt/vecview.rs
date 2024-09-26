@@ -38,6 +38,7 @@ impl<T> VecView<T> {
         self.range.end
     }
 
+    #[inline]
     pub fn consume_item(mut self, idx: usize) -> T {
         self.items.swap_remove(idx)
     }
