@@ -158,28 +158,28 @@ fn display_key(key: &console::Key) -> impl Display + '_ {
 
     impl Display for DisplayKey<'_> {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            match self.0 {
-                Key::ArrowLeft => todo!(),
-                Key::ArrowRight => todo!(),
-                Key::ArrowUp => todo!(),
-                Key::ArrowDown => todo!(),
-                Key::Enter => todo!(),
-                Key::Escape => todo!(),
-                Key::Backspace => todo!(),
-                Key::Home => todo!(),
-                Key::End => todo!(),
-                Key::Tab => todo!(),
-                Key::BackTab => todo!(),
-                Key::Alt => todo!(),
-                Key::Del => todo!(),
-                Key::Shift => todo!(),
-                Key::Insert => todo!(),
-                Key::PageUp => todo!(),
-                Key::PageDown => todo!(),
-                Key::Char(c) => f.write_char(c.to_ascii_uppercase()),
-                Key::CtrlC => f.write_str("Ctrl-C"),
-                _ => f.write_str("unknown"),
-            }
+            f.write_str(match self.0 {
+                Key::ArrowLeft => "Arrow-Left",
+                Key::ArrowRight => "Arrow-Right",
+                Key::ArrowUp => "Arrow-Up (inactive)",
+                Key::ArrowDown => "Arrow-Down (inactive)",
+                Key::Enter => "Enter (inactive)",
+                Key::Escape => "Esc (inactive)",
+                Key::Backspace => "Backspace",
+                Key::Home => "Home",
+                Key::End => "End",
+                Key::Tab => "Tab",
+                Key::BackTab => "Shift-Tab",
+                Key::Alt => "Alt",
+                Key::Del => "Del",
+                Key::Shift => "Shift",
+                Key::Insert => "Insert",
+                Key::PageUp => "Page-Up",
+                Key::PageDown => "Page-Down",
+                Key::Char(c) => return f.write_char(c.to_ascii_uppercase()),
+                Key::CtrlC => "Ctrl-C",
+                _ => "unknown",
+            })
         }
     }
 
