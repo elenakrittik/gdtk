@@ -6,13 +6,11 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-ahash = { version = "0.8.6", features = ["serde"] }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
-serde = { version = "1.0.203", features = ["derive"] }
+serde = "1.0.203"
 thiserror = "1.0.61"
-toml = "0.8.14"
 versions = "6.0.0"
-tabled = "0.15.0"
+tabled = "0.16.0"
 cynic = { version = "3.8.0", default-features = false }
 ureq = { version = "3.0.0-rc1", features = ["json"] }
 rkyv = "0.8.8"

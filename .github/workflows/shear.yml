@@ -1,0 +1,25 @@
+name: Shear dependencies
+
+on:
+  push:
+    paths: 
+        - '**/Cargo.toml'
+        - '**/Cargo.lock'
+        - '.github/workflows/shear.yml'
+  merge_group:
+
+jobs:
+  shear:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rui314/setup-mold@v1
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: nightly-2024-09-24
+
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-shear
+
+      - run: cargo shear
