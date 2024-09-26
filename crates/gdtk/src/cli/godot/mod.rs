@@ -29,22 +29,22 @@ impl tapcli::Command for GodotCommand {
     type Error = anyhow::Error;
 
     #[rustfmt::skip]
-    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+    fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
         match parser.next().unwrap().as_ref() {
-            tapcli::ArgRef::Value("list") => Ok(Self::List(GodotListCommand::parse(parser).await?)),
-            tapcli::ArgRef::Value("run") => Ok(Self::Run(GodotRunCommand::parse(parser).await?)),
-            tapcli::ArgRef::Value("install") => Ok(Self::Install(GodotInstallCommand::parse(parser).await?)),
-            tapcli::ArgRef::Value("uninstall") => Ok(Self::Uninstall(GodotUninstallCommand::parse(parser).await?)),
+            tapcli::ArgRef::Value("list") => Ok(Self::List(GodotListCommand::parse(parser)?)),
+            tapcli::ArgRef::Value("run") => Ok(Self::Run(GodotRunCommand::parse(parser)?)),
+            tapcli::ArgRef::Value("install") => Ok(Self::Install(GodotInstallCommand::parse(parser)?)),
+            tapcli::ArgRef::Value("uninstall") => Ok(Self::Uninstall(GodotUninstallCommand::parse(parser)?)),
             other => unknown!(other),
         }
     }
 
-    async fn run(self) -> Result<Self::Output, Self::Error> {
+    fn run(self) -> Result<Self::Output, Self::Error> {
         match self {
-            GodotCommand::List(c) => c.run().await,
-            GodotCommand::Run(c) => c.run().await,
-            GodotCommand::Install(c) => c.run().await,
-            GodotCommand::Uninstall(c) => c.run().await,
+            GodotCommand::List(c) => c.run(),
+            GodotCommand::Run(c) => c.run(),
+            GodotCommand::Install(c) => c.run(),
+            GodotCommand::Uninstall(c) => c.run(),
         }
     }
 }

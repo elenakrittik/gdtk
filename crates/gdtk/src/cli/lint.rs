@@ -15,7 +15,7 @@ pub struct LintCommand {
 impl tapcli::Command for LintCommand {
     type Error = anyhow::Error;
 
-    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+    fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
         let mut files = Vec::new();
 
         for arg in parser {
@@ -28,7 +28,7 @@ impl tapcli::Command for LintCommand {
         Ok(Self { files })
     }
 
-    async fn run(self) -> Result<Self::Output, Self::Error> {
+    fn run(self) -> Result<Self::Output, Self::Error> {
         let files = resolve_files_by_ext(self.files, "gd")?;
         let counts: Counter = files.iter().filter_map(|p| run_on_file(p).ok()).sum();
 

@@ -17,18 +17,18 @@ impl tapcli::Command for DevGDScriptCommand {
     type Error = anyhow::Error;
 
     #[rustfmt::skip]
-    async fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
+    fn parse(parser: &mut tapcli::Parser) -> Result<Self, Self::Error> {
         match parser.next().unwrap().as_ref() {
-            tapcli::ArgRef::Value("lex") => Ok(Self::Lex(DevGDScriptLexCommand::parse(parser).await?)),
-            tapcli::ArgRef::Value("parse") => Ok(Self::Parse(DevGDScriptParseCommand::parse(parser).await?)),
+            tapcli::ArgRef::Value("lex") => Ok(Self::Lex(DevGDScriptLexCommand::parse(parser)?)),
+            tapcli::ArgRef::Value("parse") => Ok(Self::Parse(DevGDScriptParseCommand::parse(parser)?)),
             other => unknown!(other),
         }
     }
 
-    async fn run(self) -> Result<Self::Output, Self::Error> {
+    fn run(self) -> Result<Self::Output, Self::Error> {
         match self {
-            Self::Lex(cmd) => cmd.run().await,
-            Self::Parse(cmd) => cmd.run().await,
+            Self::Lex(cmd) => cmd.run(),
+            Self::Parse(cmd) => cmd.run(),
         }
     }
 }

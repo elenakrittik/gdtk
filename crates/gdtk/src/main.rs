@@ -14,11 +14,10 @@ use crate::utils::setup_tracing;
 pub mod cli;
 pub mod utils;
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let cli = crate::cli::Cli::from_env().await?;
+fn main() -> anyhow::Result<()> {
+    let cli = crate::cli::Cli::from_env()?;
 
     setup_tracing(&cli)?;
 
-    cli.run().await
+    cli.run()
 }
