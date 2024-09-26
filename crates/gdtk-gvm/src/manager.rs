@@ -39,14 +39,14 @@ impl VersionManager {
     }
 
     /// Try to find an installed version.
-    pub fn get_version(&self, name: &str, mono: bool) -> Option<&crate::types::LocalVersion> {
+    pub fn get_version(&self, name: &str, mono: bool) -> Option<&LocalVersion> {
         self.installed()
             .iter()
             .find(|v| v.name == name && v.mono == mono)
     }
 
     /// Insert a version.
-    pub fn add_version(&mut self, data: crate::types::LocalVersion) {
+    pub fn add_version(&mut self, data: LocalVersion) {
         debug_assert!(self.get_version(&data.name, data.mono).is_none());
 
         self.inner.0.push(data);
@@ -56,7 +56,7 @@ impl VersionManager {
         self.installed().len() == 0
     }
 
-    pub fn remove_version(&mut self, name: &str, mono: bool) -> Option<crate::types::LocalVersion> {
+    pub fn remove_version(&mut self, name: &str, mono: bool) -> Option<LocalVersion> {
         let idx = self
             .installed()
             .iter()
