@@ -1,7 +1,9 @@
-use std::io::{Error as IOError, ErrorKind};
+#![feature(decl_macro)]
+
+use std::io::Error as IOError;
 
 pub use camino;
-use camino::{Utf8Path as Path, Utf8PathBuf as PathBuf};
+use camino::{Utf8Path, Utf8PathBuf};
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
@@ -13,7 +15,7 @@ pub enum Error {
     CaminoPathBufError(#[from] camino::FromPathBufError),
 }
 
-pub fn ensure_path(path: &Path, dir: bool) -> Result<bool, Error> {
+pub fn ensure_path(path: &Utf8Path, dir: bool) -> Result<bool, Error> {
     if path.exists() {
         return Ok(false);
     }
@@ -22,8 +24,8 @@ pub fn ensure_path(path: &Path, dir: bool) -> Result<bool, Error> {
         std::fs::create_dir(path)?;
     } else {
         std::fs::OpenOptions::new()
-            .create(true)
             .write(true)
+            .create(true)
             .truncate(true)
             .open(path)?;
     }
@@ -31,86 +33,122 @@ pub fn ensure_path(path: &Path, dir: bool) -> Result<bool, Error> {
     Ok(true)
 }
 
-pub fn base_conf_dir() -> Result<PathBuf, Error> {
-    let mut conf_dir = dirs::config_local_dir()
-        .ok_or(IOError::new(
-            ErrorKind::NotFound,
-            "Config directory could not be detected.",
-        ))
-        .map(PathBuf::try_from)??;
-
-    conf_dir.push("gdtk");
-    ensure_path(&conf_dir, true)?;
-
-    Ok(conf_dir)
+macro dirs_wrapper($(#[$attr:meta])* $base:ident) {
+    $(#[$attr])*
+    pub fn $base() -> ::std::result::Result<$crate::camino::Utf8PathBuf, $crate::Error> {
+        Ok(::dirs::$base()
+            .ok_or(::std::io::Error::from(::std::io::ErrorKind::NotFound))
+            .map($crate::camino::Utf8PathBuf::try_from)??)
+    }
 }
 
-pub fn base_data_dir() -> Result<PathBuf, Error> {
-    let mut data_dir = dirs::data_local_dir()
-        .ok_or(IOError::new(
-            ErrorKind::NotFound,
-            "Data directory could not be detected.",
-        ))
-        .map(PathBuf::try_from)??;
+pub macro dir {
+    // the entrypoint. accepts possible documentation/atttibutes and the identifier, then hands
+    // the inner body handling to other (private) macro arms
+    (
+        $(#[$attr:meta])*
+        $name:ident:
 
-    data_dir.push("gdtk");
-    ensure_path(&data_dir, true)?;
+        $($body:tt)+
+    ) => {
+        $(#[$attr])*
+        pub fn $name() -> ::std::result::Result<$crate::camino::Utf8PathBuf, $crate::Error> {
+            $crate::dir!(_ $($body)+)
+        }
+    },
 
-    Ok(data_dir)
+    // a shortcut to remove boilerplate when no special code is required to retrieve the base path
+    (
+        _
+        $base:ident
+
+        $($body:tt)+
+    ) => {
+        $crate::dir!(
+            _
+            { $base()? }
+            $($body)+
+        )
+    },
+
+    // the additions to the base path
+    (
+        _
+        $base:block
+        $(/ #[dir: $is_dir:literal] $new:literal)*
+    ) => {
+        {
+            let mut base = $base;
+
+            $({
+                base.push($new);
+                $crate::ensure_path(&base, $is_dir)?;
+            })*
+
+            ::std::result::Result::Ok(base)
+        }
+    },
 }
 
-pub fn godots_path() -> Result<PathBuf, Error> {
-    let mut data_dir = base_data_dir()?;
+dirs_wrapper!(config_local_dir);
+dirs_wrapper!(data_local_dir);
+dirs_wrapper!(home_dir);
 
-    data_dir.push("godots");
+dir! {
+    /// TODO
+    base_conf_dir:
 
-    ensure_path(&data_dir, true)?;
-
-    Ok(data_dir)
+    config_local_dir
+    / #[dir: true] "gdtk"
 }
 
-pub fn logs_path() -> Result<PathBuf, Error> {
-    let mut data_dir = base_data_dir()?;
+dir! {
+    /// TODO
+    base_data_dir:
 
-    data_dir.push("logs");
-
-    ensure_path(&data_dir, true)?;
-
-    Ok(data_dir)
+    data_local_dir
+    / #[dir: true] "gdtk"
 }
 
-pub fn executable_path() -> Result<PathBuf, Error> {
-    // we don't use dirs::executable_dir() because it "doesn't work" on Windows
-    // and macos, even though in practice, `.local/bin` is a thing on all systems
+dir! {
+    /// TODO
+    godots_path:
 
-    let mut home = dirs::home_dir()
-        .ok_or(std::io::Error::new(
-            std::io::ErrorKind::NotFound,
-            "Home directory could not be detected.",
-        ))
-        .map(PathBuf::try_from)??;
+    base_data_dir
+    / #[dir: true] "godots"
+}
 
-    home.push(".local");
+dir! {
+    /// TODO
+    logs_path:
 
-    ensure_path(&home, true)?;
+    base_data_dir
+    / #[dir: true] "logs"
+}
 
-    home.push("bin");
+// we don't use dirs::executable_dir() because it "doesn't work" on Windows
+// and macos, even though in practice, `.local/bin` is a thing on all systems
 
-    ensure_path(&home, true)?;
+/* TODO: the above is invalid, we should provide a set of env vars to override the
+thing in case someone really doesn't want a ~/.local/bin */
+dir! {
+    /// TODO
+    executable_path:
 
-    Ok(home)
+    home_dir
+    / #[dir: true] ".local"
+    / #[dir: true] "bin"
 }
 
 /// Returns the path to the default godot executable.
 ///
 /// **DOES NOT ENSURE THAT IT EXISTS!**
-pub fn default_godot_path() -> Result<PathBuf, Error> {
+pub fn default_godot_path() -> Result<Utf8PathBuf, Error> {
     let mut exec = executable_path()?;
 
-    // NOTE: windows is dumb and can only know if something is executable by
-    // looking at it's extension, so running `godot` *manually* will not work
-    // on windows. however, executing it through a symlink or by spawning a
-    // process will work just fine, so we are fine as well.
+    // NOTE: while windows won't allow a user to launch any file as an .exe
+    // (unless it does end in .exe), it does allow doing so through it's
+    // system APIs, so we're good
     exec.push("godot");
 
     Ok(exec)
