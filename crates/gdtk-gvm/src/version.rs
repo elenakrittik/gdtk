@@ -1,5 +1,3 @@
-use std::fmt::Display;
-
 use versions::Version as SemanticVersion;
 
 use crate::queries::releases::Release as GraphQLRelease;
@@ -24,7 +22,8 @@ impl OnlineVersion {
     }
 }
 
-impl Display for OnlineVersion {
+#[cfg(not(feature = "cliui"))]
+impl std::fmt::Display for OnlineVersion {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.data.tag_name)
     }
@@ -42,5 +41,28 @@ impl From<GraphQLRelease> for OnlineVersion {
 impl PartialOrd for OnlineVersion {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         self.semantic.partial_cmp(&other.semantic)
+    }
+}
+
+#[cfg(feature = "cliui")]
+pub mod cliui {
+    use super::OnlineVersion;
+
+    pub trait IsMono {
+        fn is_mono(&self) -> bool;
+    }
+
+    impl IsMono for bool {
+        fn is_mono(&self) -> bool {
+            *self
+        }
+    }
+
+    impl<State: IsMono> cliui::StateDisplay<State> for OnlineVersion {
+        fn display(&self, state: &State) -> impl std::fmt::Display {
+            let suffix = if state.is_mono() { " (mono)" } else { "" };
+
+            format!("{}{}", &self.data.tag_name, suffix)
+        }
     }
 }

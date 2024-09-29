@@ -647,6 +647,7 @@ dependencies = [
 name = "gdtk-gvm"
 version = "0.1.0"
 dependencies = [
+ "cliui",
  "cynic",
  "cynic-codegen",
  "gdtk-paths",

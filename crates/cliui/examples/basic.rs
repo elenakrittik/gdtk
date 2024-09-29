@@ -1,7 +1,4 @@
-use cliui::{
-    prompt::{Action, Key},
-    Prompt,
-};
+use cliui::{Action, Key, Prompt};
 
 struct MyState {
     only_3x: bool,
@@ -12,8 +9,8 @@ fn main() -> cliui::Result<()> {
 
     Prompt::builder()
         .with_question("Choose Godot version")
-        .with_items(ITEMS.into_iter().collect::<Vec<_>>())
         .with_state(MyState { only_3x: false })
+        .with_items(ITEMS.into_iter().collect::<Vec<_>>())
         .with_action(
             Key::Char('b'),
             Action {

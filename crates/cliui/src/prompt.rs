@@ -7,7 +7,7 @@ use ahash::AHashMap;
 use console::Term;
 use yansi::Paint;
 
-use crate::prompt::vecview::VecView;
+use crate::{prompt::vecview::VecView, StateDisplay};
 
 mod action;
 mod builders;
@@ -33,7 +33,7 @@ pub struct Prompt<Item, State> {
     state: State,
 }
 
-impl<Item: Display, State> Prompt<Item, State> {
+impl<State, Item: StateDisplay<State>> Prompt<Item, State> {
     pub fn interact(mut self) -> crate::Result<(Option<Item>, State)> {
         let mut choice = None;
 
@@ -104,7 +104,12 @@ impl<Item: Display, State> Prompt<Item, State> {
                 " "
             };
 
-            writeln!(self.term, "{} {}", arrow.paint(ARROW_STYLE), item)?;
+            writeln!(
+                self.term,
+                "{} {}",
+                arrow.paint(ARROW_STYLE),
+                item.display(&self.state)
+            )?;
 
             idx += 1;
         }
@@ -121,7 +126,7 @@ impl<Item: Display, State> Prompt<Item, State> {
                 "{} {}: {}",
                 '?'.paint(CHOICE_STYLE),
                 self.question,
-                &self.view[choice],
+                &self.view[choice].display(&self.state),
             )?;
         } else {
             writeln!(
