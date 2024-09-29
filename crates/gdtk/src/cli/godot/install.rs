@@ -47,27 +47,23 @@ impl tapcli::Command for GodotInstallCommand {
         let asset = pick_asset(&assets, self.mono)
             .expect("Couldn't find a Godot build for current OS/arch pair.");
 
-        let mut spinner = spinoff::Spinner::new(
+        let mut status = spinoff::Spinner::new(
             spinoff::spinners::Dots2,
-            "Downloading (this may take a while)..",
+            "Preparing..",
             spinoff::Color::Cyan,
         );
 
-        let mut content = vec![];
+        let resp = ureq::get(&asset.download_url.0).call()?;
 
-        ureq::get(&asset.download_url.0)
-            .call()?
-            .into_body()
-            .into_reader()
-            .read_to_end(&mut content)?;
+        let content = download(resp, &mut status)?;
 
         let mut source = std::io::Cursor::new(content);
 
-        spinner.update_text("Extracting..");
+        status.update_text("Extracting..");
 
         extract_godot(&mut source, &target_dir, self.mono)?;
 
-        spinner.update_text("Setting up..");
+        status.update_text("Setting up..");
 
         // Enable self-contained mode.
         std::fs::File::create(target_dir.join("._sc_"))?;
@@ -80,10 +76,52 @@ impl tapcli::Command for GodotInstallCommand {
 
         manager.save()?;
 
-        spinner.success(&format!("Installed Godot {}!", &display_version));
+        status.success(&format!("Installed Godot {}!", &display_version));
 
         Ok(())
     }
+}
+
+// 16KB at a time
+const BYTES_AT_A_TIME: usize = 1024 * 16;
+// most godot version don't exceed 100MB, so
+// this should help avoid spontaneous allocations
+const PREALLOCATION_SIZE: usize = 1024 * 1024 * 100;
+
+fn download(
+    resp: ureq::http::Response<ureq::Body>,
+    status: &mut spinoff::Spinner,
+) -> anyhow::Result<Vec<u8>> {
+    let total = resp
+        .headers()
+        .get(ureq::http::header::CONTENT_LENGTH)
+        .map(|v| v.to_str())
+        .unwrap()?
+        .parse::<usize>()? as f64;
+
+    let mut percentage = 0;
+    let mut reader = resp.into_body().into_reader();
+    let mut chunk = [0u8; BYTES_AT_A_TIME];
+    let mut output = Vec::with_capacity(PREALLOCATION_SIZE);
+
+    while let Ok(bytes_read) = reader.read(&mut chunk) {
+        let new_percentage = ((output.len() as f64 / total) * 100.) as usize;
+
+        if new_percentage != percentage {
+            percentage = new_percentage;
+            status.update_text(format!("Downloading.. {}%", percentage));
+        }
+
+        if bytes_read == 0 {
+            break;
+        }
+
+        output.extend_from_slice(&chunk[..bytes_read]);
+    }
+
+    status.update_text("Download complete!");
+
+    Ok(output)
 }
 
 fn extract_godot(

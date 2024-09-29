@@ -98,7 +98,7 @@ where
     let token = format!("Bearer {}", retrieve_token()?);
 
     let data = ureq::post(GITHUB_GRAPHQL_API)
-        .header("Authorization", &token)
+        .header(ureq::http::header::AUTHORIZATION, &token)
         .send_json(op)?
         .into_body()
         .read_json::<cynic::GraphQlResponse<Q>>()?
