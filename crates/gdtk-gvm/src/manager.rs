@@ -9,25 +9,31 @@ pub struct VersionManager {
 impl VersionManager {
     /// Load the `versions.toml` file.
     pub fn load() -> Result<Self, crate::Error> {
-        let mut content = vec![];
-        let mut file = std::fs::File::options()
-            .read(true)
-            .write(true)
-            .open(crate::utils::versions_toml_path()?)?;
+        let path = gdtk_paths::local_versions_path()?;
 
-        file.read_to_end(&mut content)?;
+        Ok(
+            match crate::utils::maybe_create_local_versions(path.as_std_path())? {
+                Some(inner) => Self { inner },
+                None => {
+                    let mut content = vec![];
+                    let mut file = std::fs::File::options().read(true).open(&path)?;
 
-        let versions = rkyv::from_bytes::<_, rkyv::rancor::Error>(&content)?;
+                    file.read_to_end(&mut content)?;
 
-        Ok(Self { inner: versions })
+                    let inner = rkyv::from_bytes::<_, rkyv::rancor::Error>(&content)?;
+
+                    Self { inner }
+                }
+            },
+        )
     }
 
     /// Save the `versions.toml` file.
     pub fn save(&self) -> Result<(), crate::Error> {
         let contents = rkyv::to_bytes::<rkyv::rancor::Error>(&self.inner)?;
-        let path = crate::utils::versions_toml_path()?;
+        let path = gdtk_paths::local_versions_path()?;
 
-        std::fs::write(path, contents)?;
+        std::fs::write(&path, contents)?;
 
         Ok(())
     }
