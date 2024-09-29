@@ -53,9 +53,9 @@ impl tapcli::Command for GodotInstallCommand {
             spinoff::Color::Cyan,
         );
 
-        let call = ureq::get(&asset.download_url.0).call()?;
+        let resp = ureq::get(&asset.download_url.0).call()?;
 
-        let content = download(call, &mut status)?;
+        let content = download(resp, &mut status)?;
 
         let mut source = std::io::Cursor::new(content);
 
@@ -89,10 +89,10 @@ const BYTES_AT_A_TIME: usize = 1024 * 16;
 const PREALLOCATION_SIZE: usize = 1024 * 1024 * 100;
 
 fn download(
-    call: ureq::http::Response<ureq::Body>,
+    resp: ureq::http::Response<ureq::Body>,
     status: &mut spinoff::Spinner,
 ) -> anyhow::Result<Vec<u8>> {
-    let total = call
+    let total = resp
         .headers()
         .get(ureq::http::header::CONTENT_LENGTH)
         .map(|v| v.to_str())
@@ -100,7 +100,7 @@ fn download(
         .parse::<usize>()? as f64;
 
     let mut percentage = 0;
-    let mut reader = call.into_body().into_reader();
+    let mut reader = resp.into_body().into_reader();
     let mut chunk = [0u8; BYTES_AT_A_TIME];
     let mut output = Vec::with_capacity(PREALLOCATION_SIZE);
 
