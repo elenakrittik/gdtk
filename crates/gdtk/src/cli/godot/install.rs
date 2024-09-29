@@ -87,7 +87,7 @@ impl tapcli::Command for GodotInstallCommand {
 }
 
 fn extract_godot(source: impl Read + Seek, target_dir: &Utf8Path) -> anyhow::Result<()> {
-    gdtk_paths::ensure_path(target_dir, true)?;
+    let _ = gdtk_paths::ensure_dir_exists(target_dir)?;
 
     let mut archive = zip::ZipArchive::new(source)?;
 
