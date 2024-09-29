@@ -10,7 +10,7 @@ use gdtk_gvm::{
     utils::pick_asset,
     version::OnlineVersion,
 };
-use gdtk_paths::camino::Utf8Path;
+use gdtk_paths::camino::{Utf8Path, Utf8PathBuf};
 
 pub struct GodotInstallCommand {
     version: OnlineVersion,
@@ -65,7 +65,7 @@ impl tapcli::Command for GodotInstallCommand {
 
         spinner.update_text("Extracting..");
 
-        extract_godot(&mut source, &target_dir)?;
+        extract_godot(&mut source, &target_dir, self.mono)?;
 
         spinner.update_text("Setting up..");
 
@@ -86,24 +86,64 @@ impl tapcli::Command for GodotInstallCommand {
     }
 }
 
-fn extract_godot(source: impl Read + Seek, target_dir: &Utf8Path) -> anyhow::Result<()> {
+fn extract_godot(
+    source: impl Read + Seek,
+    target_dir: &Utf8Path,
+    unwrap_top_dir: bool,
+) -> anyhow::Result<()> {
     let _ = gdtk_paths::ensure_dir_exists(target_dir)?;
 
     let mut archive = zip::ZipArchive::new(source)?;
 
     for n in 0..archive.len() {
-        let mut file = archive.by_index(n)?;
+        let mut entry = archive.by_index(n)?;
 
-        let mut path = File::create(if file.name().contains("console") {
-            target_dir.join("godot_console")
-        } else {
-            target_dir.join("godot")
-        })?;
+        let entry_path = entry.enclosed_name().map(Utf8PathBuf::try_from).unwrap()?;
+        let entry_path = normalize_entry_path(entry_path, unwrap_top_dir);
 
-        std::io::copy(&mut file, &mut path)?;
+        // "hey PathBuf can you join "./somepath/" and "hello\world"" - "sure thing, tho slashes are your problem, sucks to suck"
+        // explanation: PathBuf apparently does not even normalize slashes when joining. therefore we do the stupid thing.
+        let mut full = target_dir.to_owned();
+
+        full.extend(entry_path.components());
+
+        if entry.is_dir() {
+            std::fs::create_dir_all(&full)?;
+            continue;
+        }
+
+        let mut entry_target = File::create(&full)?;
+
+        std::io::copy(&mut entry, &mut entry_target)?;
     }
 
     Ok(())
+}
+
+fn normalize_entry_path(path: Utf8PathBuf, unwrap_top_dir: bool) -> Utf8PathBuf {
+    let path = if unwrap_top_dir {
+        let mut c = path.components();
+        c.next();
+        c.as_path().to_owned()
+    } else {
+        path
+    };
+
+    // if it is a top-level entry
+    if path.components().count() == 1 {
+        let is_godot = path.as_str().contains("Godot_v");
+        let is_console = path.as_str().contains("console");
+
+        if is_godot && is_console {
+            Utf8PathBuf::from("godot_console")
+        } else if is_godot && !is_console {
+            Utf8PathBuf::from("godot")
+        } else {
+            path
+        }
+    } else {
+        path
+    }
 }
 
 const TOGGLE_MONO_KEY: cliui::Key = cliui::Key::Char('m');
