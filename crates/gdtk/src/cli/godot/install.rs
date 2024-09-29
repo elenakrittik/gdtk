@@ -147,34 +147,21 @@ fn normalize_entry_path(path: Utf8PathBuf, unwrap_top_dir: bool) -> Utf8PathBuf 
 }
 
 const TOGGLE_MONO_KEY: cliui::Key = cliui::Key::Char('m');
-const TOGGLE_MONO_DESC_NO: &str = "Install the mono variant? (current: no)";
-const TOGGLE_MONO_DESC_YES: &str = "Install the mono variant? (current: yes)";
+const TOGGLE_MONO_DESC: &str = "Install the mono variant?";
 
 fn prompt_for_version() -> anyhow::Result<(OnlineVersion, bool)> {
     let available_versions = fetch_versions()?;
 
     let (version, mono) = Prompt::builder()
         .with_question("Select version")
-        .with_items(available_versions)
         .with_state(false)
+        .with_items(available_versions)
         .with_action(
             TOGGLE_MONO_KEY,
             Action {
-                description: TOGGLE_MONO_DESC_NO,
+                description: TOGGLE_MONO_DESC,
                 callback: |prompt| {
                     *prompt.state_mut() = !prompt.state();
-
-                    let description = if *prompt.state() {
-                        TOGGLE_MONO_DESC_YES
-                    } else {
-                        TOGGLE_MONO_DESC_NO
-                    };
-
-                    prompt
-                        .actions_mut()
-                        .get_mut(&TOGGLE_MONO_KEY)
-                        .unwrap()
-                        .description = description;
 
                     Ok(())
                 },

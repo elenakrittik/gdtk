@@ -1,7 +1,4 @@
-use cliui::{
-    prompt::{Action, Key},
-    Prompt,
-};
+use cliui::{Action, Key, Prompt};
 
 struct MyState {
     only_3x: bool,

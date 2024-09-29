@@ -1,10 +1,8 @@
-use std::fmt::Display;
-
 use ahash::AHashMap;
 use console::{Key, Term};
 
 use super::{action::Action, sentinel::Sentinel, vecview::VecView};
-use crate::Prompt;
+use crate::{Prompt, StateDisplay};
 
 impl Prompt<Sentinel, Sentinel> {
     pub fn builder() -> PromptBuilder<Sentinel> {
@@ -40,7 +38,7 @@ impl PromptBuilder<Sentinel> {
     }
 }
 
-impl<Item: Display, State> PromptBuilder<Item, State> {
+impl<State, Item: StateDisplay<State>> PromptBuilder<Item, State> {
     /// Set the question for this prompt.
     pub fn with_question(mut self, question: &'static str) -> PromptBuilder<Item, State> {
         self.question = Some(question);
@@ -48,7 +46,7 @@ impl<Item: Display, State> PromptBuilder<Item, State> {
     }
 
     /// Set the items for this prompt. **This resets `.actions`.**.
-    pub fn with_items<NewItem: Display>(
+    pub fn with_items<NewItem: StateDisplay<State>>(
         self,
         items: impl Into<Vec<NewItem>>,
     ) -> PromptBuilder<NewItem, State> {

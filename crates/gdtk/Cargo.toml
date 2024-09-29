@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.86"
 diagnosis = { version = "0.1.0", path = "../diagnosis", features = ["codespan-reporting"] }
-gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm" }
+gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm", features = ["cliui"] }
 cliui = { version = "0.1.0", path = "../cliui" }
 gdtk-lint = { version = "0.1.0", path = "../gdtk-lint" }
 gdtk-godotcfg-parser = { version = "0.1.0", path = "../gdtk-godotcfg-parser" }

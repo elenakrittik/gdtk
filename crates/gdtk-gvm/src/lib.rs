@@ -1,4 +1,4 @@
-#![feature(decl_macro)]
+#![feature(decl_macro, min_specialization)]
 
 pub use versions;
 

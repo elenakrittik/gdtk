@@ -14,6 +14,11 @@ tabled = "0.16.0"
 cynic = { version = "3.8.0", default-features = false }
 ureq = { version = "3.0.0-rc1", features = ["json"] }
 rkyv = "0.8.8"
+cliui = { path = "../cliui", optional = true }
 
 [build-dependencies]
 cynic-codegen = { version = "3.8.0", features = ["rkyv"] }
+
+[features]
+default = []
+cliui = ["dep:cliui"]
