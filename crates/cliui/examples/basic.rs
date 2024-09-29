@@ -9,8 +9,8 @@ fn main() -> cliui::Result<()> {
 
     Prompt::builder()
         .with_question("Choose Godot version")
-        .with_state(MyState { only_3x: false })
         .with_items(ITEMS.into_iter().collect::<Vec<_>>())
+        .with_state(MyState { only_3x: false })
         .with_action(
             Key::Char('b'),
             Action {
