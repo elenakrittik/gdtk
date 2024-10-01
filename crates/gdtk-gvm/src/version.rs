@@ -1,20 +1,24 @@
 use versions::Version as SemanticVersion;
 
-use crate::queries::releases::Release as GraphQLRelease;
+use crate::api::Release;
 
 #[derive(PartialEq, Debug)]
 pub struct OnlineVersion {
     semantic: SemanticVersion,
-    data: GraphQLRelease,
+    data: Release,
 }
 
 impl OnlineVersion {
+    pub fn id(&self) -> u32 {
+        self.data.id
+    }
+
     pub fn name(&self) -> &str {
         &self.data.tag_name
     }
 
     pub fn is_dev(&self) -> bool {
-        self.data.is_prerelease
+        self.data.prerelease
     }
 
     pub fn as_ordered(&self) -> &impl Ord {
@@ -28,8 +32,8 @@ impl std::fmt::Display for OnlineVersion {
     }
 }
 
-impl From<GraphQLRelease> for OnlineVersion {
-    fn from(value: GraphQLRelease) -> Self {
+impl From<Release> for OnlineVersion {
+    fn from(value: Release) -> Self {
         Self {
             semantic: SemanticVersion::new(&value.tag_name).expect("a valid version"),
             data: value,

@@ -1,6 +1,8 @@
 use tracing::level_filters::LevelFilter;
 
-use crate::cli::{dev::DevCommand, godot::GodotCommand, lint::LintCommand};
+#[cfg(any(debug_assertions, feature = "dev"))]
+use crate::cli::dev::DevCommand;
+use crate::cli::{godot::GodotCommand, lint::LintCommand};
 
 #[cfg(any(debug_assertions, feature = "dev"))]
 pub mod dev;

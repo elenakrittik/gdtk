@@ -1,36 +1,24 @@
-use cynic::QueryBuilder;
+use ureq::http::{
+    header::{ACCEPT, AUTHORIZATION},
+    Uri,
+};
 
 use crate::{
-    queries::{
-        release_assets::{ReleaseAsset, ReleaseAssetsQuery, ReleaseAssetsQueryVariables},
-        releases::{ReleasesQuery, ReleasesQueryVariables},
-        GITHUB_GRAPHQL_API,
-    },
+    api::{fetch_assets_url, fetch_releases_url, octocrab::get_next_link, Release, ReleaseAsset},
     version::OnlineVersion,
 };
 
 pub fn fetch_versions() -> Result<Vec<OnlineVersion>, crate::Error> {
     let mut output = vec![];
-    let mut cursor_end = None;
+    let mut link = fetch_releases_url();
 
     loop {
-        let op = ReleasesQuery::build(ReleasesQueryVariables {
-            after: cursor_end.as_deref(),
-        });
+        let (releases, new_link) = send_api_request::<Vec<Release>>(link)?;
 
-        let response = send_graphql_request(op)?.repository.unwrap().releases;
+        output.extend(releases.into_iter().map(OnlineVersion::from));
 
-        output.extend(
-            response
-                .nodes
-                .unwrap()
-                .into_iter()
-                .flatten()
-                .map(OnlineVersion::from),
-        );
-
-        if response.page_info.has_next_page {
-            cursor_end = response.page_info.end_cursor;
+        if let Some(new_link) = new_link {
+            link = new_link;
         } else {
             break;
         }
@@ -41,27 +29,17 @@ pub fn fetch_versions() -> Result<Vec<OnlineVersion>, crate::Error> {
     Ok(output)
 }
 
-pub fn fetch_version_assets(tag_name: &str) -> Result<Vec<ReleaseAsset>, crate::Error> {
+pub fn fetch_version_assets(release_id: u32) -> Result<Vec<ReleaseAsset>, crate::Error> {
     let mut output = vec![];
-    let mut cursor_end = None;
+    let mut link = fetch_assets_url(release_id);
 
     loop {
-        let op = ReleaseAssetsQuery::build(ReleaseAssetsQueryVariables {
-            after: cursor_end.as_deref(),
-            tag_name,
-        });
+        let (assets, new_link) = send_api_request::<Vec<ReleaseAsset>>(link)?;
 
-        let response = send_graphql_request(op)?
-            .repository
-            .unwrap()
-            .release
-            .unwrap()
-            .release_assets;
+        output.extend(assets);
 
-        output.extend(response.nodes.unwrap().into_iter().flatten());
-
-        if response.page_info.has_next_page {
-            cursor_end = response.page_info.end_cursor;
+        if let Some(new_link) = new_link {
+            link = new_link;
         } else {
             break;
         }
@@ -70,11 +48,12 @@ pub fn fetch_version_assets(tag_name: &str) -> Result<Vec<ReleaseAsset>, crate::
     Ok(output)
 }
 
-fn retrieve_token() -> Result<String, crate::Error> {
+fn retrieve_token() -> Option<String> {
     let command = std::process::Command::new("gh")
         .arg("auth")
         .arg("token")
-        .output()?;
+        .output()
+        .ok()?;
 
     let std::process::Output {
         status,
@@ -83,27 +62,28 @@ fn retrieve_token() -> Result<String, crate::Error> {
     } = command;
 
     if status.success() {
-        Ok(String::from_utf8(output.trim_ascii().to_owned())
-            .map_err(|_| crate::Error::TokenRetrievalError)?)
+        String::from_utf8(output.trim_ascii().to_owned()).ok()
     } else {
-        Err(crate::Error::TokenRetrievalError)
+        None
     }
 }
 
-fn send_graphql_request<Q, V>(op: cynic::Operation<Q, V>) -> Result<Q, crate::Error>
+fn send_api_request<T>(url: Uri) -> Result<(T, Option<Uri>), crate::Error>
 where
-    Q: serde::de::DeserializeOwned,
-    V: serde::Serialize,
+    T: serde::de::DeserializeOwned,
 {
-    let token = format!("Bearer {}", retrieve_token()?);
+    let mut request = ureq::get(url)
+        .header(ACCEPT, "application/vnd.github+json")
+        .header("X-GitHub-Api-Version", "2022-11-28");
 
-    let data = ureq::post(GITHUB_GRAPHQL_API)
-        .header(ureq::http::header::AUTHORIZATION, &token)
-        .send_json(op)?
-        .into_body()
-        .read_json::<cynic::GraphQlResponse<Q>>()?
-        .data
-        .unwrap();
+    if let Some(token) = retrieve_token() {
+        request = request.header(AUTHORIZATION, format!("Bearer {token}"));
+    }
 
-    Ok(data)
+    let response = request.call()?;
+
+    let next_link = get_next_link(response.headers());
+    let data = response.into_body().read_json::<T>()?;
+
+    Ok((data, next_link))
 }

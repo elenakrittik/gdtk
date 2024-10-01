@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{queries::release_assets::ReleaseAsset, types::LocalVersions};
+use crate::{api::ReleaseAsset, types::LocalVersions};
 
 /// Pick the best match for a given ``version`` from ``vers``.
 pub fn coerce_version<V: Display>(input: &str, pool: Vec<V>) -> Result<Vec<V>, crate::Error> {

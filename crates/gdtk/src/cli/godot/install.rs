@@ -12,40 +12,27 @@ use gdtk_gvm::{
 };
 use gdtk_paths::camino::{Utf8Path, Utf8PathBuf};
 
-pub struct GodotInstallCommand {
-    version: OnlineVersion,
-    mono: bool,
-}
+pub struct GodotInstallCommand;
 
 impl tapcli::Command for GodotInstallCommand {
     type Error = anyhow::Error;
 
     fn parse(_: &mut tapcli::Parser) -> Result<Self, Self::Error> {
-        let (version, mono) = prompt_for_version()?;
-
-        Ok(Self { version, mono })
+        Ok(Self)
     }
 
     fn run(self) -> Result<Self::Output, Self::Error> {
-        let mut manager = gdtk_gvm::VersionManager::load()?;
-
-        let display_version = format!(
-            "{}{}",
-            self.version.name(),
-            if self.mono { "-mono" } else { "" }
+        let mut status = spinoff::Spinner::new(
+            spinoff::spinners::Dots2,
+            "Preparing..",
+            spinoff::Color::Cyan,
         );
-        let target_dir = gdtk_paths::godots_path()?.join(&display_version);
 
-        if manager
-            .get_version(self.version.name(), self.mono)
-            .is_some()
-        {
-            anyhow::bail!("Godot {} is already installed.", self.version.name());
-        }
+        let online_versions = fetch_versions()?;
 
-        let assets = fetch_version_assets(self.version.name())?;
-        let asset = pick_asset(&assets, self.mono)
-            .expect("Couldn't find a Godot build for current OS/arch pair.");
+        status.clear();
+
+        let (version, mono) = prompt_for_version(online_versions)?;
 
         let mut status = spinoff::Spinner::new(
             spinoff::spinners::Dots2,
@@ -53,7 +40,20 @@ impl tapcli::Command for GodotInstallCommand {
             spinoff::Color::Cyan,
         );
 
-        let resp = ureq::get(&asset.download_url.0).call()?;
+        let mut manager = gdtk_gvm::VersionManager::load()?;
+
+        let display_version = format!("{}{}", version.name(), if mono { "-mono" } else { "" });
+        let target_dir = gdtk_paths::godots_path()?.join(&display_version);
+
+        if manager.get_version(version.name(), mono).is_some() {
+            anyhow::bail!("Godot {} is already installed.", version.name());
+        }
+
+        let assets = fetch_version_assets(version.id())?;
+        let asset = pick_asset(&assets, mono)
+            .expect("Couldn't find a Godot build for current OS/arch pair.");
+
+        let resp = ureq::get(&asset.download_url).call()?;
 
         let content = download(resp, &mut status)?;
 
@@ -61,7 +61,7 @@ impl tapcli::Command for GodotInstallCommand {
 
         status.update_text("Extracting..");
 
-        extract_godot(&mut source, &target_dir, self.mono)?;
+        extract_godot(&mut source, &target_dir, mono)?;
 
         status.update_text("Setting up..");
 
@@ -69,14 +69,14 @@ impl tapcli::Command for GodotInstallCommand {
         std::fs::File::create(target_dir.join("._sc_"))?;
 
         manager.add_version(LocalVersion {
-            name: self.version.name().to_owned(),
+            name: version.name().to_owned(),
             path: target_dir.into_string(),
-            mono: self.mono,
+            mono,
         });
 
         manager.save()?;
 
-        status.success(&format!("Installed Godot {}!", &display_version));
+        status.success(&format!("Installed Godot {}!", version));
 
         Ok(())
     }
@@ -187,13 +187,11 @@ fn normalize_entry_path(path: Utf8PathBuf, unwrap_top_dir: bool) -> Utf8PathBuf 
 const TOGGLE_MONO_KEY: cliui::Key = cliui::Key::Char('m');
 const TOGGLE_MONO_DESC: &str = "Install the mono variant?";
 
-fn prompt_for_version() -> anyhow::Result<(OnlineVersion, bool)> {
-    let available_versions = fetch_versions()?;
-
+fn prompt_for_version(versions: Vec<OnlineVersion>) -> anyhow::Result<(OnlineVersion, bool)> {
     let (version, mono) = Prompt::builder()
         .with_question("Select version")
         .with_state(false)
-        .with_items(available_versions)
+        .with_items(versions)
         .with_action(
             TOGGLE_MONO_KEY,
             Action {
