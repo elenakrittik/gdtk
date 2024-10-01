@@ -2,10 +2,6 @@ name: Shear dependencies
 
 on:
   push:
-    paths: 
-        - '**/Cargo.toml'
-        - '**/Cargo.lock'
-        - '.github/workflows/shear.yml'
   merge_group:
 
 jobs:
