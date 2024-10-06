@@ -1,10 +1,5 @@
 #![deny(clippy::disallowed_types)]
-#![feature(
-    let_chains,
-    decl_macro,
-    option_get_or_insert_default,
-    impl_trait_in_assoc_type
-)]
+#![feature(let_chains, decl_macro, impl_trait_in_assoc_type)]
 #![feature(generic_arg_infer)]
 
 use tapcli::Command;
