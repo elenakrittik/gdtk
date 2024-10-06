@@ -68,15 +68,10 @@ fn symlink_default_version(
     }
 
     #[cfg(windows)]
-    {
-        // std::os::windows::fs::symlink_file(original, link)?;
-        mslnk::ShellLink::new(original)?.create_lnk(link)?;
-    }
+    mslnk::ShellLink::new(original)?.create_lnk(link)?;
 
-    #[cfg(not(windows))]
-    {
-        std::os::unix::fs::symlink(original, link)?;
-    }
+    #[cfg(unix)]
+    std::os::unix::fs::symlink(original, link)?;
 
     Ok(())
 }
