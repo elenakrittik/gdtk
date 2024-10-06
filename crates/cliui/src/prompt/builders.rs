@@ -66,13 +66,13 @@ impl<State, Item: StateDisplay<State>> PromptBuilder<Item, State> {
         }
     }
 
-    /// Set the default item for this prompt.
-    ///
-    /// Defaults to `0`.
-    // pub fn with_default_item(mut self, idx: usize) -> Self {
-    //     self.default_item_idx = Some(idx);
-    //     self
-    // }
+    // /// Set the default item for this prompt.
+    // ///
+    // /// Defaults to `0`.
+    // // pub fn with_default_item(mut self, idx: usize) -> Self {
+    // //     self.default_item_idx = Some(idx);
+    // //     self
+    // // }
 
     /// Set the terminal for this prompt.
     ///
