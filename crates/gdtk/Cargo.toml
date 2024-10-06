@@ -28,3 +28,6 @@ extend = "1.2.0"
 
 [features]
 dev = []
+
+[target.'cfg(windows)'.dependencies]
+mslnk = "0.1.8"
