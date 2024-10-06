@@ -1,11 +1,14 @@
+use std::env::consts::EXE_SUFFIX;
+
 use crate::cli::{
     godot::{
-        install::GodotInstallCommand, list::GodotListCommand, run::GodotRunCommand,
-        uninstall::GodotUninstallCommand,
+        default::GodotDefaultCommand, install::GodotInstallCommand, list::GodotListCommand,
+        run::GodotRunCommand, uninstall::GodotUninstallCommand,
     },
     unknown,
 };
 
+pub mod default;
 pub mod install;
 pub mod list;
 pub mod run;
@@ -23,6 +26,9 @@ pub enum GodotCommand {
 
     /// Uninstall the specified Godot version.
     Uninstall(GodotUninstallCommand),
+
+    /// Change the default Godot version.
+    Default(GodotDefaultCommand),
 }
 
 impl tapcli::Command for GodotCommand {
@@ -35,6 +41,7 @@ impl tapcli::Command for GodotCommand {
             tapcli::ArgRef::Value("run") => Ok(Self::Run(GodotRunCommand::parse(parser)?)),
             tapcli::ArgRef::Value("install") => Ok(Self::Install(GodotInstallCommand::parse(parser)?)),
             tapcli::ArgRef::Value("uninstall") => Ok(Self::Uninstall(GodotUninstallCommand::parse(parser)?)),
+            tapcli::ArgRef::Value("default") => Ok(Self::Default(GodotDefaultCommand::parse(parser)?)),
             other => unknown!(other),
         }
     }
@@ -45,27 +52,31 @@ impl tapcli::Command for GodotCommand {
             GodotCommand::Run(c) => c.run(),
             GodotCommand::Install(c) => c.run(),
             GodotCommand::Uninstall(c) => c.run(),
+            GodotCommand::Default(c) => c.run(),
         }
     }
 }
 
-// fn symlink_default_version(version_folder: &std::path::Path) -> std::io::Result<()> {
-//     let original = version_folder.join("godot");
-//     let link = gdtk_paths::default_godot_path()?;
+fn symlink_default_version(
+    installation_folder: &gdtk_paths::camino::Utf8Path,
+) -> anyhow::Result<()> {
+    let original = installation_folder.join(format!("godot{}", EXE_SUFFIX));
+    let link = gdtk_paths::default_godot_path()?;
 
-//     if link.exists() {
-//         std::fs::remove_file(&link)?;
-//     }
+    if link.exists() {
+        std::fs::remove_file(&link)?;
+    }
 
-//     #[cfg(windows)]
-//     {
-//         std::os::windows::fs::symlink_file(original, link)?;
-//     }
+    #[cfg(windows)]
+    {
+        // std::os::windows::fs::symlink_file(original, link)?;
+        mslnk::ShellLink::new(original)?.create_lnk(link)?;
+    }
 
-//     #[cfg(not(windows))]
-//     {
-//         std::os::unix::fs::symlink(original, link)?;
-//     }
+    #[cfg(not(windows))]
+    {
+        std::os::unix::fs::symlink(original, link)?;
+    }
 
-//     Ok(())
-// }
+    Ok(())
+}

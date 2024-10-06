@@ -1,9 +1,10 @@
 use std::{
+    env::consts::EXE_SUFFIX,
     fs::File,
     io::{Read, Seek},
 };
 
-use cliui::{Action, Prompt};
+use cliui::{Action, Prompt, StateDisplay};
 use gdtk_gvm::{
     online::{fetch_version_assets, fetch_versions},
     types::LocalVersion,
@@ -11,6 +12,8 @@ use gdtk_gvm::{
     version::OnlineVersion,
 };
 use gdtk_paths::camino::{Utf8Path, Utf8PathBuf};
+
+use super::symlink_default_version;
 
 pub struct GodotInstallCommand {
     version: OnlineVersion,
@@ -29,12 +32,12 @@ impl tapcli::Command for GodotInstallCommand {
     fn run(self) -> Result<Self::Output, Self::Error> {
         let mut manager = gdtk_gvm::VersionManager::load()?;
 
-        let display_version = format!(
+        let target_dir = format!(
             "{}{}",
             self.version.name(),
             if self.mono { "-mono" } else { "" }
         );
-        let target_dir = gdtk_paths::godots_path()?.join(&display_version);
+        let target_dir = gdtk_paths::godots_path()?.join(&target_dir);
 
         if manager
             .get_version(self.version.name(), self.mono)
@@ -68,6 +71,10 @@ impl tapcli::Command for GodotInstallCommand {
         // Enable self-contained mode.
         std::fs::File::create(target_dir.join("._sc_"))?;
 
+        if manager.is_empty() {
+            symlink_default_version(&target_dir)?;
+        }
+
         manager.add_version(LocalVersion {
             name: self.version.name().to_owned(),
             path: target_dir.into_string(),
@@ -76,7 +83,7 @@ impl tapcli::Command for GodotInstallCommand {
 
         manager.save()?;
 
-        status.success(&format!("Installed Godot {}!", &display_version));
+        status.success(&format!("Installed Godot {}!", self.version.display(&true)));
 
         Ok(())
     }
@@ -173,9 +180,9 @@ fn normalize_entry_path(path: Utf8PathBuf, unwrap_top_dir: bool) -> Utf8PathBuf 
         let is_console = path.as_str().contains("console");
 
         if is_godot && is_console {
-            Utf8PathBuf::from("godot_console")
+            Utf8PathBuf::from(format!("godot_console{}", EXE_SUFFIX))
         } else if is_godot && !is_console {
-            Utf8PathBuf::from("godot")
+            Utf8PathBuf::from(format!("godot{}", EXE_SUFFIX))
         } else {
             path
         }

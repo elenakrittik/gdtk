@@ -117,6 +117,7 @@ impl<State, Item: StateDisplay<State>> PromptBuilder<Item, State> {
     pub fn build(self) -> Prompt<Item, State> {
         let question = self.question.expect("`question` must've been set before calling `.build()`");
         let items = self.items.expect("`items` must've been set before calling `.build()`");
+        assert!(!items.is_empty());
         let term = self.term.unwrap_or_else(Term::stderr);
         let allow_esc = self.allow_esc.unwrap_or(false);
         let total_view_length = self.view_length.unwrap_or(7);
