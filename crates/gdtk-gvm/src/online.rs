@@ -97,13 +97,13 @@ where
 {
     let token = format!("Bearer {}", retrieve_token()?);
 
-    let data = ureq::post(GITHUB_GRAPHQL_API)
+    let response = ureq::post(GITHUB_GRAPHQL_API)
         .header(ureq::http::header::AUTHORIZATION, &token)
-        .send_json(op)?
-        .into_body()
-        .read_json::<cynic::GraphQlResponse<Q>>()?
-        .data
-        .unwrap();
+        .send_json(op)?;
 
-    Ok(data)
+    let json = response
+        .into_body()
+        .read_json::<cynic::GraphQlResponse<Q>>()?;
+
+    Ok(json.data.unwrap())
 }

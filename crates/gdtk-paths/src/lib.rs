@@ -190,13 +190,14 @@ pub fn executable_path() -> Result<Utf8PathBuf, Error> {
         .or(local_bin_path())
 }
 
-dir! {
-    /// Returns the path to the default godot executable.
-    pub default_godot_path: executable_path
-    // NOTE: while windows won't allow a user to launch any file as an .exe
-    // (unless it does end in .exe), it does allow doing so through it's
-    // system APIs, so we're good
-    / #[dir: false] "godot"
+/// Returns the path to the default godot executable.
+pub fn default_godot_path() -> Result<Utf8PathBuf, Error> {
+    let mut base = executable_path()?;
+
+    let suffix = if cfg!(windows) { ".lnk" } else { "" };
+    base.push(format!("godot{}", suffix));
+
+    Ok(base)
 }
 
 dir! {
