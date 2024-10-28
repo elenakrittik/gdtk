@@ -13,6 +13,6 @@ documentation = "https://docs.rs/cliui"
 
 [dependencies]
 console = "0.15.0"
-thiserror = "1.0.61"
+thiserror = "1.0.65"
 yansi = "1.0.1"
 ahash = "0.8.11"
