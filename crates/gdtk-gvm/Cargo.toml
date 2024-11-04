@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
-serde = "1.0.213"
+serde = "1.0.214"
 thiserror = "1.0.67"
 versions = "6.0.0"
 tabled = "0.16.0"
