@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 # `RustcVisualizer`
 yansi = { version = "1.0.1", features = ["hyperlink"], optional = true }
-thiserror = { version = "1.0", optional = true }
+thiserror = { version = "2.0", optional = true }
 ahash = { version = "0.8.11", optional = true }
 count-digits = { version = "0.5.1", optional = true }
 

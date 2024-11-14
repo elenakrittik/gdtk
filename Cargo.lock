@@ -216,7 +216,7 @@ version = "0.1.0"
 dependencies = [
  "ahash 0.8.11",
  "console",
- "thiserror",
+ "thiserror 2.0.3",
  "yansi",
 ]
 
@@ -347,7 +347,7 @@ dependencies = [
  "ref-cast",
  "serde",
  "static_assertions",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -366,7 +366,7 @@ dependencies = [
  "rkyv 0.7.45",
  "strsim 0.10.0",
  "syn 2.0.87",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -477,7 +477,7 @@ dependencies = [
  "codespan-reporting",
  "count-digits",
  "miette",
- "thiserror",
+ "thiserror 2.0.3",
  "yansi",
 ]
 
@@ -642,7 +642,7 @@ dependencies = [
  "logos",
  "pratt",
  "regex",
- "thiserror",
+ "thiserror 2.0.3",
 ]
 
 [[package]]
@@ -652,7 +652,7 @@ dependencies = [
  "delegate",
  "enum-as-inner",
  "logos",
- "thiserror",
+ "thiserror 2.0.3",
  "tracing",
 ]
 
@@ -667,7 +667,7 @@ dependencies = [
  "rkyv 0.8.8",
  "serde",
  "tabled",
- "thiserror",
+ "thiserror 2.0.3",
  "ureq",
  "versions",
 ]
@@ -687,7 +687,7 @@ version = "0.1.0"
 dependencies = [
  "camino",
  "dirs",
- "thiserror",
+ "thiserror 2.0.3",
 ]
 
 [[package]]
@@ -755,7 +755,7 @@ dependencies = [
  "httparse",
  "log",
  "smallvec",
- "thiserror",
+ "thiserror 1.0.69",
  "url",
 ]
 
@@ -858,7 +858,7 @@ dependencies = [
  "combine",
  "jni-sys",
  "log",
- "thiserror",
+ "thiserror 1.0.69",
  "walkdir",
 ]
 
@@ -976,7 +976,7 @@ dependencies = [
  "supports-unicode",
  "terminal_size",
  "textwrap",
- "thiserror",
+ "thiserror 1.0.69",
  "unicode-width",
 ]
 
@@ -1326,7 +1326,7 @@ checksum = "ba009ff324d1fc1b900bd1fdb31564febe58a8ccc8a6fdbb93b543d33b13ca43"
 dependencies = [
  "getrandom",
  "libredox",
- "thiserror",
+ "thiserror 1.0.69",
 ]
 
 [[package]]
@@ -1845,18 +1845,38 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.67"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3b3c6efbfc763e64eb85c11c25320f0737cb7364c4b6336db90aa9ebe27a0bbd"
+checksum = "b6aaf5339b578ea85b50e080feb250a3e8ae8cfcdff9a461c9ec2904bc923f52"
 dependencies = [
- "thiserror-impl",
+ "thiserror-impl 1.0.69",
+]
+
+[[package]]
+name = "thiserror"
+version = "2.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c006c85c7651b3cf2ada4584faa36773bd07bac24acfb39f3c431b36d7e667aa"
+dependencies = [
+ "thiserror-impl 2.0.3",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.67"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b607164372e89797d78b8e23a6d67d5d1038c1c65efd52e1389ef8b77caba2a6"
+checksum = "4fee6c4efc90059e10f81e6d42c60a18f76588c3d74cb83a0b242a2b6c7504c1"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.87",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "2.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f077553d607adc1caf65430528a576c757a71ed73944b66ebb58ef2bbd243568"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1937,7 +1957,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3566e8ce28cc0a3fe42519fc80e6b4c943cc4c8cef275620eb8dac2d3d4e06cf"
 dependencies = [
  "crossbeam-channel",
- "thiserror",
+ "thiserror 1.0.69",
  "time",
  "tracing-subscriber",
 ]
@@ -2034,7 +2054,7 @@ dependencies = [
  "serde",
  "serde_json",
  "smallvec",
- "thiserror",
+ "thiserror 1.0.69",
  "utf-8",
  "webpki-roots",
 ]
@@ -2336,7 +2356,7 @@ dependencies = [
  "flate2",
  "indexmap",
  "memchr",
- "thiserror",
+ "thiserror 1.0.69",
  "zopfli",
 ]
 
