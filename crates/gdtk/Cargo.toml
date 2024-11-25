@@ -17,7 +17,7 @@ zip = { version = "2.1.3", default-features = false, features = [
 ] }
 itertools = "0.13.0"
 ureq = "3.0.0-rc1"
-tabled = { version = "0.16.0", features = ["std"] }
+tabled = { version = "0.17.0", features = ["std"] }
 spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
 ignore = { version = "0.4.22", features = ["simd-accel"] }
 tracing = { version = "0.1.40", features = ["release_max_level_info"] }
