@@ -11,7 +11,7 @@ ahash = { version = "0.8.11", optional = true }
 count-digits = { version = "0.5.1", optional = true }
 
 # `MietteVisualizer`
-miette = { version = "7.2.0", features = [
+miette = { version = "7.4.0", features = [
     "fancy-no-backtrace",
 ], default-features = false, optional = true }
 
