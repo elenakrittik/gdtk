@@ -13,7 +13,7 @@ versions = "6.0.0"
 tabled = "0.17.0"
 cynic = { version = "3.9.0", default-features = false }
 ureq = { version = "3.0.0-rc1", features = ["json"] }
-rkyv = "0.8.8"
+rkyv = "0.8.9"
 cliui = { path = "../cliui", optional = true }
 
 [build-dependencies]
