@@ -21,7 +21,7 @@ tabled = { version = "0.17.0", features = ["std"] }
 spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
 ignore = { version = "0.4.22", features = ["simd-accel"] }
 tracing = { version = "0.1.41", features = ["release_max_level_info"] }
-tracing-subscriber = { version = "0.3.18", default-features = false, features = ["fmt", "ansi", "smallvec", "parking_lot"] }
+tracing-subscriber = { version = "0.3.19", default-features = false, features = ["fmt", "ansi", "smallvec", "parking_lot"] }
 tracing-appender = "0.2.3"
 tapcli = { version = "0.1.0", path = "../tapcli" }
 extend = "1.2.0"
