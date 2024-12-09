@@ -17,7 +17,7 @@ rkyv = "0.8.9"
 cliui = { path = "../cliui", optional = true }
 
 [build-dependencies]
-cynic-codegen = { version = "3.9.0", features = ["rkyv"] }
+cynic-codegen = { version = "3.9.1", features = ["rkyv"] }
 
 [features]
 default = []
