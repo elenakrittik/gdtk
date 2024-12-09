@@ -11,7 +11,7 @@ gdtk-gdscript-ast = { version = "0.1.0", path = "../gdtk-gdscript-ast" }
 pratt = "0.4.0"
 enum-as-inner = "0.6.0"
 logos = "0.14.0"
-thiserror = "2.0.3"
+thiserror = "2.0.6"
 ahash = "0.8.11"
 regex = "1.11.1"
 itertools = "0.13.0"
