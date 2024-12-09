@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 camino = "1.1.9"
 dirs = "5.0.1"
-thiserror = "2.0.3"
+thiserror = "2.0.6"
 
 [package.metadata.cargo-shear]
 ignored = ["dirs"]
