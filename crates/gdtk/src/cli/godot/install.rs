@@ -83,7 +83,10 @@ impl tapcli::Command for GodotInstallCommand {
 
         manager.save()?;
 
-        status.success(&format!("Installed Godot {}!", self.version.display(&self.mono)));
+        status.success(&format!(
+            "Installed Godot {}!",
+            self.version.display(&self.mono)
+        ));
 
         Ok(())
     }
