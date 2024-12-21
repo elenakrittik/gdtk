@@ -24,6 +24,10 @@ pub impl tapcli::Parser {
 pub fn prompt_local_version(manager: &VersionManager) -> anyhow::Result<&LocalVersion> {
     let available_versions = manager.installed();
 
+    if available_versions.is_empty() {
+        anyhow::bail!("No versions installed. Install one with `gdtk godot install`!");
+    }
+
     let (Some(version), _) = Prompt::builder()
         .with_question("Select version")
         .with_items(available_versions.iter().collect::<Vec<_>>()) // FIXME: remove vec requirement, somehow?
