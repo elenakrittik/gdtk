@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.93"
+anyhow = "1.0.95"
 diagnosis = { version = "0.1.0", path = "../diagnosis", features = ["codespan-reporting"] }
 gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm", features = ["cliui"] }
 cliui = { version = "0.1.0", path = "../cliui" }
