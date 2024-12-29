@@ -11,3 +11,8 @@ updates:
       prefix: "deps"
     labels:
       - "a: deps"
+    groups:
+      cargo:
+        applies-to: version-updates
+        patterns:
+          - "*"
