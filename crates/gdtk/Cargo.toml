@@ -15,7 +15,7 @@ gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
 zip = { version = "2.2.2", default-features = false, features = [
     "deflate",
 ] }
-itertools = "0.13.0"
+itertools = "0.14.0"
 ureq = "3.0.0-rc1"
 tabled = { version = "0.17.0", features = ["std"] }
 spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
