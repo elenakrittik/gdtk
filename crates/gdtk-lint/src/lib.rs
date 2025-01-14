@@ -4,6 +4,7 @@ pub mod lints;
 pub mod utils;
 
 use gdtk_gdscript_ast::Visitor;
+use lints::typing;
 
 use crate::lints::{redundancy, style, syntax};
 
@@ -21,6 +22,7 @@ pub fn run_builtin_lints<'s>(
     let mut standalone_expression =
         redundancy::standalone_expression::StandaloneExpression::default();
     let mut unnecessary_branch = redundancy::unnecessary_branch::UnnecessaryBranch::default();
+    let mut untyped_code = typing::untyped_code::UntypedCode::default();
 
     // Run lints.
     identifier_casing.visit_file(file);
@@ -29,6 +31,7 @@ pub fn run_builtin_lints<'s>(
     self_in_static.visit_file(file);
     standalone_expression.visit_file(file);
     unnecessary_branch.visit_file(file);
+    untyped_code.visit_file(file);
 
     // Collect diagnostics.
     diagnostics.extend(identifier_casing.0);
@@ -37,6 +40,7 @@ pub fn run_builtin_lints<'s>(
     diagnostics.extend(self_in_static.diagnostics);
     diagnostics.extend(standalone_expression.0);
     diagnostics.extend(unnecessary_branch.0);
+    diagnostics.extend(untyped_code.0);
 
     diagnostics
 }
