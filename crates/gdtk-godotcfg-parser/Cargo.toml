@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-delegate = "0.13.1"
+delegate = "0.13.2"
 enum-as-inner = "0.6.0"
 logos = "0.14.0"
 thiserror = "2.0.11"
