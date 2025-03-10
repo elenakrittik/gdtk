@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.95"
+anyhow = "1.0.97"
 diagnosis = { version = "0.1.0", path = "../diagnosis", features = ["codespan-reporting"] }
 gdtk-gvm = { version = "0.1.0", path = "../gdtk-gvm", features = ["cliui"] }
 cliui = { version = "0.1.0", path = "../cliui" }
@@ -12,12 +12,12 @@ gdtk-lint = { version = "0.1.0", path = "../gdtk-lint" }
 gdtk-godotcfg-parser = { version = "0.1.0", path = "../gdtk-godotcfg-parser" }
 gdtk-gdscript-parser = { version = "0.1.0", path = "../gdtk-gdscript-parser" }
 gdtk-paths = { version = "0.1.0", path = "../gdtk-paths" }
-zip = { version = "2.2.2", default-features = false, features = [
+zip = { version = "2.2.3", default-features = false, features = [
     "deflate",
 ] }
 itertools = "0.14.0"
 ureq = "3.0.0-rc1"
-tabled = { version = "0.17.0", features = ["std"] }
+tabled = { version = "0.18.0", features = ["std"] }
 spinoff = { version = "0.8.0", features = ["dots2"], default-features = false }
 ignore = { version = "0.4.22", features = ["simd-accel"] }
 tracing = { version = "0.1.41", features = ["release_max_level_info"] }
